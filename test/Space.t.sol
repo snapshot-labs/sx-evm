@@ -7,7 +7,7 @@ import "forge-std/console2.sol";
 
 contract SpaceTest is Test {
     Space public space;
-    // address deployerAddress = ;// get address?
+
     uint32 private votingDelay = 0;
     uint32 private minVotingDuration = 0;
     uint32 private maxVotingDuration = 1000;
@@ -51,7 +51,7 @@ contract SpaceTest is Test {
             authenticators,
             executionStrategies
         );
-   }
+    }
 
     function testEmptyVotingStrategiesSetUp() public {
         address[] memory emptyVotingStrategies = new address[](0);
@@ -179,7 +179,6 @@ contract SpaceTest is Test {
         userVotingStrategyParams2[1] = new bytes(0);
         userVotingStrategyParams2[2] = new bytes(0);
         userVotingStrategyParams2[3] = new bytes(0);
-
 
         // Expect revert
         vm.expectRevert("Duplicates found");
