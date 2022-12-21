@@ -5,6 +5,7 @@ pragma solidity ^0.8.15;
 import "../interfaces/IVotingStrategy.sol";
 
 contract VanillaVotingStrategy is IVotingStrategy {
+    // solhint-disable no-unused-vars
     function getVotingPower(
         uint256 timestamp,
         address voterAddress,
