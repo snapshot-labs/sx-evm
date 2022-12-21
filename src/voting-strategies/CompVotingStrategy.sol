@@ -2,6 +2,7 @@
 
 pragma solidity ^0.8.15;
 
+import "@solidity-bytes-utils/contracts/BytesLib.sol";
 import "../interfaces/IVotingStrategy.sol";
 import "../interfaces/IComp.sol";
 
@@ -12,12 +13,8 @@ contract CompVotingStrategy is IVotingStrategy {
         address voterAddress,
         bytes memory params,
         bytes memory userParams
-    ) external view returns (uint256 votingPower) {
-
-        address tokenAddress;
-        assembly {
-            tokenAddress := mload(params)
-        }
-        comp.getPriorVotes(msg.sender, sub256(block.number, 1))
+    ) external view returns (uint256) {
+        address tokenAddress = BytesLib.toAddress(params, 0);
+        return uint256(IComp(tokenAddress).getPriorVotes(voterAddress, block.number - 1));
     }
 }
