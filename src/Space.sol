@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 import "forge-std/console2.sol";
+import "src/interfaces/IVotingStrategy.sol";
 
-// Ownable? Eip712?
+// TODO: Ownable? Eip712?
 contract Space {
     // notice: `uint32::max` corresponds to year ~2106.
     struct Proposal {
@@ -43,7 +44,7 @@ contract Space {
         uint32 _maxVotingDuration,
         uint256 _proposalThreshold,
         uint256 _quorum,
-        address[] memory _votingStrategies, // TODO: Add voting strategies params flat
+        address[] memory _votingStrategies,
         bytes[] memory _votingStrategiesParams,
         address[] memory _authenticators,
         address[] memory _executionStrategies
@@ -112,9 +113,14 @@ contract Space {
             address strategyAddress = usedVotingStrategies[i];
             bool strategyExists = votingStrategies[strategyAddress];
             require(strategyExists, "Invalid used strategy");
-            // totalVotingPower += getVotingPower(timestamp, userAddress, votingStrategiesParams[strategyAddress],
-            // userVotingStrategyParams[strategyAddress]); // TODO: use SafeMath, check overflow and use Interface
-            totalVotingPower += 1; // TODO remove this
+            IVotingStrategy strategy = IVotingStrategy(strategyAddress);
+            totalVotingPower += strategy.getVotingPower(
+                timestamp,
+                userAddress,
+                votingStrategiesParams[strategyAddress],
+                userVotingStrategyParams[i]
+            );
+            // TODO: use SafeMath, check overflow
         }
 
         return totalVotingPower;
