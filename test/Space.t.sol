@@ -4,6 +4,7 @@ pragma solidity ^0.8.13;
 import "forge-std/Test.sol";
 import "../src/Space.sol";
 import "forge-std/console2.sol";
+import "../src/voting-strategies/VanillaVotingStrategy.sol";
 
 contract SpaceTest is Test {
     Space public space;
@@ -13,8 +14,8 @@ contract SpaceTest is Test {
     uint32 private maxVotingDuration = 1000;
     uint32 private proposalThreshold = 1;
     uint32 private quorum = 1;
-    address[] private votingStrategies = [address(0)];
-    bytes[] private votingStrategiesParams = [new bytes(0)];
+    address[] private votingStrategies;
+    bytes[] private votingStrategiesParams;
     address[] private authenticators = [address(this)];
     address[] private executionStrategies = [address(0)];
     bytes[] private userVotingStrategyParams = [new bytes(0)];
@@ -25,6 +26,10 @@ contract SpaceTest is Test {
     // TODO: add setters and test them (maybe in another test file)
 
     function setUp() public {
+        VanillaVotingStrategy vanillaVotingStrategy = new VanillaVotingStrategy();
+        votingStrategies.push(address(vanillaVotingStrategy));
+        votingStrategiesParams.push(new bytes(0));
+
         space = new Space(
             votingDelay,
             minVotingDuration,
