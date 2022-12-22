@@ -179,11 +179,11 @@ contract SpaceTest is Test {
         invalidUsedStrategy[0] = address(2);
         invalidUsedStrategy[0] = address(0); // Duplicate entry
 
-        bytes[] memory userVotingStrategyParams2 = new bytes[](4);
-        userVotingStrategyParams2[0] = new bytes(0);
-        userVotingStrategyParams2[1] = new bytes(0);
-        userVotingStrategyParams2[2] = new bytes(0);
-        userVotingStrategyParams2[3] = new bytes(0);
+        bytes[] memory _userVotingStrategyParams = new bytes[](4);
+        _userVotingStrategyParams[0] = new bytes(0);
+        _userVotingStrategyParams[1] = new bytes(0);
+        _userVotingStrategyParams[2] = new bytes(0);
+        _userVotingStrategyParams[3] = new bytes(0);
 
         // Expect revert
         vm.expectRevert("Duplicates found");
@@ -193,7 +193,7 @@ contract SpaceTest is Test {
             metadataUri,
             executionStrategies[0],
             invalidUsedStrategy,
-            userVotingStrategyParams2,
+            _userVotingStrategyParams,
             executionParams
         );
     }
