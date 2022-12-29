@@ -41,7 +41,7 @@ jobs:
         run: "forge config"
 
       - name: "Run the tests"
-        run: "forge test"
+        run: "yarn test"
 
       - name: "Build the contracts"
         run: |
