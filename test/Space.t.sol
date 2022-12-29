@@ -3,6 +3,7 @@ pragma solidity ^0.8.13;
 
 import "forge-std/Test.sol";
 import "../src/Space.sol";
+// import "../src/interfaces/ISpace.sol";
 import "forge-std/console2.sol";
 import "../src/voting-strategies/VanillaVotingStrategy.sol";
 
@@ -20,6 +21,9 @@ contract SpaceTest is Test {
     address[] private executionStrategies = [address(0)];
     bytes[] private userVotingStrategyParams = [new bytes(0)];
     bytes private executionParams = new bytes(0);
+    address private owner = address(this);
+
+    uint256[] private usedVotingStrategiesIndices = [0];
 
     string private metadataUri = "Snapshot On-Chain";
 
@@ -31,6 +35,7 @@ contract SpaceTest is Test {
         votingStrategiesParams.push(new bytes(0));
 
         space = new Space(
+            owner,
             votingDelay,
             minVotingDuration,
             maxVotingDuration,
@@ -46,6 +51,7 @@ contract SpaceTest is Test {
     function testMinDurationSetUp() public {
         vm.expectRevert("Min duration should be smaller than max duration");
         new Space(
+            owner,
             votingDelay,
             maxVotingDuration + 1,
             maxVotingDuration,
@@ -63,6 +69,7 @@ contract SpaceTest is Test {
 
         vm.expectRevert("Voting Strategies array empty");
         new Space(
+            owner,
             votingDelay,
             minVotingDuration,
             maxVotingDuration,
@@ -80,6 +87,7 @@ contract SpaceTest is Test {
 
         vm.expectRevert("Authenticators array empty");
         new Space(
+            owner,
             votingDelay,
             minVotingDuration,
             maxVotingDuration,
@@ -97,6 +105,7 @@ contract SpaceTest is Test {
 
         vm.expectRevert("Execution Strategies array empty");
         new Space(
+            owner,
             votingDelay,
             minVotingDuration,
             maxVotingDuration,
@@ -107,19 +116,6 @@ contract SpaceTest is Test {
             authenticators,
             emptyExecutionStrategies
         );
-    }
-
-    function testValidProposal() public {
-        // TODO: check that even got emitted
-        space.propose(
-            address(this),
-            metadataUri,
-            executionStrategies[0],
-            votingStrategies,
-            userVotingStrategyParams,
-            executionParams
-        );
-        // TODO: get proposal Info
     }
 
     function testInvalidAuth() public {
@@ -133,7 +129,7 @@ contract SpaceTest is Test {
             address(this),
             metadataUri,
             executionStrategies[0],
-            votingStrategies,
+            usedVotingStrategiesIndices,
             userVotingStrategyParams,
             executionParams
         );
@@ -149,18 +145,18 @@ contract SpaceTest is Test {
             address(this),
             metadataUri,
             invalidExecutionStrategy,
-            votingStrategies,
+            usedVotingStrategiesIndices,
             userVotingStrategyParams,
             executionParams
         );
     }
 
     function testInvalidUsedVotingStrategy() public {
-        address[] memory invalidUsedStrategy = new address[](1);
-        invalidUsedStrategy[0] = address(42);
+        uint256[] memory invalidUsedStrategy = new uint256[](1);
+        invalidUsedStrategy[0] = 42;
 
-        // Expect revert
-        vm.expectRevert("Invalid used strategy");
+        // Expect revert (out of bounds).
+        vm.expectRevert();
 
         space.propose(
             address(this),
@@ -173,11 +169,11 @@ contract SpaceTest is Test {
     }
 
     function testDuplicateUsedVotingStrategy() public {
-        address[] memory invalidUsedStrategy = new address[](4);
-        invalidUsedStrategy[0] = address(0);
-        invalidUsedStrategy[0] = address(1);
-        invalidUsedStrategy[0] = address(2);
-        invalidUsedStrategy[0] = address(0); // Duplicate entry
+        uint256[] memory invalidUsedStrategy = new uint256[](4);
+        invalidUsedStrategy[0] = 0;
+        invalidUsedStrategy[0] = 1;
+        invalidUsedStrategy[0] = 2;
+        invalidUsedStrategy[0] = 0; // Duplicate entry
 
         bytes[] memory _userVotingStrategyParams = new bytes[](4);
         _userVotingStrategyParams[0] = new bytes(0);
@@ -196,5 +192,22 @@ contract SpaceTest is Test {
             _userVotingStrategyParams,
             executionParams
         );
+    }
+
+    function testValidProposal() public {
+        // ISpace spaceInterface = ISpace(address(space));
+        // TODO: Check that the correct event gets fired
+        // vm.expectEmit(true, true, true, true);
+        // emit spaceInterface.ProposalCreated(address(this), address(1), 10);
+
+        space.propose(
+            address(this),
+            metadataUri,
+            executionStrategies[0],
+            usedVotingStrategiesIndices,
+            userVotingStrategyParams,
+            executionParams
+        );
+        // TODO: get proposal Info
     }
 }
