@@ -42,8 +42,3 @@ jobs:
 
       - name: "Run the tests"
         run: "yarn test"
-
-      - name: "Build the contracts"
-        run: |
-          forge --version
-          forge build --sizes
