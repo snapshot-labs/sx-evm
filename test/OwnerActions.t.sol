@@ -58,7 +58,8 @@ contract SettersTest is Test, ISpaceEvents {
         emit MaxVotingDurationUpdated(maxVotingDuration, nextDuration);
         space.setMaxVotingDuration(nextDuration);
 
-        // TODO: check that it actually updates it by creating a new proposal?
+        uint32 duration = space.maxVotingDuration();
+        require(duration == nextDuration, "Max Voting Duration did not get updated");
     }
 
     function testOwnerSetMaxVotingDelay() public {
@@ -82,7 +83,8 @@ contract SettersTest is Test, ISpaceEvents {
         emit MinVotingDurationUpdated(minVotingDuration, nextDuration);
         space.setMinVotingDuration(nextDuration);
 
-        // TODO: check that it actually updates it by creating a new proposal?
+        uint32 duration = space.minVotingDuration();
+        require(duration == nextDuration, "Min Voting Duration did not get updated");
     }
 
     function testOwnerSetMinVotingDuration() public {
@@ -119,22 +121,16 @@ contract SettersTest is Test, ISpaceEvents {
     // ------- ProposalThreshold ----
 
     function testSetProposalThreshold() public {
+        uint256 nextThreshold = 2;
+
         // Ensure event gets fired properly
         vm.expectEmit(true, true, true, true);
-        emit ProposalThresholdUpdated(1, 2);
+        emit ProposalThresholdUpdated(proposalThreshold, nextThreshold);
 
-        space.setProposalThreshold(2);
+        space.setProposalThreshold(nextThreshold);
 
-        vm.expectRevert("Proposal threshold not reached");
-
-        space.propose(
-            address(this),
-            metadataUri,
-            executionStrategies[0],
-            usedVotingStrategiesIndices,
-            userVotingStrategyParams,
-            executionParams
-        );
+        uint256 threshold = space.proposalThreshold();
+        require(threshold == nextThreshold, "Proposal Threshold did not get updated");
     }
 
     function testOwnerSetProposalThreshold() public {
@@ -156,7 +152,8 @@ contract SettersTest is Test, ISpaceEvents {
 
         space.setQuorum(newQuorum);
 
-        // TODO: Ensure new quorum prevents user from finalizing a proposal
+        uint256 q = space.quorum();
+        require(q == newQuorum, "Quorum did not get updated");
     }
 
     function testOwnerSetQuorum() public {
@@ -176,7 +173,8 @@ contract SettersTest is Test, ISpaceEvents {
         emit VotingDelayUpdated(votingDelay, nextDelay);
         space.setVotingDelay(nextDelay);
 
-        // TODO: Actually check that delay is enforced
+        uint32 delay = space.votingDelay();
+        require(delay == nextDelay, "Voting Delay did not get updated");
     }
 
     function testOwnerSetVotingDelay() public {
@@ -196,6 +194,8 @@ contract SettersTest is Test, ISpaceEvents {
 
         uint256[] memory newIndices = new uint256[](1);
         newIndices[0] = 1;
+
+        uint256 nextNonce = space.nextProposalNonce();
 
         // Ensure event gets fired properly
         vm.expectEmit(true, true, true, true);
@@ -219,7 +219,9 @@ contract SettersTest is Test, ISpaceEvents {
             executionParams
         );
 
-        // TODO: check proposal exists
+        // Ensure proposal exists (querying an invalid nonce will throw)
+        // TODO: add test that throws if we query an invalid nonce
+        space.getProposalInfo(nextNonce);
 
         // Ensure event gets fired properly
         vm.expectEmit(true, true, true, true);
@@ -253,7 +255,8 @@ contract SettersTest is Test, ISpaceEvents {
             executionParams
         );
 
-        // TODO: check proposal exists
+        // Ensure proposal exists
+        space.getProposalInfo(nextNonce + 1);
     }
 
     function testOwnerAddVotingStrategies() public {

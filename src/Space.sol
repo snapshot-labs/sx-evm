@@ -9,18 +9,19 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 
 // TODO: Ownable? Eip712?
 contract Space is ISpaceEvents, Ownable {
-    uint32 private votingDelay;
-    uint32 private minVotingDuration;
-    uint32 private maxVotingDuration;
+    uint32 public maxVotingDuration;
+    uint32 public minVotingDuration;
+    uint256 public nextProposalNonce;
+    uint256 public proposalThreshold;
+    uint256 public quorum;
+    uint32 public votingDelay;
 
-    uint256 private proposalThreshold;
-    uint256 private quorum;
-    mapping(address => bool) private executionStrategies;
-    mapping(address => bool) private authenticators;
     // This needs to be an array because a mapping would limit a space to only one use per voting strategy contract.
     address[] private votingStrategies;
     bytes[] private votingStrategiesParams;
-    uint256 private nextProposalNonce;
+
+    mapping(address => bool) private executionStrategies;
+    mapping(address => bool) private authenticators;
     mapping(uint256 => Proposal) private proposalRegistry;
     mapping(uint256 => bool) private executedProposals;
 
@@ -202,6 +203,17 @@ contract Space is ISpaceEvents, Ownable {
         _removeVotingStrategies(indicesToRemove);
     }
 
+    function getProposalInfo(uint256 proposalId) public view returns (Proposal memory) {
+        Proposal memory proposal = proposalRegistry[proposalId];
+
+        // startTimestamp cannot be set to 0 when a proposal is created,
+        // so if proposal.startTimestamp is 0 it means this proposal does not exist
+        // and hence `proposalId` is invalid.
+        require(proposal.startTimestamp != 0, "Invalid proposalId");
+
+        return (proposal);
+    }
+
     function propose(
         address proposerAddress,
         string calldata metadataUri,
@@ -209,7 +221,7 @@ contract Space is ISpaceEvents, Ownable {
         uint256[] calldata usedVotingStrategiesIndices,
         bytes[] calldata userVotingStrategyParams,
         bytes calldata executionParams
-    ) external {
+    ) public {
         _assertValidAuthenticator();
         _assertValidExecutionStrategy(executionStrategy);
         require(
