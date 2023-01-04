@@ -3,15 +3,17 @@ pragma solidity ^0.8.13;
 
 import "forge-std/Test.sol";
 import "../src/Space.sol";
+import "../src/types.sol";
 import "forge-std/console2.sol";
 import "../src/voting-strategies/VanillaVotingStrategy.sol";
 import "../src/interfaces/ISpace.sol";
+import "../src/interfaces/space/ISpaceEvents.sol";
 
-contract SettersTest is Test {
+contract SettersTest is Test, ISpaceEvents {
     ISpace public space;
 
     uint32 private votingDelay = 0;
-    uint32 private minVotingDuration = 0;
+    uint32 private minVotingDuration = 1;
     uint32 private maxVotingDuration = 1000;
     uint32 private proposalThreshold = 1;
     uint32 private quorum = 1;
@@ -47,26 +49,81 @@ contract SettersTest is Test {
         space = ISpace(address(spaceContract));
     }
 
-    function testSetQuorum() public {
-        space.setQuorum(2);
-        // TODO: check event
+    // ------- MaxVotingDuration ----
 
-        // TODO: Ensure new quorum is prevents user from finalizing a proposal
+    function testSetMaxVotingDuration() public {
+        // Ensure event gets fired properly
+        vm.expectEmit(true, true, true, true);
+        uint32 nextDuration = maxVotingDuration + 1;
+        emit MaxVotingDurationUpdated(maxVotingDuration, nextDuration);
+        space.setMaxVotingDuration(nextDuration);
 
-        // Reset quorum to initial value
-        space.setQuorum(quorum);
+        // TODO: check that it actually updates it by creating a new proposal?
     }
 
-    function testOwnerSetQuorum() public {
+    function testOwnerSetMaxVotingDelay() public {
         vm.expectRevert("Ownable: caller is not the owner");
 
         vm.prank(address(1));
-        space.setQuorum(2);
+        space.setMaxVotingDuration(2000);
     }
 
+    function testSetInvalidMaxVotingDelay() public {
+        vm.expectRevert("Max Duration must be bigger than Min Duration");
+        space.setMaxVotingDuration(minVotingDuration - 1);
+    }
+
+    // ------- MinVotingDuration ----
+
+    function testSetMinVotingDelay() public {
+        // Ensure event gets fired properly
+        vm.expectEmit(true, true, true, true);
+        uint32 nextDuration = minVotingDuration + 1;
+        emit MinVotingDurationUpdated(minVotingDuration, nextDuration);
+        space.setMinVotingDuration(nextDuration);
+
+        // TODO: check that it actually updates it by creating a new proposal?
+    }
+
+    function testOwnerSetMinVotingDuration() public {
+        vm.expectRevert("Ownable: caller is not the owner");
+
+        vm.prank(address(1));
+        space.setMinVotingDuration(2000);
+    }
+
+    function testOwnerSetMinVotingDelay() public {
+        vm.expectRevert("Min Duration must be smaller than Max Duration");
+        space.setMinVotingDuration(maxVotingDuration + 1);
+    }
+
+    // ------- MetadataUri ----
+
+    function testSetMetadataUri() public {
+        // Ensure event gets fired properly
+        vm.expectEmit(true, true, true, true);
+        string memory newMetadataUri = "All your bases are belong to us";
+        emit MetadataUriUpdated(newMetadataUri);
+
+        space.setMetadataUri(newMetadataUri);
+    }
+
+    function testOwnerSetMetadataUri() public {
+        vm.expectRevert("Ownable: caller is not the owner");
+
+        vm.prank(address(1));
+
+        space.setMetadataUri("All your bases are belong to us");
+    }
+
+    // ------- ProposalThreshold ----
+
     function testSetProposalThreshold() public {
+        // Ensure event gets fired properly
+        vm.expectEmit(true, true, true, true);
+        emit ProposalThresholdUpdated(1, 2);
+
         space.setProposalThreshold(2);
-        // TODO: check event
 
         vm.expectRevert("Proposal threshold not reached");
 
@@ -78,8 +135,6 @@ contract SettersTest is Test {
             userVotingStrategyParams,
             executionParams
         );
-
-        space.setProposalThreshold(proposalThreshold);
     }
 
     function testOwnerSetProposalThreshold() public {
@@ -90,19 +145,48 @@ contract SettersTest is Test {
         space.setProposalThreshold(2);
     }
 
-    function testSetMetadataUri() public {
-        space.setMetadataUri("All your bases are belong to us");
+    // ------- Quorum ----
 
-        // TODO: check event
+    function testSetQuorum() public {
+        uint newQuorum = 2;
+
+        // Ensure event gets fired properly
+        vm.expectEmit(true, true, true, true);
+        emit QuorumUpdated(quorum, newQuorum);
+
+        space.setQuorum(newQuorum);
+
+        // TODO: Ensure new quorum prevents user from finalizing a proposal
     }
 
-    function testOwnerSetMetadataUri() public {
+    function testOwnerSetQuorum() public {
         vm.expectRevert("Ownable: caller is not the owner");
 
         vm.prank(address(1));
-
-        space.setMetadataUri("All your bases are belong to us");
+        space.setQuorum(2);
     }
+
+    // ------- VotingDelay ----
+
+    function testSetVotingDelay() public {
+        uint32 nextDelay = 10;
+
+        // Ensure event gets fired properly
+        vm.expectEmit(true, true, true, true);
+        emit VotingDelayUpdated(votingDelay, nextDelay);
+        space.setVotingDelay(nextDelay);
+
+        // TODO: Actually check that delay is enforced
+    }
+
+    function testOwnerSetVotingDelay() public {
+        vm.expectRevert("Ownable: caller is not the owner");
+
+        vm.prank(address(1));
+        space.setVotingDelay(2);
+    }
+
+    // ------- VotingStrategies ----
 
     function testAddAndRemoveVotingStrategies() public {
         address[] memory newVotingStrategies = new address[](1);
@@ -113,10 +197,18 @@ contract SettersTest is Test {
         uint256[] memory newIndices = new uint256[](1);
         newIndices[0] = 1;
 
+        // Ensure event gets fired properly
+        vm.expectEmit(true, true, true, true);
+        emit VotingStrategiesAdded(newVotingStrategies, newVotingStrategiesParams);
         // Add the new voting Strategies
         space.addVotingStrategies(newVotingStrategies, newVotingStrategiesParams);
-        // TODO: check event
 
+        // Ensure event gets fired properly.
+        vm.expectEmit(true, false, false, false);
+        // Empty proposal that won't actually get checked but just used to fire the event.
+        Proposal memory proposal;
+        // Note: Here we don't check the content but simply that the event got fired.
+        emit ProposalCreated(1, address(0), proposal, metadataUri, executionParams);
         // Try creating a proposal using these new strategies.
         space.propose(
             address(this),
@@ -127,16 +219,16 @@ contract SettersTest is Test {
             executionParams
         );
 
-        // TODO: check event propose
-        // tODO: check proposal exists
+        // TODO: check proposal exists
 
+        // Ensure event gets fired properly
+        vm.expectEmit(true, true, true, true);
+        emit VotingStrategiesRemoved(newIndices);
         // Remove the voting strategies
         space.removeVotingStrategies(newIndices);
-        // TODO: check event
-
-        vm.expectRevert("Invalid Voting Strategy Index");
 
         // Try creating a proposal using these new strategies (should revert)
+        vm.expectRevert("Invalid Voting Strategy Index");
         space.propose(
             address(this),
             metadataUri,
@@ -145,6 +237,11 @@ contract SettersTest is Test {
             userVotingStrategyParams,
             executionParams
         );
+
+        // Ensure event gets fired properly.
+        vm.expectEmit(true, false, false, false);
+        // Note: Here we don't check the content but simply that the event got fired.
+        emit ProposalCreated(1, address(0), proposal, metadataUri, executionParams);
 
         // Try creating a proposal with the previous voting strategy
         space.propose(
@@ -156,7 +253,6 @@ contract SettersTest is Test {
             executionParams
         );
 
-        // TODO: check event propose
         // TODO: check proposal exists
     }
 
@@ -175,4 +271,7 @@ contract SettersTest is Test {
 
         space.removeVotingStrategies(usedVotingStrategiesIndices);
     }
+
+    // ------- Authenticators ----
+    // ------- ExecutionStrategies ----
 }

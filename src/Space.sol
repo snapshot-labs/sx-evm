@@ -2,19 +2,13 @@
 pragma solidity ^0.8.13;
 import "forge-std/console2.sol";
 import "src/interfaces/IVotingStrategy.sol";
+// import "src/interfaces/ISpace.sol"; TODO: add this later when everything has been impl
+import "src/interfaces/space/ISpaceEvents.sol";
 import "src/types.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 // TODO: Ownable? Eip712?
-contract Space is Ownable {
-    event ProposalCreated(
-        uint256 proposalId,
-        address proposerAddress,
-        Proposal proposal,
-        string metadataUri,
-        bytes executionParams
-    );
-
+contract Space is ISpaceEvents, Ownable {
     uint32 private votingDelay;
     uint32 private minVotingDuration;
     uint32 private maxVotingDuration;
@@ -61,7 +55,7 @@ contract Space is Ownable {
         proposalThreshold = _proposalThreshold;
         quorum = _quorum;
 
-        // TODO: find a way to call [`_addVotingStrategies`]
+        // TODO: find a way to call [`_addVotingStrategies`] (problem because of `calldata` vs `memory`)
         for (uint i = 0; i < _votingStrategies.length; i++) {
             // See comment in `_addVotingStrategies`
             require(_votingStrategies[i] != address(0), "Invalid Voting Strategy address");
@@ -72,9 +66,14 @@ contract Space is Ownable {
         for (uint i = 0; i < _executionStrategies.length; i++) {
             executionStrategies[_executionStrategies[i]] = true;
         }
+
         for (uint i = 0; i < _authenticators.length; i++) {
             authenticators[_authenticators[i]] = true;
         }
+        // TODO: decide if we wish to emit the events or not
+        // emit VotingStrategiesAdded(_votingStrategies, _votingStrategiesParams);
+        // emit ExecutionStrategiesAdded(_executionStrategies);
+        // emit AuthenticatorsAdded(_authenticators);
 
         nextProposalNonce = 1;
     }
@@ -97,7 +96,7 @@ contract Space is Ownable {
             votingStrategiesParams.push(_votingStrategiesParams[i]);
         }
 
-        // TODO: emit an event
+        emit VotingStrategiesAdded(_votingStrategies, _votingStrategiesParams);
     }
 
     function _removeVotingStrategies(uint256[] calldata indicesToRemove) private {
@@ -105,7 +104,8 @@ contract Space is Ownable {
             votingStrategies[indicesToRemove[i]] = address(0);
             votingStrategiesParams[indicesToRemove[i]] = new bytes(0);
         }
-        // TODO: emit an event
+
+        emit VotingStrategiesRemoved(indicesToRemove);
     }
 
     function _assertValidAuthenticator() private view {
@@ -154,23 +154,40 @@ contract Space is Ownable {
         return totalVotingPower;
     }
 
-    function setQuorum(uint256 _quorum) external onlyOwner {
-        quorum = _quorum;
-        // TODO emit event
+    function setMaxVotingDuration(uint32 _maxVotingDuration) external onlyOwner {
+        require(_maxVotingDuration >= minVotingDuration, "Max Duration must be bigger than Min Duration");
+        emit MaxVotingDurationUpdated(maxVotingDuration, _maxVotingDuration);
+
+        maxVotingDuration = _maxVotingDuration;
     }
 
-    function setProposalThreshold(uint256 _threshold) external onlyOwner {
-        proposalThreshold = _threshold;
-        // TODO emit event
+    function setMinVotingDuration(uint32 _minVotingDuration) external onlyOwner {
+        require(_minVotingDuration <= maxVotingDuration, "Min Duration must be smaller than Max Duration");
+
+        emit MinVotingDurationUpdated(minVotingDuration, _minVotingDuration);
+
+        minVotingDuration = _minVotingDuration;
     }
 
     function setMetadataUri(string calldata _metadataUri) external onlyOwner {
-        // TODO emit event
+        emit MetadataUriUpdated(_metadataUri);
+    }
+
+    function setProposalThreshold(uint256 _threshold) external onlyOwner {
+        emit ProposalThresholdUpdated(proposalThreshold, _threshold);
+
+        proposalThreshold = _threshold;
+    }
+
+    function setQuorum(uint256 _quorum) external onlyOwner {
+        emit QuorumUpdated(quorum, _quorum);
+        quorum = _quorum;
     }
 
     function setVotingDelay(uint32 _votingDelay) external onlyOwner {
+        emit VotingDelayUpdated(votingDelay, _votingDelay);
+
         votingDelay = _votingDelay;
-        // TODO: emit event
         // TODO: check it's not too big?
     }
 
