@@ -16,8 +16,7 @@ contract SpaceTest is Test, ISpaceEvents {
     uint32 private maxVotingDuration = 1000;
     uint32 private proposalThreshold = 1;
     uint32 private quorum = 1;
-    address[] private votingStrategies;
-    bytes[] private votingStrategiesParams;
+    VotingStrategy[] private votingStrategies;
     address[] private authenticators = [address(this)];
     address[] private executionStrategies = [address(0)];
     bytes[] private userVotingStrategyParams = [new bytes(0)];
@@ -32,8 +31,8 @@ contract SpaceTest is Test, ISpaceEvents {
 
     function setUp() public {
         VanillaVotingStrategy vanillaVotingStrategy = new VanillaVotingStrategy();
-        votingStrategies.push(address(vanillaVotingStrategy));
-        votingStrategiesParams.push(new bytes(0));
+        VotingStrategy memory vanillaStrategy = VotingStrategy(address(vanillaVotingStrategy), new bytes(0));
+        votingStrategies.push(vanillaStrategy);
 
         space = new Space(
             owner,
@@ -43,7 +42,6 @@ contract SpaceTest is Test, ISpaceEvents {
             proposalThreshold,
             quorum,
             votingStrategies,
-            votingStrategiesParams,
             authenticators,
             executionStrategies
         );
@@ -59,14 +57,13 @@ contract SpaceTest is Test, ISpaceEvents {
             proposalThreshold,
             quorum,
             votingStrategies,
-            votingStrategiesParams,
             authenticators,
             executionStrategies
         );
     }
 
     function testEmptyVotingStrategiesSetUp() public {
-        address[] memory emptyVotingStrategies = new address[](0);
+        VotingStrategy[] memory emptyVotingStrategies = new VotingStrategy[](0);
 
         vm.expectRevert("Voting Strategies array empty");
         new Space(
@@ -77,7 +74,6 @@ contract SpaceTest is Test, ISpaceEvents {
             proposalThreshold,
             quorum,
             emptyVotingStrategies,
-            votingStrategiesParams,
             authenticators,
             executionStrategies
         );
@@ -95,7 +91,6 @@ contract SpaceTest is Test, ISpaceEvents {
             proposalThreshold,
             quorum,
             votingStrategies,
-            votingStrategiesParams,
             emptyAuthenticators,
             executionStrategies
         );
@@ -113,7 +108,6 @@ contract SpaceTest is Test, ISpaceEvents {
             proposalThreshold,
             quorum,
             votingStrategies,
-            votingStrategiesParams,
             authenticators,
             emptyExecutionStrategies
         );

@@ -17,8 +17,7 @@ contract SettersTest is Test, ISpaceEvents {
     uint32 private maxVotingDuration = 1000;
     uint32 private proposalThreshold = 1;
     uint32 private quorum = 1;
-    address[] private votingStrategies;
-    bytes[] private votingStrategiesParams;
+    VotingStrategy[] private votingStrategies;
     address[] private authenticators = [address(this)];
     address[] private executionStrategies = [address(0)];
     bytes[] private userVotingStrategyParams = [new bytes(0)];
@@ -31,8 +30,8 @@ contract SettersTest is Test, ISpaceEvents {
     // TODO: add setters and test them (maybe in another test file)
     function setUp() public {
         VanillaVotingStrategy vanillaVotingStrategy = new VanillaVotingStrategy();
-        votingStrategies.push(address(vanillaVotingStrategy));
-        votingStrategiesParams.push(new bytes(0));
+        VotingStrategy memory votingStrategy = VotingStrategy(address(vanillaVotingStrategy), new bytes(0));
+        votingStrategies.push(votingStrategy);
 
         Space spaceContract = new Space(
             owner,
@@ -42,7 +41,6 @@ contract SettersTest is Test, ISpaceEvents {
             proposalThreshold,
             quorum,
             votingStrategies,
-            votingStrategiesParams,
             authenticators,
             executionStrategies
         );
@@ -187,11 +185,13 @@ contract SettersTest is Test, ISpaceEvents {
     // ------- VotingStrategies ----
 
     function testAddAndRemoveVotingStrategies() public {
-        address[] memory newVotingStrategies = new address[](1);
-        newVotingStrategies[0] = votingStrategies[0];
-        bytes[] memory newVotingStrategiesParams = new bytes[](1);
-        newVotingStrategiesParams[0] = votingStrategiesParams[0];
+        // Create a new array of voting strategy
+        VotingStrategy[] memory newVotingStrategies = new VotingStrategy[](1);
+        // This array contains the same voting strategy as the initial one but
+        // should be accessed with a new strategy index.
+        newVotingStrategies[0] = VotingStrategy(votingStrategies[0].addy, votingStrategies[0].params);
 
+        // New strategy index should be `1` (`0` is used for the first one!).
         uint256[] memory newIndices = new uint256[](1);
         newIndices[0] = 1;
 
@@ -199,9 +199,9 @@ contract SettersTest is Test, ISpaceEvents {
 
         // Ensure event gets fired properly
         vm.expectEmit(true, true, true, true);
-        emit VotingStrategiesAdded(newVotingStrategies, newVotingStrategiesParams);
+        emit VotingStrategiesAdded(newVotingStrategies);
         // Add the new voting Strategies
-        space.addVotingStrategies(newVotingStrategies, newVotingStrategiesParams);
+        space.addVotingStrategies(newVotingStrategies);
 
         // Ensure event gets fired properly.
         vm.expectEmit(true, false, false, false);
@@ -264,7 +264,7 @@ contract SettersTest is Test, ISpaceEvents {
 
         vm.prank(address(1));
 
-        space.addVotingStrategies(votingStrategies, votingStrategiesParams);
+        space.addVotingStrategies(votingStrategies);
     }
 
     function testOwnerRemoveVotingStrategies() public {

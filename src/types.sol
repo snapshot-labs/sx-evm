@@ -12,3 +12,8 @@ struct Proposal {
     address executionStrategy;
     bytes32 executionHash;
 }
+
+struct VotingStrategy {
+    address addy;
+    bytes params;
+}

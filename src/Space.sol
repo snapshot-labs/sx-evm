@@ -26,13 +26,10 @@ contract Space is ISpaceEvents, Ownable {
     // Delay between when the proposal is created and when the voting period starts for this proposal.
     uint32 public votingDelay;
 
-    // TODO: Use a struct and create array of struct
     // Array of available voting strategies that users can use to determine their voting power.
     /// @dev This needs to be an array because a mapping would limit a space to only one use per
     ///      voting strategy contract.
-    address[] private votingStrategies;
-    // Associated parameteres to use with a voting strategy (e.g. address of an erc20 contract).
-    bytes[] private votingStrategiesParams;
+    VotingStrategy[] private votingStrategies;
 
     // Mapping of allowed execution strategies.
     mapping(address => bool) private executionStrategies;
@@ -42,7 +39,6 @@ contract Space is ISpaceEvents, Ownable {
     mapping(uint256 => Proposal) private proposalRegistry;
     // Mapping to keep track of whether a proposal has been executed or not.
     mapping(uint256 => bool) private executedProposals;
-
 
     // ------------------------------------
     // |                                  |
@@ -57,8 +53,7 @@ contract Space is ISpaceEvents, Ownable {
         uint32 _maxVotingDuration,
         uint256 _proposalThreshold,
         uint256 _quorum,
-        address[] memory _votingStrategies,
-        bytes[] memory _votingStrategiesParams,
+        VotingStrategy[] memory _votingStrategies,
         address[] memory _authenticators,
         address[] memory _executionStrategies
     ) {
@@ -68,10 +63,6 @@ contract Space is ISpaceEvents, Ownable {
 
         // TODO: call _addVotingStrategies and remove
         require(_votingStrategies.length > 0, "Voting Strategies array empty");
-        require(
-            _votingStrategies.length == _votingStrategiesParams.length,
-            "Strategies and Strategies Parameters length mismatch"
-        );
 
         transferOwnership(owner);
 
@@ -84,9 +75,8 @@ contract Space is ISpaceEvents, Ownable {
         // TODO: find a way to call [`_addVotingStrategies`] (problem because of `calldata` vs `memory`)
         for (uint i = 0; i < _votingStrategies.length; i++) {
             // See comment in `_addVotingStrategies`
-            require(_votingStrategies[i] != address(0), "Invalid Voting Strategy address");
+            require(_votingStrategies[i].addy != address(0), "Invalid Voting Strategy address");
             votingStrategies.push(_votingStrategies[i]);
-            votingStrategiesParams.push(_votingStrategiesParams[i]);
         }
 
         for (uint i = 0; i < _executionStrategies.length; i++) {
@@ -114,27 +104,18 @@ contract Space is ISpaceEvents, Ownable {
      * @notice  Internal function to add voting strategies.
      * @dev     `_votingStrategies` should not be set to `0`.
      * @param   _votingStrategies  Array of voting strategies to add.
-     * @param   _votingStrategiesParams  Corresponding array of parameters to add.
      */
-    function _addVotingStrategies(
-        address[] calldata _votingStrategies,
-        bytes[] calldata _votingStrategiesParams
-    ) private {
+    function _addVotingStrategies(VotingStrategy[] calldata _votingStrategies) private {
         require(_votingStrategies.length > 0, "Voting Strategies array empty");
-        require(
-            _votingStrategies.length == _votingStrategiesParams.length,
-            "Strategies and Strategies Parameters length mismatch"
-        );
 
         for (uint i = 0; i < _votingStrategies.length; i++) {
             // A voting strategy set to 0 is used to indicate that the voting strategy is no longer active,
             // so we need to prevent the user from adding a null invalid strategy address.
-            require(_votingStrategies[i] != address(0), "Invalid Voting Strategy address");
+            require(_votingStrategies[i].addy != address(0), "Invalid Voting Strategy address");
             votingStrategies.push(_votingStrategies[i]);
-            votingStrategiesParams.push(_votingStrategiesParams[i]);
         }
 
-        emit VotingStrategiesAdded(_votingStrategies, _votingStrategiesParams);
+        emit VotingStrategiesAdded(_votingStrategies);
     }
 
     /**
@@ -144,8 +125,8 @@ contract Space is ISpaceEvents, Ownable {
      */
     function _removeVotingStrategies(uint256[] calldata indicesToRemove) private {
         for (uint i = 0; i < indicesToRemove.length; i++) {
-            votingStrategies[indicesToRemove[i]] = address(0);
-            votingStrategiesParams[indicesToRemove[i]] = new bytes(0);
+            votingStrategies[indicesToRemove[i]].addy = address(0);
+            votingStrategies[indicesToRemove[i]].params = new bytes(0);
         }
 
         emit VotingStrategiesRemoved(indicesToRemove);
@@ -203,15 +184,15 @@ contract Space is ISpaceEvents, Ownable {
         uint256 totalVotingPower = 0;
         for (uint i = 0; i < usedVotingStrategiesIndices.length; i++) {
             uint index = usedVotingStrategiesIndices[i];
-            address strategyAddress = votingStrategies[index];
+            VotingStrategy memory votingStrategy = votingStrategies[index];
             // A strategyAddress set to 0 indicates that this address has already been removed and is
             // no longer a valid voting strategy. See `_removeVotingStrategies`.
-            require(strategyAddress != address(0), "Invalid Voting Strategy Index");
-            IVotingStrategy strategy = IVotingStrategy(strategyAddress);
+            require(votingStrategy.addy != address(0), "Invalid Voting Strategy Index");
+            IVotingStrategy strategy = IVotingStrategy(votingStrategy.addy);
             totalVotingPower += strategy.getVotingPower(
                 timestamp,
                 userAddress,
-                votingStrategiesParams[index],
+                votingStrategy.params,
                 userVotingStrategyParams[i]
             );
             // TODO: use SafeMath, check overflow
@@ -263,11 +244,8 @@ contract Space is ISpaceEvents, Ownable {
         // TODO: check it's not too big?
     }
 
-    function addVotingStrategies(
-        address[] calldata _votingStrategies,
-        bytes[] calldata _votingStrategiesParams
-    ) external onlyOwner {
-        _addVotingStrategies(_votingStrategies, _votingStrategiesParams);
+    function addVotingStrategies(VotingStrategy[] calldata _votingStrategies) external onlyOwner {
+        _addVotingStrategies(_votingStrategies);
     }
 
     function removeVotingStrategies(uint256[] calldata indicesToRemove) external onlyOwner {
