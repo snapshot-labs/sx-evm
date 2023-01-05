@@ -378,7 +378,6 @@ contract Space is ISpaceEvents, Ownable {
         // TODO: should we use encode or encodePacked?
         bytes32 executionHash = keccak256(abi.encodePacked(executionParams));
 
-        // TODO: Is `memory` correct here?
         Proposal memory proposal = Proposal(
             quorum,
             snapshotTimestamp,

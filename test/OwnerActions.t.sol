@@ -27,7 +27,6 @@ contract SettersTest is Test, ISpaceEvents {
 
     string private metadataUri = "Snapshot On-Chain";
 
-    // TODO: add setters and test them (maybe in another test file)
     function setUp() public {
         VanillaVotingStrategy vanillaVotingStrategy = new VanillaVotingStrategy();
         VotingStrategy memory votingStrategy = VotingStrategy(address(vanillaVotingStrategy), new bytes(0));
