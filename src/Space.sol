@@ -7,23 +7,48 @@ import "src/interfaces/space/ISpaceEvents.sol";
 import "src/types.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
-// TODO: Ownable? Eip712?
+/**
+ * @author  SnapshotLabs
+ * @title   Space Contract.
+ * @notice  Logic and bookkeeping contract.
+ */
 contract Space is ISpaceEvents, Ownable {
+    // Maximum duration a proposal can last.
     uint32 public maxVotingDuration;
+    // Minimum duration a proposal can last.
     uint32 public minVotingDuration;
+    // Next proposal nonce, increased by one everytime a new proposal is created.
     uint256 public nextProposalNonce;
+    // Minimum voting power required by a user to create a new proposal (used to prevent proposal spamming).
     uint256 public proposalThreshold;
+    // Total voting power that needs to participate to a vote for a vote to be considered valid.
     uint256 public quorum;
+    // Delay between when the proposal is created and when the voting period starts for this proposal.
     uint32 public votingDelay;
 
-    // This needs to be an array because a mapping would limit a space to only one use per voting strategy contract.
+    // TODO: Use a struct and create array of struct
+    // Array of available voting strategies that users can use to determine their voting power.
+    /// @dev This needs to be an array because a mapping would limit a space to only one use per
+    ///      voting strategy contract.
     address[] private votingStrategies;
+    // Associated parameteres to use with a voting strategy (e.g. address of an erc20 contract).
     bytes[] private votingStrategiesParams;
 
+    // Mapping of allowed execution strategies.
     mapping(address => bool) private executionStrategies;
+    // Mapping of allowed authenticators.
     mapping(address => bool) private authenticators;
+    // Mapping of all `Proposal`s of this space (past and present).
     mapping(uint256 => Proposal) private proposalRegistry;
+    // Mapping to keep track of whether a proposal has been executed or not.
     mapping(uint256 => bool) private executedProposals;
+
+
+    // ------------------------------------
+    // |                                  |
+    // |          CONSTRUCTOR             |
+    // |                                  |
+    // ------------------------------------
 
     constructor(
         address owner,
@@ -79,6 +104,18 @@ contract Space is ISpaceEvents, Ownable {
         nextProposalNonce = 1;
     }
 
+    // ------------------------------------
+    // |                                  |
+    // |            INTERNAL              |
+    // |                                  |
+    // ------------------------------------
+
+    /**
+     * @notice  Internal function to add voting strategies.
+     * @dev     `_votingStrategies` should not be set to `0`.
+     * @param   _votingStrategies  Array of voting strategies to add.
+     * @param   _votingStrategiesParams  Corresponding array of parameters to add.
+     */
     function _addVotingStrategies(
         address[] calldata _votingStrategies,
         bytes[] calldata _votingStrategiesParams
@@ -100,6 +137,11 @@ contract Space is ISpaceEvents, Ownable {
         emit VotingStrategiesAdded(_votingStrategies, _votingStrategiesParams);
     }
 
+    /**
+     * @notice  Internal function to remove voting strategies.
+     * @dev     Does not shrink the array but simply sets the values to 0.
+     * @param   indicesToRemove  Indices of the strategies to remove.
+     */
     function _removeVotingStrategies(uint256[] calldata indicesToRemove) private {
         for (uint i = 0; i < indicesToRemove.length; i++) {
             votingStrategies[indicesToRemove[i]] = address(0);
@@ -109,15 +151,26 @@ contract Space is ISpaceEvents, Ownable {
         emit VotingStrategiesRemoved(indicesToRemove);
     }
 
+    /**
+     * @notice  Internal function to ensure `msg.sender` is in the list of allowed authenticators.
+     */
     function _assertValidAuthenticator() private view {
         require(authenticators[msg.sender], "Invalid Authenticator");
     }
 
+    /**
+     * @notice  Internal function to ensure `executionStrategy` is in the list of allowed execution strategies.
+     * @param   executionStrategy  The execution strategy to check.
+     */
     function _assertValidExecutionStrategy(address executionStrategy) private view {
         require(executionStrategies[executionStrategy], "Invalid Execution Strategy");
     }
 
-    // No way to declare a mapping in memory so we need to use an array and go for O(n^2)...
+    /**
+     * @notice  Internal function to ensure there are no duplicates in an array of uints.
+     * @dev     No way to declare a mapping in memory so we need to use an array and go for O(n^2)...
+     * @param   arr  Array to check for duplicates.
+     */
     function _assertNoDuplicates(uint[] memory arr) private pure {
         if (arr.length > 0) {
             for (uint i = 0; i < arr.length - 1; i++) {
@@ -128,19 +181,31 @@ contract Space is ISpaceEvents, Ownable {
         }
     }
 
+    /**
+     * @notice  Internal function that will loop over the used voting strategies and
+                return the cumulative voting power of a user.
+     * @dev     
+     * @param   timestamp  Timestamp of the snapshot.
+     * @param   userAddress  Address for which to compute the voting power.
+     * @param   usedVotingStrategiesIndices  Indices of the desired voting strategies to check.
+     * @param   userVotingStrategyParams  Associated user parameters.
+     * @return  uint256  The total voting power of a user (over those specified voting strategies).
+     */
     function _getCumulativeVotingPower(
         uint32 timestamp,
         address userAddress,
         uint[] calldata usedVotingStrategiesIndices,
         bytes[] calldata userVotingStrategyParams
     ) private view returns (uint256) {
-        // Make sure there are no duplicates to avoid an attack where people double count a voting strategy
+        // Ensure there are no duplicates to avoid an attack where people double count a voting strategy
         _assertNoDuplicates(usedVotingStrategiesIndices);
 
         uint256 totalVotingPower = 0;
         for (uint i = 0; i < usedVotingStrategiesIndices.length; i++) {
             uint index = usedVotingStrategiesIndices[i];
             address strategyAddress = votingStrategies[index];
+            // A strategyAddress set to 0 indicates that this address has already been removed and is
+            // no longer a valid voting strategy. See `_removeVotingStrategies`.
             require(strategyAddress != address(0), "Invalid Voting Strategy Index");
             IVotingStrategy strategy = IVotingStrategy(strategyAddress);
             totalVotingPower += strategy.getVotingPower(
@@ -154,6 +219,12 @@ contract Space is ISpaceEvents, Ownable {
 
         return totalVotingPower;
     }
+
+    // ------------------------------------
+    // |                                  |
+    // |             SETTERS              |
+    // |                                  |
+    // ------------------------------------
 
     function setMaxVotingDuration(uint32 _maxVotingDuration) external onlyOwner {
         require(_maxVotingDuration >= minVotingDuration, "Max Duration must be bigger than Min Duration");
@@ -203,7 +274,13 @@ contract Space is ISpaceEvents, Ownable {
         _removeVotingStrategies(indicesToRemove);
     }
 
-    function getProposalInfo(uint256 proposalId) public view returns (Proposal memory) {
+    // ------------------------------------
+    // |                                  |
+    // |             GETTERS              |
+    // |                                  |
+    // ------------------------------------
+
+    function getProposalInfo(uint256 proposalId) external view returns (Proposal memory) {
         Proposal memory proposal = proposalRegistry[proposalId];
 
         // startTimestamp cannot be set to 0 when a proposal is created,
@@ -211,9 +288,25 @@ contract Space is ISpaceEvents, Ownable {
         // and hence `proposalId` is invalid.
         require(proposal.startTimestamp != 0, "Invalid proposalId");
 
+        // TODO: maybe get proposal status (executed or not?)
         return (proposal);
     }
 
+    // ------------------------------------
+    // |                                  |
+    // |             CORE                 |
+    // |                                  |
+    // ------------------------------------
+
+    /**
+     * @notice  Creates a proposal.
+     * @param   proposerAddress  The address of the proposal creator.
+     * @param   metadataUri  The metadata URI for the proposal.
+     * @param   executionStrategy  The execution contract to use for this proposal.
+     * @param   usedVotingStrategiesIndices  Indices to use to compute the proposer voting power.
+     * @param   userVotingStrategyParams  Associated parameters to use for computing the proposer voting power.
+     * @param   executionParams  The execution parameters (used if a proposal gets accepted).
+     */
     function propose(
         address proposerAddress,
         string calldata metadataUri,
@@ -221,7 +314,7 @@ contract Space is ISpaceEvents, Ownable {
         uint256[] calldata usedVotingStrategiesIndices,
         bytes[] calldata userVotingStrategyParams,
         bytes calldata executionParams
-    ) public {
+    ) external {
         _assertValidAuthenticator();
         _assertValidExecutionStrategy(executionStrategy);
         require(
@@ -247,7 +340,7 @@ contract Space is ISpaceEvents, Ownable {
         // TODO: should we use encode or encodePacked?
         bytes32 executionHash = keccak256(abi.encodePacked(executionParams));
 
-        // TODO: Is memory correct here?
+        // TODO: Is `memory` correct here?
         Proposal memory proposal = Proposal(
             quorum,
             snapshotTimestamp,
