@@ -206,9 +206,9 @@ contract SettersTest is Test, ISpaceEvents {
         // Ensure event gets fired properly.
         vm.expectEmit(true, false, false, false);
         // Empty proposal that won't actually get checked but just used to fire the event.
-        Proposal memory proposal;
+        Proposal memory tmpProposal;
         // Note: Here we don't check the content but simply that the event got fired.
-        emit ProposalCreated(1, address(0), proposal, metadataUri, executionParams);
+        emit ProposalCreated(1, address(0), tmpProposal, metadataUri, executionParams);
         // Try creating a proposal using these new strategies.
         space.propose(
             address(this),
@@ -243,7 +243,7 @@ contract SettersTest is Test, ISpaceEvents {
         // Ensure event gets fired properly.
         vm.expectEmit(true, false, false, false);
         // Note: Here we don't check the content but simply that the event got fired.
-        emit ProposalCreated(1, address(0), proposal, metadataUri, executionParams);
+        emit ProposalCreated(1, address(0), tmpProposal, metadataUri, executionParams);
 
         // Try creating a proposal with the previous voting strategy
         space.propose(
@@ -276,5 +276,129 @@ contract SettersTest is Test, ISpaceEvents {
     }
 
     // ------- Authenticators ----
+    function testAddAndRemoveAuthenticator() public {
+        address[] memory newAuths = new address[](1);
+        newAuths[0] = address(42);
+
+        // Ensure the event gets fired properly.
+        vm.expectEmit(true, true, true, true);
+        emit AuthenticatorsAdded(newAuths);
+
+        // Add auths
+        space.addAuthenticators(newAuths);
+
+        // Ensure event gets fired properly.
+        vm.expectEmit(true, false, false, false);
+        Proposal memory tmpProposal;
+        // Note: Here we don't check the content but simply that the event got fired.
+        emit ProposalCreated(1, address(0), tmpProposal, metadataUri, executionParams);
+
+        // Create a new proposal by using the new authenticator
+        vm.prank(newAuths[0]);
+        space.propose(
+            address(1337),
+            metadataUri,
+            executionStrategies[0],
+            usedVotingStrategiesIndices,
+            userVotingStrategyParams,
+            executionParams
+        );
+
+        // Ensure the event gets fired properly.
+        vm.expectEmit(true, true, true, true);
+        emit AuthenticatorsRemoved(newAuths);
+
+        // Remove the authenticator
+        space.removeAuthenticators(newAuths);
+
+        // Ensure we can't propose with this authenticator anymore
+        vm.expectRevert("Invalid Authenticator");
+        vm.prank(newAuths[0]);
+        space.propose(
+            address(1337),
+            metadataUri,
+            executionStrategies[0],
+            usedVotingStrategiesIndices,
+            userVotingStrategyParams,
+            executionParams
+        );
+    }
+
+    function testOwnerAddAuthenticators() public {
+        vm.expectRevert("Ownable: caller is not the owner");
+
+        vm.prank(address(1));
+
+        space.removeAuthenticators(authenticators);
+    }
+
+    function testOwnerRemoveAuthenticators() public {
+        vm.expectRevert("Ownable: caller is not the owner");
+
+        vm.prank(address(1));
+
+        space.removeAuthenticators(authenticators);
+    }
+
     // ------- ExecutionStrategies ----
+    function testAddAndRemoveExecutionStrategies() public {
+        address[] memory newStrats = new address[](1);
+        newStrats[0] = address(42);
+        Proposal memory tmpProposal;
+
+        // Ensure event gets fired properly.
+        vm.expectEmit(true, true, true, true);
+        emit ExecutionStrategiesAdded(newStrats);
+
+        // Add execution strategies
+        space.addExecutionStrategies(newStrats);
+
+        // Ensure event gets fired properly.
+        vm.expectEmit(true, false, false, false);
+        // Note: Here we don't check the content but simply that the event got fired.
+        emit ProposalCreated(1, address(0), tmpProposal, metadataUri, executionParams);
+
+        space.propose(
+            address(1337),
+            metadataUri,
+            newStrats[0],
+            usedVotingStrategiesIndices,
+            userVotingStrategyParams,
+            executionParams
+        );
+
+        // Ensure event gets fired properly.
+        vm.expectEmit(true, true, true, true);
+        emit ExecutionStrategiesRemoved(newStrats);
+
+        // Add execution strategies
+        space.removeExecutionStrategies(newStrats);
+
+        // Try proposing with the removed execution Strategy. Should fail.
+        vm.expectRevert("Invalid Execution Strategy");
+        space.propose(
+            address(1337),
+            metadataUri,
+            newStrats[0],
+            usedVotingStrategiesIndices,
+            userVotingStrategyParams,
+            executionParams
+        );
+    }
+
+    function testOwnerAddExecutionStrategy() public {
+        vm.expectRevert("Ownable: caller is not the owner");
+
+        vm.prank(address(1));
+
+        space.removeExecutionStrategies(executionStrategies);
+    }
+
+    function testOwnerRemoveExecutionStrategy() public {
+        vm.expectRevert("Ownable: caller is not the owner");
+
+        vm.prank(address(1));
+
+        space.removeExecutionStrategies(executionStrategies);
+    }
 }

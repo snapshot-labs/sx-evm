@@ -133,6 +133,50 @@ contract Space is ISpaceEvents, Ownable {
     }
 
     /**
+     * @notice  Internal function to add authenticators.
+     * @param   _authenticators  Array of authenticators to add.
+     */
+    function _addAuthenticators(address[] calldata _authenticators) private {
+        for (uint i = 0; i < _authenticators.length; i++) {
+            authenticators[_authenticators[i]] = true;
+        }
+        emit AuthenticatorsAdded(_authenticators);
+    }
+
+    /**
+     * @notice  Internal function to remove authenticators.
+     * @param   _authenticators  Array of authenticators to remove.
+     */
+    function _removeAuthenticators(address[] calldata _authenticators) private {
+        for (uint i = 0; i < _authenticators.length; i++) {
+            authenticators[_authenticators[i]] = false;
+        }
+        emit AuthenticatorsRemoved(_authenticators);
+    }
+
+    /**
+     * @notice  Internal function to add exection strategies.
+     * @param   _executionStrategies  Array of exectuion strategies to add.
+     */
+    function _addExecutionStrategies(address[] calldata _executionStrategies) private {
+        for (uint i = 0; i < _executionStrategies.length; i++) {
+            executionStrategies[_executionStrategies[i]] = true;
+        }
+        emit ExecutionStrategiesAdded(_executionStrategies);
+    }
+
+    /**
+     * @notice  Internal function to remove execution strategies.
+     * @param   _executionStrategies  Array of execution strategies to remove.
+     */
+    function _removeExecutionStrategies(address[] calldata _executionStrategies) private {
+        for (uint i = 0; i < _executionStrategies.length; i++) {
+            executionStrategies[_executionStrategies[i]] = false;
+        }
+        emit ExecutionStrategiesRemoved(_executionStrategies);
+    }
+
+    /**
      * @notice  Internal function to ensure `msg.sender` is in the list of allowed authenticators.
      */
     function _assertValidAuthenticator() private view {
@@ -250,6 +294,22 @@ contract Space is ISpaceEvents, Ownable {
 
     function removeVotingStrategies(uint256[] calldata indicesToRemove) external onlyOwner {
         _removeVotingStrategies(indicesToRemove);
+    }
+
+    function addAuthenticators(address[] calldata _authenticators) external onlyOwner {
+        _addAuthenticators(_authenticators);
+    }
+
+    function removeAuthenticators(address[] calldata _authenticators) external onlyOwner {
+        _removeAuthenticators(_authenticators);
+    }
+
+    function addExecutionStrategies(address[] calldata _executionStrategies) external onlyOwner {
+        _addExecutionStrategies(_executionStrategies);
+    }
+
+    function removeExecutionStrategies(address[] calldata _executionStrategies) external onlyOwner {
+        _removeExecutionStrategies(_executionStrategies);
     }
 
     // ------------------------------------

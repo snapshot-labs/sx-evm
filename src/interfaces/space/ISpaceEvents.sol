@@ -15,7 +15,9 @@ interface ISpaceEvents {
     event VotingStrategiesAdded(VotingStrategy[] votingStrategies);
     event VotingStrategiesRemoved(uint256[] indices);
     event ExecutionStrategiesAdded(address[] executionStrategies);
+    event ExecutionStrategiesRemoved(address[] executionStrategies);
     event AuthenticatorsAdded(address[] authenticators);
+    event AuthenticatorsRemoved(address[] authenticators);
 
     event MaxVotingDurationUpdated(uint32 previous, uint32 newMaxVotingDuration);
     event MinVotingDurationUpdated(uint32 previous, uint32 newMinVotingDuration);
