@@ -2,12 +2,13 @@
 pragma solidity ^0.8.13;
 
 import "forge-std/Test.sol";
-import "../src/Space.sol";
-// import "../src/interfaces/ISpace.sol";
 import "forge-std/console2.sol";
+import "../src/Space.sol";
+import "../src/types.sol";
 import "../src/voting-strategies/VanillaVotingStrategy.sol";
+import "../src/interfaces/space/ISpaceEvents.sol";
 
-contract SpaceTest is Test {
+contract SpaceTest is Test, ISpaceEvents {
     Space public space;
 
     uint32 private votingDelay = 0;
@@ -195,10 +196,13 @@ contract SpaceTest is Test {
     }
 
     function testValidProposal() public {
-        // ISpace spaceInterface = ISpace(address(space));
-        // TODO: Check that the correct event gets fired
-        // vm.expectEmit(true, true, true, true);
-        // emit spaceInterface.ProposalCreated(address(this), address(1), 10);
+        vm.expectEmit(true, false, false, false);
+        // Placeholder variable just to check that the event got fired
+        Proposal memory tmp;
+        // We will only check that the event is fired, not the actual content.
+        // The reason for that is that we can't know the exact timestamp so the `proposal` struct
+        // will probably be incorrect. We check fields individually after anyway so it shouldn't matter.
+        emit ProposalCreated(1, address(this), tmp, metadataUri, executionParams);
 
         space.propose(
             address(this),
@@ -208,6 +212,21 @@ contract SpaceTest is Test {
             userVotingStrategyParams,
             executionParams
         );
-        // TODO: get proposal Info
+
+        Proposal memory proposal = space.getProposalInfo(1);
+        require(proposal.quorum == quorum, "Quorum not set properly");
+        require(proposal.snapshotTimestamp + votingDelay == proposal.startTimestamp, "StartTimestamp not set properly");
+        require(
+            proposal.startTimestamp + minVotingDuration == proposal.minEndTimestamp,
+            "MinEndTimestamp not set properly"
+        );
+        require(
+            proposal.startTimestamp + maxVotingDuration == proposal.maxEndTimestamp,
+            "MaxEndTimestamp not set properly"
+        );
+        require(proposal.executionStrategy == executionStrategies[0], "ExecutionStrategy not set properly");
+
+        bytes32 executionHash = keccak256(abi.encodePacked(executionParams));
+        require(proposal.executionHash == executionHash, "Execution Hash not computed properly");
     }
 }
