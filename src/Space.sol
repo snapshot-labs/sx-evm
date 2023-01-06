@@ -47,7 +47,7 @@ contract Space is ISpaceEvents, Ownable {
     // ------------------------------------
 
     constructor(
-        address owner,
+        address _owner,
         uint32 _votingDelay,
         uint32 _minVotingDuration,
         uint32 _maxVotingDuration,
@@ -67,7 +67,7 @@ contract Space is ISpaceEvents, Ownable {
         // TODO: call _addVotingStrategies and remove
         require(_votingStrategies.length > 0, "Voting Strategies array empty");
 
-        transferOwnership(owner);
+        transferOwnership(_owner);
 
         votingDelay = _votingDelay;
         minVotingDuration = _minVotingDuration;
