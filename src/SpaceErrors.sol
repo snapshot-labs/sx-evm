@@ -18,4 +18,12 @@ contract SpaceErrors {
     error ProposalThresholdNotReached(uint256 votingPower);
 
     error DuplicateFound(uint a, uint b);
+
+    error ProposalNotExecutedYet();
+
+    error VotingPeriodHasEnded();
+    error VotingPeriodHasNotStarted();
+    error UserHasAlreadyVoted();
+
+    error UserHasNoVotingPower();
 }

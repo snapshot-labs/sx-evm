@@ -8,6 +8,7 @@ import "src/SpaceErrors.sol";
 import "src/types.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@zodiac/core/Module.sol";
+import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
 /**
  * @author  SnapshotLabs
@@ -39,6 +40,10 @@ contract Space is ISpaceEvents, Module, SpaceErrors {
     mapping(address => bool) private authenticators;
     // Mapping of all `Proposal`s of this space (past and present).
     mapping(uint256 => Proposal) private proposalRegistry;
+    // TODO: comment
+    mapping(uint256 => mapping(address => bool)) private voteRegistry;
+    // TODO: comment
+    mapping(uint256 => mapping(Choice => uint256)) private votePower; // TODO: chance this name cuz it sucks
 
     // ------------------------------------
     // |                                  |
@@ -409,7 +414,7 @@ contract Space is ISpaceEvents, Module, SpaceErrors {
     // ------------------------------------
 
     /**
-     * @notice  Creates a proposal.
+     * @notice  Create a proposal.
      * @param   proposerAddress  The address of the proposal creator.
      * @param   metadataUri  The metadata URI for the proposal.
      * @param   executionStrategy  The execution contract and associated execution parameters to use for this proposal.
@@ -454,5 +459,47 @@ contract Space is ISpaceEvents, Module, SpaceErrors {
         emit ProposalCreated(nextProposalId, proposerAddress, proposal, metadataUri, executionStrategy.params);
 
         nextProposalId++;
+    }
+
+    /**
+     * @notice  Cast a vote
+     * @param   voterAddress  Voter's address.
+     * @param   proposalId  Proposal id.
+     * @param   choice  Choice can be `For`, `Against` or `Abstain`.
+     * @param   usedVotingStrategies  Strategies to use to compute the voter's voting power.
+     */
+    function vote(
+        address voterAddress,
+        uint256 proposalId,
+        Choice choice,
+        IndexedStrategy[] calldata usedVotingStrategies
+    ) external {
+        _assertValidAuthenticator();
+        _assertProposalExists(proposalId);
+
+        Proposal memory proposal = proposalRegistry[proposalId];
+
+        if (proposal.finalizationStatus != FinalizationStatus.NotExecuted) revert ProposalNotExecutedYet();
+
+        uint256 currentTimestamp = block.timestamp;
+
+        if (currentTimestamp >= proposal.maxEndTimestamp) revert VotingPeriodHasEnded();
+        if (currentTimestamp < proposal.startTimestamp) revert VotingPeriodHasNotStarted();
+
+        // Ensure voter has not already voted.
+        if (voteRegistry[proposalId][voterAddress] == true) revert UserHasAlreadyVoted();
+
+        uint256 votingPower = _getCumulativeVotingPower(proposal.snapshotTimestamp, voterAddress, usedVotingStrategies);
+
+        if (votingPower == 0) revert UserHasNoVotingPower();
+
+        uint256 previousVotingPower = votePower[proposalId][choice];
+        uint256 newVotingPower = SafeMath.add(previousVotingPower, votingPower);
+
+        votePower[proposalId][choice] = newVotingPower;
+        voteRegistry[proposalId][voterAddress] = true;
+
+        Vote memory userVote = Vote(choice, votingPower);
+        emit VoteCreated(proposalId, voterAddress, userVote);
     }
 }
