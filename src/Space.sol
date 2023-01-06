@@ -57,7 +57,10 @@ contract Space is ISpaceEvents, Ownable {
         address[] memory _authenticators,
         address[] memory _executionStrategies
     ) {
-        require(_minVotingDuration <= _maxVotingDuration, "Min duration should be smaller than or equal max duration");
+        require(
+            _minVotingDuration <= _maxVotingDuration,
+            "Min duration should be smaller than or equal to max duration"
+        );
         require(_authenticators.length > 0, "Authenticators array empty");
         require(_executionStrategies.length > 0, "Execution Strategies array empty");
 

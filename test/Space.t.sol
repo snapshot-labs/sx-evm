@@ -46,7 +46,7 @@ contract SpaceTest is Test, ISpaceEvents {
     }
 
     function testMinDurationSetUp() public {
-        vm.expectRevert("Min duration should be smaller than max duration");
+        vm.expectRevert("Min duration should be smaller than or equal to max duration");
         new Space(
             owner,
             votingDelay,
