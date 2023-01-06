@@ -372,8 +372,8 @@ contract Space is ISpaceEvents, Ownable {
 
         // TODO: use SafeMath
         uint32 startTimestamp = snapshotTimestamp + votingDelay;
-        uint32 minEndtimestamp = startTimestamp + minVotingDuration;
-        uint32 maxEndtimestamp = startTimestamp + maxVotingDuration;
+        uint32 minEndTimestamp = startTimestamp + minVotingDuration;
+        uint32 maxEndTimestamp = startTimestamp + maxVotingDuration;
 
         // TODO: should we use encode or encodePacked?
         bytes32 executionHash = keccak256(abi.encodePacked(executionParams));
@@ -382,8 +382,8 @@ contract Space is ISpaceEvents, Ownable {
             quorum,
             snapshotTimestamp,
             startTimestamp,
-            minEndtimestamp,
-            maxEndtimestamp,
+            minEndTimestamp,
+            maxEndTimestamp,
             executionStrategy,
             executionHash
         );
