@@ -219,7 +219,6 @@ contract SettersTest is Test, ISpaceEvents {
         );
 
         // Ensure proposal exists (querying an invalid nonce will throw)
-        // TODO: add test that throws if we query an invalid nonce
         space.getProposalInfo(nextNonce);
 
         // Ensure event gets fired properly
@@ -254,7 +253,7 @@ contract SettersTest is Test, ISpaceEvents {
             executionParams
         );
 
-        // Ensure proposal exists
+        // Ensure proposal exists (querying an invalid nonce will throw)
         space.getProposalInfo(nextNonce + 1);
     }
 

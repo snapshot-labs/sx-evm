@@ -221,4 +221,9 @@ contract SpaceTest is Test, ISpaceEvents {
         bytes32 executionHash = keccak256(abi.encodePacked(executionParams));
         require(proposal.executionHash == executionHash, "Execution Hash not computed properly");
     }
+
+    function testGetInvalidProposalInfo() public {
+        vm.expectRevert("Invalid proposalId");
+        space.getProposalInfo(1337);
+    }
 }
