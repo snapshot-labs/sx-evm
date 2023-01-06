@@ -73,17 +73,17 @@ contract Space is ISpaceEvents, Ownable {
         quorum = _quorum;
 
         // TODO: find a way to call [`_addVotingStrategies`] (problem because of `calldata` vs `memory`)
-        for (uint i = 0; i < _votingStrategies.length; i++) {
+        for (uint256 i = 0; i < _votingStrategies.length; i++) {
             // See comment in `_addVotingStrategies`
             require(_votingStrategies[i].addy != address(0), "Invalid Voting Strategy address");
             votingStrategies.push(_votingStrategies[i]);
         }
 
-        for (uint i = 0; i < _executionStrategies.length; i++) {
+        for (uint256 i = 0; i < _executionStrategies.length; i++) {
             executionStrategies[_executionStrategies[i]] = true;
         }
 
-        for (uint i = 0; i < _authenticators.length; i++) {
+        for (uint256 i = 0; i < _authenticators.length; i++) {
             authenticators[_authenticators[i]] = true;
         }
         // TODO: decide if we wish to emit the events or not
@@ -108,7 +108,7 @@ contract Space is ISpaceEvents, Ownable {
     function _addVotingStrategies(VotingStrategy[] calldata _votingStrategies) private {
         require(_votingStrategies.length > 0, "Voting Strategies array empty");
 
-        for (uint i = 0; i < _votingStrategies.length; i++) {
+        for (uint256 i = 0; i < _votingStrategies.length; i++) {
             // A voting strategy set to 0 is used to indicate that the voting strategy is no longer active,
             // so we need to prevent the user from adding a null invalid strategy address.
             require(_votingStrategies[i].addy != address(0), "Invalid Voting Strategy address");
@@ -124,7 +124,7 @@ contract Space is ISpaceEvents, Ownable {
      * @param   indicesToRemove  Indices of the strategies to remove.
      */
     function _removeVotingStrategies(uint256[] calldata indicesToRemove) private {
-        for (uint i = 0; i < indicesToRemove.length; i++) {
+        for (uint256 i = 0; i < indicesToRemove.length; i++) {
             votingStrategies[indicesToRemove[i]].addy = address(0);
             votingStrategies[indicesToRemove[i]].params = new bytes(0);
         }
@@ -137,7 +137,7 @@ contract Space is ISpaceEvents, Ownable {
      * @param   _authenticators  Array of authenticators to add.
      */
     function _addAuthenticators(address[] calldata _authenticators) private {
-        for (uint i = 0; i < _authenticators.length; i++) {
+        for (uint256 i = 0; i < _authenticators.length; i++) {
             authenticators[_authenticators[i]] = true;
         }
         emit AuthenticatorsAdded(_authenticators);
@@ -148,7 +148,7 @@ contract Space is ISpaceEvents, Ownable {
      * @param   _authenticators  Array of authenticators to remove.
      */
     function _removeAuthenticators(address[] calldata _authenticators) private {
-        for (uint i = 0; i < _authenticators.length; i++) {
+        for (uint256 i = 0; i < _authenticators.length; i++) {
             authenticators[_authenticators[i]] = false;
         }
         emit AuthenticatorsRemoved(_authenticators);
@@ -159,7 +159,7 @@ contract Space is ISpaceEvents, Ownable {
      * @param   _executionStrategies  Array of exectuion strategies to add.
      */
     function _addExecutionStrategies(address[] calldata _executionStrategies) private {
-        for (uint i = 0; i < _executionStrategies.length; i++) {
+        for (uint256 i = 0; i < _executionStrategies.length; i++) {
             executionStrategies[_executionStrategies[i]] = true;
         }
         emit ExecutionStrategiesAdded(_executionStrategies);
@@ -170,7 +170,7 @@ contract Space is ISpaceEvents, Ownable {
      * @param   _executionStrategies  Array of execution strategies to remove.
      */
     function _removeExecutionStrategies(address[] calldata _executionStrategies) private {
-        for (uint i = 0; i < _executionStrategies.length; i++) {
+        for (uint256 i = 0; i < _executionStrategies.length; i++) {
             executionStrategies[_executionStrategies[i]] = false;
         }
         emit ExecutionStrategiesRemoved(_executionStrategies);
@@ -198,8 +198,8 @@ contract Space is ISpaceEvents, Ownable {
      */
     function _assertNoDuplicates(uint[] memory arr) private pure {
         if (arr.length > 0) {
-            for (uint i = 0; i < arr.length - 1; i++) {
-                for (uint j = i + 1; j < arr.length; j++) {
+            for (uint256 i = 0; i < arr.length - 1; i++) {
+                for (uint256 j = i + 1; j < arr.length; j++) {
                     require(arr[i] != arr[j], "Duplicates found"); // TODO: should we use a `if` to reduce gas cost?
                 }
             }
@@ -226,8 +226,8 @@ contract Space is ISpaceEvents, Ownable {
         _assertNoDuplicates(usedVotingStrategiesIndices);
 
         uint256 totalVotingPower = 0;
-        for (uint i = 0; i < usedVotingStrategiesIndices.length; i++) {
-            uint index = usedVotingStrategiesIndices[i];
+        for (uint256 i = 0; i < usedVotingStrategiesIndices.length; i++) {
+            uint256 index = usedVotingStrategiesIndices[i];
             VotingStrategy memory votingStrategy = votingStrategies[index];
             // A strategyAddress set to 0 indicates that this address has already been removed and is
             // no longer a valid voting strategy. See `_removeVotingStrategies`.
