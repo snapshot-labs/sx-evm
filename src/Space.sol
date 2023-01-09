@@ -108,7 +108,7 @@ contract Space is ISpaceEvents, Ownable {
      * @dev     `_votingStrategies` should not be set to `0`.
      * @param   _votingStrategies  Array of voting strategies to add.
      */
-    function _addVotingStrategies(VotingStrategy[] calldata _votingStrategies) private {
+    function _addVotingStrategies(VotingStrategy[] calldata _votingStrategies) internal {
         require(_votingStrategies.length > 0, "Voting Strategies array empty");
 
         for (uint256 i = 0; i < _votingStrategies.length; i++) {
@@ -126,7 +126,7 @@ contract Space is ISpaceEvents, Ownable {
      * @dev     Does not shrink the array but simply sets the values to 0.
      * @param   indicesToRemove  Indices of the strategies to remove.
      */
-    function _removeVotingStrategies(uint256[] calldata indicesToRemove) private {
+    function _removeVotingStrategies(uint256[] calldata indicesToRemove) internal {
         for (uint256 i = 0; i < indicesToRemove.length; i++) {
             votingStrategies[indicesToRemove[i]].addy = address(0);
             votingStrategies[indicesToRemove[i]].params = new bytes(0);
@@ -139,7 +139,7 @@ contract Space is ISpaceEvents, Ownable {
      * @notice  Internal function to add authenticators.
      * @param   _authenticators  Array of authenticators to add.
      */
-    function _addAuthenticators(address[] calldata _authenticators) private {
+    function _addAuthenticators(address[] calldata _authenticators) internal {
         for (uint256 i = 0; i < _authenticators.length; i++) {
             authenticators[_authenticators[i]] = true;
         }
@@ -150,7 +150,7 @@ contract Space is ISpaceEvents, Ownable {
      * @notice  Internal function to remove authenticators.
      * @param   _authenticators  Array of authenticators to remove.
      */
-    function _removeAuthenticators(address[] calldata _authenticators) private {
+    function _removeAuthenticators(address[] calldata _authenticators) internal {
         for (uint256 i = 0; i < _authenticators.length; i++) {
             authenticators[_authenticators[i]] = false;
         }
@@ -161,7 +161,7 @@ contract Space is ISpaceEvents, Ownable {
      * @notice  Internal function to add exection strategies.
      * @param   _executionStrategies  Array of exectuion strategies to add.
      */
-    function _addExecutionStrategies(address[] calldata _executionStrategies) private {
+    function _addExecutionStrategies(address[] calldata _executionStrategies) internal {
         for (uint256 i = 0; i < _executionStrategies.length; i++) {
             executionStrategies[_executionStrategies[i]] = true;
         }
@@ -172,7 +172,7 @@ contract Space is ISpaceEvents, Ownable {
      * @notice  Internal function to remove execution strategies.
      * @param   _executionStrategies  Array of execution strategies to remove.
      */
-    function _removeExecutionStrategies(address[] calldata _executionStrategies) private {
+    function _removeExecutionStrategies(address[] calldata _executionStrategies) internal {
         for (uint256 i = 0; i < _executionStrategies.length; i++) {
             executionStrategies[_executionStrategies[i]] = false;
         }
@@ -182,7 +182,7 @@ contract Space is ISpaceEvents, Ownable {
     /**
      * @notice  Internal function to ensure `msg.sender` is in the list of allowed authenticators.
      */
-    function _assertValidAuthenticator() private view {
+    function _assertValidAuthenticator() internal view {
         require(authenticators[msg.sender], "Invalid Authenticator");
     }
 
@@ -190,7 +190,7 @@ contract Space is ISpaceEvents, Ownable {
      * @notice  Internal function to ensure `executionStrategy` is in the list of allowed execution strategies.
      * @param   executionStrategy  The execution strategy to check.
      */
-    function _assertValidExecutionStrategy(address executionStrategy) private view {
+    function _assertValidExecutionStrategy(address executionStrategy) internal view {
         require(executionStrategies[executionStrategy], "Invalid Execution Strategy");
     }
 
@@ -199,7 +199,7 @@ contract Space is ISpaceEvents, Ownable {
      * @dev     No way to declare a mapping in memory so we need to use an array and go for O(n^2)...
      * @param   arr  Array to check for duplicates.
      */
-    function _assertNoDuplicates(uint[] memory arr) private pure {
+    function _assertNoDuplicates(uint[] memory arr) internal pure {
         if (arr.length > 0) {
             for (uint256 i = 0; i < arr.length - 1; i++) {
                 for (uint256 j = i + 1; j < arr.length; j++) {
@@ -224,7 +224,7 @@ contract Space is ISpaceEvents, Ownable {
         address userAddress,
         uint[] calldata usedVotingStrategiesIndices,
         bytes[] calldata userVotingStrategyParams
-    ) private view returns (uint256) {
+    ) internal view returns (uint256) {
         // Ensure there are no duplicates to avoid an attack where people double count a voting strategy
         _assertNoDuplicates(usedVotingStrategiesIndices);
 
