@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.13;
+pragma solidity ^0.8.15;
 import "forge-std/console2.sol";
 import "src/interfaces/IVotingStrategy.sol";
 // import "src/interfaces/ISpace.sol"; TODO: add this later when everything has been impl
