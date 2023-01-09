@@ -206,20 +206,22 @@ contract SpaceTest is Test, ISpaceEvents {
         );
 
         Proposal memory proposal = space.getProposalInfo(1);
-        require(proposal.quorum == quorum, "Quorum not set properly");
-        require(proposal.snapshotTimestamp + votingDelay == proposal.startTimestamp, "StartTimestamp not set properly");
-        require(
-            proposal.startTimestamp + minVotingDuration == proposal.minEndTimestamp,
+        assertEq(proposal.quorum, quorum, "Quorum not set properly");
+        assertEq(proposal.snapshotTimestamp + votingDelay, proposal.startTimestamp, "StartTimestamp not set properly");
+        assertEq(
+            proposal.startTimestamp + minVotingDuration,
+            proposal.minEndTimestamp,
             "MinEndTimestamp not set properly"
         );
-        require(
-            proposal.startTimestamp + maxVotingDuration == proposal.maxEndTimestamp,
+        assertEq(
+            proposal.startTimestamp + maxVotingDuration,
+            proposal.maxEndTimestamp,
             "MaxEndTimestamp not set properly"
         );
-        require(proposal.executionStrategy == executionStrategies[0], "ExecutionStrategy not set properly");
+        assertEq(proposal.executionStrategy, executionStrategies[0], "ExecutionStrategy not set properly");
 
         bytes32 executionHash = keccak256(abi.encodePacked(executionParams));
-        require(proposal.executionHash == executionHash, "Execution Hash not computed properly");
+        assertEq(proposal.executionHash, executionHash, "Execution Hash not computed properly");
     }
 
     function testGetInvalidProposalInfo() public {

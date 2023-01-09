@@ -56,7 +56,7 @@ contract SettersTest is Test, ISpaceEvents {
         space.setMaxVotingDuration(nextDuration);
 
         uint32 duration = space.maxVotingDuration();
-        require(duration == nextDuration, "Max Voting Duration did not get updated");
+        assertEq(duration, nextDuration, "Max Voting Duration did not get updated");
     }
 
     function testOwnerSetMaxVotingDelay() public {
@@ -81,7 +81,7 @@ contract SettersTest is Test, ISpaceEvents {
         space.setMinVotingDuration(nextDuration);
 
         uint32 duration = space.minVotingDuration();
-        require(duration == nextDuration, "Min Voting Duration did not get updated");
+        assertEq(duration, nextDuration, "Min Voting Duration did not get updated");
     }
 
     function testOwnerSetMinVotingDuration() public {
@@ -127,7 +127,7 @@ contract SettersTest is Test, ISpaceEvents {
         space.setProposalThreshold(nextThreshold);
 
         uint256 threshold = space.proposalThreshold();
-        require(threshold == nextThreshold, "Proposal Threshold did not get updated");
+        assertEq(threshold, nextThreshold, "Proposal Threshold did not get updated");
     }
 
     function testOwnerSetProposalThreshold() public {
@@ -150,7 +150,7 @@ contract SettersTest is Test, ISpaceEvents {
         space.setQuorum(newQuorum);
 
         uint256 q = space.quorum();
-        require(q == newQuorum, "Quorum did not get updated");
+        assertEq(q, newQuorum, "Quorum did not get updated");
     }
 
     function testOwnerSetQuorum() public {
@@ -171,7 +171,7 @@ contract SettersTest is Test, ISpaceEvents {
         space.setVotingDelay(nextDelay);
 
         uint32 delay = space.votingDelay();
-        require(delay == nextDelay, "Voting Delay did not get updated");
+        assertEq(delay, nextDelay, "Voting Delay did not get updated");
     }
 
     function testOwnerSetVotingDelay() public {
