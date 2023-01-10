@@ -378,7 +378,6 @@ contract Space is ISpaceEvents, Ownable {
         uint32 minEndTimestamp = startTimestamp + minVotingDuration;
         uint32 maxEndTimestamp = startTimestamp + maxVotingDuration;
 
-        // TODO: should we use encode or encodePacked?
         bytes32 executionHash = keccak256(executionParams);
 
         Proposal memory proposal = Proposal(
