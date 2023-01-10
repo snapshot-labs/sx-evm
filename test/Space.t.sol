@@ -7,8 +7,9 @@ import "../src/Space.sol";
 import "../src/types.sol";
 import "../src/voting-strategies/VanillaVotingStrategy.sol";
 import "../src/interfaces/space/ISpaceEvents.sol";
+import { GasSnapshot } from "forge-gas-snapshot/GasSnapshot.sol";
 
-contract SpaceTest is Test, ISpaceEvents {
+contract SpaceTest is Test, ISpaceEvents, GasSnapshot {
     Space public space;
 
     uint32 private votingDelay = 0;
@@ -31,7 +32,7 @@ contract SpaceTest is Test, ISpaceEvents {
         VanillaVotingStrategy vanillaVotingStrategy = new VanillaVotingStrategy();
         VotingStrategy memory vanillaStrategy = VotingStrategy(address(vanillaVotingStrategy), new bytes(0));
         votingStrategies.push(vanillaStrategy);
-
+        snapStart("CreateSpace");
         space = new Space(
             owner,
             votingDelay,
@@ -43,6 +44,7 @@ contract SpaceTest is Test, ISpaceEvents {
             authenticators,
             executionStrategies
         );
+        snapEnd();
     }
 
     function testMinDurationSetUp() public {
