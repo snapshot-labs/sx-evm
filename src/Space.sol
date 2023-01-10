@@ -6,13 +6,14 @@ import "src/interfaces/IVotingStrategy.sol";
 import "src/interfaces/space/ISpaceEvents.sol";
 import "src/types.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "@zodiac/core/Module.sol";
 
 /**
  * @author  SnapshotLabs
  * @title   Space Contract.
  * @notice  Logic and bookkeeping contract.
  */
-contract Space is ISpaceEvents, Ownable {
+contract Space is ISpaceEvents, Module {
     // Maximum duration a proposal can last.
     uint32 public maxVotingDuration;
     // Minimum duration a proposal can last.
@@ -57,6 +58,37 @@ contract Space is ISpaceEvents, Ownable {
         address[] memory _authenticators,
         address[] memory _executionStrategies
     ) {
+        bytes memory initParams = abi.encode(
+            _owner,
+            _votingDelay,
+            _minVotingDuration,
+            _maxVotingDuration,
+            _proposalThreshold,
+            _quorum,
+            _votingStrategies,
+            _authenticators,
+            _executionStrategies
+        );
+        setUp(initParams);
+    }
+
+    function setUp(bytes memory initializeParams) public override initializer {
+        __Ownable_init();
+        (
+            address _owner,
+            uint32 _votingDelay,
+            uint32 _minVotingDuration,
+            uint32 _maxVotingDuration,
+            uint256 _proposalThreshold,
+            uint256 _quorum,
+            VotingStrategy[] memory _votingStrategies,
+            address[] memory _authenticators,
+            address[] memory _executionStrategies
+        ) = abi.decode(
+                initializeParams,
+                (address, uint32, uint32, uint32, uint256, uint256, VotingStrategy[], address[], address[])
+            );
+
         require(
             _minVotingDuration <= _maxVotingDuration,
             "Min duration should be smaller than or equal to max duration"
