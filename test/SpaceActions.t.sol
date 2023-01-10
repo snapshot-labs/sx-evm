@@ -9,7 +9,7 @@ import "../src/voting-strategies/VanillaVotingStrategy.sol";
 import "../src/interfaces/space/ISpaceEvents.sol";
 import { GasSnapshot } from "forge-gas-snapshot/GasSnapshot.sol";
 
-contract SpaceTest is Test, ISpaceEvents, GasSnapshot {
+contract SpaceActionsTest is Test, ISpaceEvents, GasSnapshot {
     Space public space;
 
     uint32 private votingDelay = 0;
@@ -45,72 +45,6 @@ contract SpaceTest is Test, ISpaceEvents, GasSnapshot {
             executionStrategies
         );
         snapEnd();
-    }
-
-    function testMinDurationSetUp() public {
-        vm.expectRevert("Min duration should be smaller than or equal to max duration");
-        new Space(
-            owner,
-            votingDelay,
-            maxVotingDuration + 1,
-            maxVotingDuration,
-            proposalThreshold,
-            quorum,
-            votingStrategies,
-            authenticators,
-            executionStrategies
-        );
-    }
-
-    function testEmptyVotingStrategiesSetUp() public {
-        VotingStrategy[] memory emptyVotingStrategies = new VotingStrategy[](0);
-
-        vm.expectRevert("Voting Strategies array empty");
-        new Space(
-            owner,
-            votingDelay,
-            minVotingDuration,
-            maxVotingDuration,
-            proposalThreshold,
-            quorum,
-            emptyVotingStrategies,
-            authenticators,
-            executionStrategies
-        );
-    }
-
-    function testEmptyAuthenticatorsSetUp() public {
-        address[] memory emptyAuthenticators = new address[](0);
-
-        vm.expectRevert("Authenticators array empty");
-        new Space(
-            owner,
-            votingDelay,
-            minVotingDuration,
-            maxVotingDuration,
-            proposalThreshold,
-            quorum,
-            votingStrategies,
-            emptyAuthenticators,
-            executionStrategies
-        );
-    }
-
-    function testEmptyExecutionStrategiesSetUp() public {
-        address[] memory emptyExecutionStrategies = new address[](0);
-
-        vm.expectRevert("Execution Strategies array empty");
-        new Space(
-            owner,
-            votingDelay,
-            minVotingDuration,
-            maxVotingDuration,
-            proposalThreshold,
-            quorum,
-            votingStrategies,
-            authenticators,
-            emptyExecutionStrategies
-        );
     }
 
     function testInvalidAuth() public {
