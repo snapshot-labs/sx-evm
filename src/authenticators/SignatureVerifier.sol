@@ -5,7 +5,7 @@ pragma solidity ^0.8.15;
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import "@openzeppelin/contracts/utils/cryptography/EIP712.sol";
 
-abstract contract SignatureVerifier is EIP712("boost", "1") {
+abstract contract SignatureVerifier is EIP712("SOC", "1") {
     error InvalidSignature();
     bytes32 private constant PROPOSE_TYPE_HASH =
         keccak256(
@@ -21,6 +21,8 @@ abstract contract SignatureVerifier is EIP712("boost", "1") {
         address space,
         bytes memory data
     ) internal view {
+        // The user voting params are not included in the signature,
+        // hence they are ignored during the decoding.
         (
             address author,
             string memory metadataUri,
