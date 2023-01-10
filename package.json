@@ -18,6 +18,6 @@
     "prettier:check": "prettier --check \"**/*.{json,md,sol,yml}\"",
     "prettier": "prettier --write \"**/*.{json,md,sol,yml}\"",
     "format": "yarn prettier",
-    "test": "forge test --via-ir --optimize -vv"
+    "test": "forge test --optimize -vv"
   }
 }

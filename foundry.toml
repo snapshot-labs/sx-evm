@@ -12,6 +12,7 @@ out = "out"
 solc = "0.8.15"
 src = "src"
 test = "test"
+via_ir = true
 
 
 [profile.ci]
