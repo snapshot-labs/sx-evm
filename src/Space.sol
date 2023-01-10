@@ -75,20 +75,10 @@ contract Space is ISpaceEvents, Ownable {
         proposalThreshold = _proposalThreshold;
         quorum = _quorum;
 
-        // TODO: find a way to call [`_addVotingStrategies`] (problem because of `calldata` vs `memory`)
-        for (uint256 i = 0; i < _votingStrategies.length; i++) {
-            // See comment in `_addVotingStrategies`
-            require(_votingStrategies[i].addy != address(0), "Invalid Voting Strategy address");
-            votingStrategies.push(_votingStrategies[i]);
-        }
+        _addVotingStrategies(_votingStrategies);
+        _addAuthenticators(_authenticators);
+        _addExecutionStrategies(_executionStrategies);
 
-        for (uint256 i = 0; i < _executionStrategies.length; i++) {
-            executionStrategies[_executionStrategies[i]] = true;
-        }
-
-        for (uint256 i = 0; i < _authenticators.length; i++) {
-            authenticators[_authenticators[i]] = true;
-        }
         // TODO: decide if we wish to emit the events or not
         // emit VotingStrategiesAdded(_votingStrategies, _votingStrategiesParams);
         // emit ExecutionStrategiesAdded(_executionStrategies);
@@ -108,7 +98,7 @@ contract Space is ISpaceEvents, Ownable {
      * @dev     `_votingStrategies` should not be set to `0`.
      * @param   _votingStrategies  Array of voting strategies to add.
      */
-    function _addVotingStrategies(VotingStrategy[] calldata _votingStrategies) internal {
+    function _addVotingStrategies(VotingStrategy[] memory _votingStrategies) internal {
         require(_votingStrategies.length > 0, "Voting Strategies array empty");
 
         for (uint256 i = 0; i < _votingStrategies.length; i++) {
@@ -126,7 +116,7 @@ contract Space is ISpaceEvents, Ownable {
      * @dev     Does not shrink the array but simply sets the values to 0.
      * @param   indicesToRemove  Indices of the strategies to remove.
      */
-    function _removeVotingStrategies(uint256[] calldata indicesToRemove) internal {
+    function _removeVotingStrategies(uint256[] memory indicesToRemove) internal {
         for (uint256 i = 0; i < indicesToRemove.length; i++) {
             votingStrategies[indicesToRemove[i]].addy = address(0);
             votingStrategies[indicesToRemove[i]].params = new bytes(0);
@@ -139,7 +129,7 @@ contract Space is ISpaceEvents, Ownable {
      * @notice  Internal function to add authenticators.
      * @param   _authenticators  Array of authenticators to add.
      */
-    function _addAuthenticators(address[] calldata _authenticators) internal {
+    function _addAuthenticators(address[] memory _authenticators) internal {
         for (uint256 i = 0; i < _authenticators.length; i++) {
             authenticators[_authenticators[i]] = true;
         }
@@ -150,7 +140,7 @@ contract Space is ISpaceEvents, Ownable {
      * @notice  Internal function to remove authenticators.
      * @param   _authenticators  Array of authenticators to remove.
      */
-    function _removeAuthenticators(address[] calldata _authenticators) internal {
+    function _removeAuthenticators(address[] memory _authenticators) internal {
         for (uint256 i = 0; i < _authenticators.length; i++) {
             authenticators[_authenticators[i]] = false;
         }
@@ -161,7 +151,7 @@ contract Space is ISpaceEvents, Ownable {
      * @notice  Internal function to add exection strategies.
      * @param   _executionStrategies  Array of exectuion strategies to add.
      */
-    function _addExecutionStrategies(address[] calldata _executionStrategies) internal {
+    function _addExecutionStrategies(address[] memory _executionStrategies) internal {
         for (uint256 i = 0; i < _executionStrategies.length; i++) {
             executionStrategies[_executionStrategies[i]] = true;
         }
@@ -172,7 +162,7 @@ contract Space is ISpaceEvents, Ownable {
      * @notice  Internal function to remove execution strategies.
      * @param   _executionStrategies  Array of execution strategies to remove.
      */
-    function _removeExecutionStrategies(address[] calldata _executionStrategies) internal {
+    function _removeExecutionStrategies(address[] memory _executionStrategies) internal {
         for (uint256 i = 0; i < _executionStrategies.length; i++) {
             executionStrategies[_executionStrategies[i]] = false;
         }
