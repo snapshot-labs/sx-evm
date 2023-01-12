@@ -2,6 +2,7 @@
 pragma solidity ^0.8.15;
 
 import "forge-std/Test.sol";
+import "./Space.t.sol";
 import "../src/Space.sol";
 import "../src/types.sol";
 import "forge-std/console2.sol";
@@ -9,43 +10,7 @@ import "../src/voting-strategies/VanillaVotingStrategy.sol";
 import "../src/interfaces/ISpace.sol";
 import "../src/interfaces/space/ISpaceEvents.sol";
 
-contract SettersTest is Test, ISpaceEvents {
-    ISpace public space;
-
-    uint32 private votingDelay = 0;
-    uint32 private minVotingDuration = 1;
-    uint32 private maxVotingDuration = 1000;
-    uint32 private proposalThreshold = 1;
-    uint32 private quorum = 1;
-    VotingStrategy[] private votingStrategies;
-    address[] private authenticators = [address(this)];
-    address[] private executionStrategies = [address(0)];
-    bytes[] private userVotingStrategyParams = [new bytes(0)];
-    bytes private executionParams = new bytes(0);
-    address private owner = address(this);
-    uint256[] private usedVotingStrategiesIndices = [0];
-
-    string private metadataUri = "Snapshot On-Chain";
-
-    function setUp() public {
-        VanillaVotingStrategy vanillaVotingStrategy = new VanillaVotingStrategy();
-        VotingStrategy memory votingStrategy = VotingStrategy(address(vanillaVotingStrategy), new bytes(0));
-        votingStrategies.push(votingStrategy);
-
-        Space spaceContract = new Space(
-            owner,
-            votingDelay,
-            minVotingDuration,
-            maxVotingDuration,
-            proposalThreshold,
-            quorum,
-            votingStrategies,
-            authenticators,
-            executionStrategies
-        );
-        space = ISpace(address(spaceContract));
-    }
-
+contract SpaceOwnerActionsTest is SpaceTest {
     // ------- MaxVotingDuration ----
 
     function testSetMaxVotingDuration() public {
@@ -207,11 +172,11 @@ contract SettersTest is Test, ISpaceEvents {
         // Empty proposal that won't actually get checked but just used to fire the event.
         Proposal memory tmpProposal;
         // Note: Here we don't check the content but simply that the event got fired.
-        emit ProposalCreated(1, address(0), tmpProposal, metadataUri, executionParams);
+        emit ProposalCreated(1, address(0), tmpProposal, proposalMetadataUri, executionParams);
         // Try creating a proposal using these new strategies.
         space.propose(
             address(this),
-            metadataUri,
+            proposalMetadataUri,
             executionStrategies[0],
             newIndices,
             userVotingStrategyParams,
@@ -231,7 +196,7 @@ contract SettersTest is Test, ISpaceEvents {
         vm.expectRevert("Invalid Voting Strategy Index");
         space.propose(
             address(this),
-            metadataUri,
+            proposalMetadataUri,
             executionStrategies[0],
             newIndices,
             userVotingStrategyParams,
@@ -241,12 +206,12 @@ contract SettersTest is Test, ISpaceEvents {
         // Ensure event gets fired properly.
         vm.expectEmit(true, false, false, false);
         // Note: Here we don't check the content but simply that the event got fired.
-        emit ProposalCreated(1, address(0), tmpProposal, metadataUri, executionParams);
+        emit ProposalCreated(1, address(0), tmpProposal, proposalMetadataUri, executionParams);
 
         // Try creating a proposal with the previous voting strategy
         space.propose(
             address(this),
-            metadataUri,
+            proposalMetadataUri,
             executionStrategies[0],
             usedVotingStrategiesIndices,
             userVotingStrategyParams,
@@ -289,13 +254,13 @@ contract SettersTest is Test, ISpaceEvents {
         vm.expectEmit(true, false, false, false);
         Proposal memory tmpProposal;
         // Note: Here we don't check the content but simply that the event got fired.
-        emit ProposalCreated(1, address(0), tmpProposal, metadataUri, executionParams);
+        emit ProposalCreated(1, address(0), tmpProposal, proposalMetadataUri, executionParams);
 
         // Create a new proposal by using the new authenticator
         vm.prank(newAuths[0]);
         space.propose(
             address(1337),
-            metadataUri,
+            proposalMetadataUri,
             executionStrategies[0],
             usedVotingStrategiesIndices,
             userVotingStrategyParams,
@@ -314,7 +279,7 @@ contract SettersTest is Test, ISpaceEvents {
         vm.prank(newAuths[0]);
         space.propose(
             address(1337),
-            metadataUri,
+            proposalMetadataUri,
             executionStrategies[0],
             usedVotingStrategiesIndices,
             userVotingStrategyParams,
@@ -354,11 +319,11 @@ contract SettersTest is Test, ISpaceEvents {
         // Ensure event gets fired properly.
         vm.expectEmit(true, false, false, false);
         // Note: Here we don't check the content but simply that the event got fired.
-        emit ProposalCreated(1, address(0), tmpProposal, metadataUri, executionParams);
+        emit ProposalCreated(1, address(0), tmpProposal, proposalMetadataUri, executionParams);
 
         space.propose(
             address(1337),
-            metadataUri,
+            proposalMetadataUri,
             newStrats[0],
             usedVotingStrategiesIndices,
             userVotingStrategyParams,
@@ -376,7 +341,7 @@ contract SettersTest is Test, ISpaceEvents {
         vm.expectRevert("Invalid Execution Strategy");
         space.propose(
             address(1337),
-            metadataUri,
+            proposalMetadataUri,
             newStrats[0],
             usedVotingStrategiesIndices,
             userVotingStrategyParams,
