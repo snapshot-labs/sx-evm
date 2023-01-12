@@ -11,15 +11,24 @@ import "../src/voting-strategies/VanillaVotingStrategy.sol";
 import "../src/interfaces/space/ISpaceEvents.sol";
 
 abstract contract SpaceTest is Test, GasSnapshot, ISpaceEvents {
+    bytes4 constant PROPOSE_SELECTOR = bytes4(keccak256("propose(address,string,address,uint256[],bytes[],bytes)"));
+
     Space space;
     VanillaVotingStrategy vanillaVotingStrategy;
     VanillaAuthenticator vanillaAuthenticator;
-    address vanillaExecutionStrategy;
+    address vanillaExecutionStrategy; // TODO: Use vanilla execution strategy contract once it's implemented
+
+    // Address of the meta transaction relayer
+    address public relayer = address(this);
+    address public owner = address(1);
+    address public author = address(2);
+    address public voter = address(3);
+    address public unauthorized = address(4);
 
     VotingStrategy[] votingStrategies;
     address[] authenticators;
     address[] executionStrategies;
-    
+
     uint32 public votingDelay;
     uint32 public minVotingDuration;
     uint32 public maxVotingDuration;
@@ -30,8 +39,6 @@ abstract contract SpaceTest is Test, GasSnapshot, ISpaceEvents {
     uint256[] public usedVotingStrategiesIndices;
     bytes[] public userVotingStrategyParams;
 
-    address public owner = address(this);
-
     // TODO: emit in the space factory event - (once we have a factory)
     string public spaceMetadataUri = "SOC Test Space";
 
@@ -40,7 +47,6 @@ abstract contract SpaceTest is Test, GasSnapshot, ISpaceEvents {
     function setUp() public {
         vanillaVotingStrategy = new VanillaVotingStrategy();
         vanillaAuthenticator = new VanillaAuthenticator();
-        // TODO: deploy vanilla execution strategy once it's implemented
 
         votingDelay = 0;
         minVotingDuration = 1;
@@ -67,6 +73,5 @@ abstract contract SpaceTest is Test, GasSnapshot, ISpaceEvents {
             authenticators,
             executionStrategies
         );
- 
     }
 }
