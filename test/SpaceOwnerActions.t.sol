@@ -154,7 +154,7 @@ contract SpaceOwnerActionsTest is SpaceTest {
             address(space),
             PROPOSE_SELECTOR,
             abi.encode(
-                address(this),
+                author,
                 proposalMetadataUri,
                 executionStrategies[0],
                 newIndices,
@@ -174,7 +174,7 @@ contract SpaceOwnerActionsTest is SpaceTest {
             address(space),
             PROPOSE_SELECTOR,
             abi.encode(
-                address(this),
+                author,
                 proposalMetadataUri,
                 executionStrategies[0],
                 newIndices,
@@ -188,7 +188,7 @@ contract SpaceOwnerActionsTest is SpaceTest {
             address(space),
             PROPOSE_SELECTOR,
             abi.encode(
-                address(this),
+                author,
                 proposalMetadataUri,
                 executionStrategies[0],
                 usedVotingStrategiesIndices,
@@ -223,7 +223,7 @@ contract SpaceOwnerActionsTest is SpaceTest {
 
         // The new authenticator is this contract so we can call `propose` directly.
         space.propose(
-            address(1337),
+            author,
             proposalMetadataUri,
             executionStrategies[0],
             usedVotingStrategiesIndices,
@@ -238,7 +238,7 @@ contract SpaceOwnerActionsTest is SpaceTest {
         // Ensure we can't propose with this authenticator anymore
         vm.expectRevert("Invalid Authenticator");
         space.propose(
-            address(1337),
+            author,
             proposalMetadataUri,
             executionStrategies[0],
             usedVotingStrategiesIndices,
@@ -275,7 +275,7 @@ contract SpaceOwnerActionsTest is SpaceTest {
             address(space),
             PROPOSE_SELECTOR,
             abi.encode(
-                address(this),
+                author,
                 proposalMetadataUri,
                 newExecutionStrategies[0],
                 usedVotingStrategiesIndices,
@@ -295,7 +295,7 @@ contract SpaceOwnerActionsTest is SpaceTest {
             address(space),
             PROPOSE_SELECTOR,
             abi.encode(
-                address(this),
+                author,
                 proposalMetadataUri,
                 newExecutionStrategies[0],
                 usedVotingStrategiesIndices,
