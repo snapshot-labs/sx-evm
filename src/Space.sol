@@ -223,7 +223,7 @@ contract Space is ISpaceEvents, Module, SpaceErrors {
         if (arr.length > 0) {
             for (uint256 i = 0; i < arr.length - 1; i++) {
                 for (uint256 j = i + 1; j < arr.length; j++) {
-                    if (arr[i] != arr[j]) revert DuplicateFound(arr[i], arr[j]);
+                    if (arr[i] == arr[j]) revert DuplicateFound(arr[i], arr[j]);
                 }
             }
         }

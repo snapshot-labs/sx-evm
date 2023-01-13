@@ -111,9 +111,9 @@ contract SpaceActionsTest is SpaceTest, SpaceErrors {
     function testProposeDuplicateUsedVotingStrategy() public {
         uint256[] memory invalidUsedStrategy = new uint256[](4);
         invalidUsedStrategy[0] = 0;
-        invalidUsedStrategy[0] = 1;
-        invalidUsedStrategy[0] = 2;
-        invalidUsedStrategy[0] = 0; // Duplicate entry
+        invalidUsedStrategy[1] = 1;
+        invalidUsedStrategy[2] = 2;
+        invalidUsedStrategy[3] = 0; // Duplicate entry
 
         bytes[] memory userVotingStrategyParams2 = new bytes[](4);
         userVotingStrategyParams2[0] = new bytes(0);
