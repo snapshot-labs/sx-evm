@@ -157,7 +157,7 @@ contract SpaceOwnerActionsTest is SpaceTest, SpaceErrors {
         vanillaAuthenticator.authenticate(
             address(space),
             PROPOSE_SELECTOR,
-            abi.encode(author, proposalMetadataUri, executionStrategies[0], executionParams, newUserVotingStrategies)
+            abi.encode(author, proposalMetadataUri, executionStrategy, newUserVotingStrategies)
         );
 
         // Remove the voting strategies
@@ -170,14 +170,14 @@ contract SpaceOwnerActionsTest is SpaceTest, SpaceErrors {
         vanillaAuthenticator.authenticate(
             address(space),
             PROPOSE_SELECTOR,
-            abi.encode(author, proposalMetadataUri, executionStrategies[0], executionParams, newUserVotingStrategies)
+            abi.encode(author, proposalMetadataUri, executionStrategy, newUserVotingStrategies)
         );
 
         // Try creating a proposal with the previous voting strategy that was never removed.
         vanillaAuthenticator.authenticate(
             address(space),
             PROPOSE_SELECTOR,
-            abi.encode(author, proposalMetadataUri, executionStrategies[0], executionParams, userVotingStrategies)
+            abi.encode(author, proposalMetadataUri, executionStrategy, userVotingStrategies)
         );
     }
 
@@ -206,7 +206,7 @@ contract SpaceOwnerActionsTest is SpaceTest, SpaceErrors {
         space.addAuthenticators(newAuths);
 
         // The new authenticator is this contract so we can call `propose` directly.
-        space.propose(author, proposalMetadataUri, executionStrategies[0], executionParams, userVotingStrategies);
+        space.propose(author, proposalMetadataUri, executionStrategy, userVotingStrategies);
 
         vm.expectEmit(true, true, true, true);
         emit AuthenticatorsRemoved(newAuths);
@@ -214,7 +214,7 @@ contract SpaceOwnerActionsTest is SpaceTest, SpaceErrors {
 
         // Ensure we can't propose with this authenticator anymore
         vm.expectRevert(abi.encodeWithSelector(AuthenticatorNotWhitelisted.selector, address(this)));
-        space.propose(author, proposalMetadataUri, executionStrategies[0], executionParams, userVotingStrategies);
+        space.propose(author, proposalMetadataUri, executionStrategy, userVotingStrategies);
     }
 
     function testUnauthorizedAddAuthenticators() public {
@@ -233,43 +233,47 @@ contract SpaceOwnerActionsTest is SpaceTest, SpaceErrors {
 
     function testAddAndRemoveExecutionStrategies() public {
         // TODO: test finalizeProposal here once we have it
+        address[] memory newExecutionStrategiesAddresses = new address[](1);
+        newExecutionStrategiesAddresses[0] = address(42);
 
-        address[] memory newExecutionStrategies = new address[](1);
-        newExecutionStrategies[0] = address(42); // Random address
+        Strategy[] memory newExecutionStrategies = new Strategy[](1);
+        newExecutionStrategies[0] = Strategy(newExecutionStrategiesAddresses[0], new bytes(0));
 
         vm.expectEmit(true, true, true, true);
-        emit ExecutionStrategiesAdded(newExecutionStrategies);
-        space.addExecutionStrategies(newExecutionStrategies);
+        emit ExecutionStrategiesAdded(newExecutionStrategiesAddresses);
+        space.addExecutionStrategies(newExecutionStrategiesAddresses);
 
         vanillaAuthenticator.authenticate(
             address(space),
             PROPOSE_SELECTOR,
-            abi.encode(author, proposalMetadataUri, newExecutionStrategies[0], executionParams, userVotingStrategies)
+            abi.encode(author, proposalMetadataUri, newExecutionStrategies[0], userVotingStrategies)
         );
 
         vm.expectEmit(true, true, true, true);
-        emit ExecutionStrategiesRemoved(newExecutionStrategies);
-        space.removeExecutionStrategies(newExecutionStrategies);
+        emit ExecutionStrategiesRemoved(newExecutionStrategiesAddresses);
+        space.removeExecutionStrategies(newExecutionStrategiesAddresses);
 
         // Ensure we cant propose with this execution strategy anymore
-        vm.expectRevert(abi.encodeWithSelector(ExecutionStrategyNotWhitelisted.selector, newExecutionStrategies[0]));
+        vm.expectRevert(
+            abi.encodeWithSelector(ExecutionStrategyNotWhitelisted.selector, newExecutionStrategiesAddresses[0])
+        );
 
         vanillaAuthenticator.authenticate(
             address(space),
             PROPOSE_SELECTOR,
-            abi.encode(author, proposalMetadataUri, newExecutionStrategies[0], executionParams, userVotingStrategies)
+            abi.encode(author, proposalMetadataUri, newExecutionStrategies[0], userVotingStrategies)
         );
     }
 
-    function testunauthorizedAddExecutionStrategy() public {
+    function testUnauthorizedAddExecutionStrategy() public {
         vm.expectRevert("Ownable: caller is not the owner");
         vm.prank(unauthorized);
-        space.removeExecutionStrategies(executionStrategies);
+        space.removeExecutionStrategies(executionStrategiesAddresses);
     }
 
     function testUnauthorizedRemoveExecutionStrategy() public {
         vm.expectRevert("Ownable: caller is not the owner");
         vm.prank(unauthorized);
-        space.removeExecutionStrategies(executionStrategies);
+        space.removeExecutionStrategies(executionStrategiesAddresses);
     }
 }

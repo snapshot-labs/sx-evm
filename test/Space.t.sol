@@ -13,7 +13,7 @@ import "../src/interfaces/space/ISpaceEvents.sol";
 import "../src/types.sol";
 
 abstract contract SpaceTest is Test, GasSnapshot, ISpaceEvents {
-    bytes4 constant PROPOSE_SELECTOR = bytes4(keccak256("propose(address,string,address,bytes,(uint256,bytes)[])"));
+    bytes4 constant PROPOSE_SELECTOR = bytes4(keccak256("propose(address,string,(address,bytes),(uint256,bytes)[])"));
 
     Space space;
     VanillaVotingStrategy vanillaVotingStrategy;
@@ -29,7 +29,9 @@ abstract contract SpaceTest is Test, GasSnapshot, ISpaceEvents {
 
     Strategy[] votingStrategies;
     address[] authenticators;
-    address[] executionStrategies;
+    Strategy executionStrategy;
+    Strategy[] executionStrategies;
+    address[] executionStrategiesAddresses;
 
     uint32 public votingDelay;
     uint32 public minVotingDuration;
@@ -37,7 +39,6 @@ abstract contract SpaceTest is Test, GasSnapshot, ISpaceEvents {
     uint256 public proposalThreshold;
     uint32 public quorum;
 
-    bytes public executionParams;
     IndexedStrategy[] public userVotingStrategies;
 
     // TODO: emit in the space factory event - (once we have a factory)
@@ -57,8 +58,10 @@ abstract contract SpaceTest is Test, GasSnapshot, ISpaceEvents {
         quorum = 1;
         votingStrategies.push(Strategy(address(vanillaVotingStrategy), new bytes(0)));
         authenticators.push(address(vanillaAuthenticator));
-        executionStrategies.push(address(vanillaExecutionStrategy), new bytes(0));
+        executionStrategy = Strategy(address(0), new bytes(0));
+        executionStrategies.push(executionStrategy);
         userVotingStrategies.push(IndexedStrategy(0, new bytes(0)));
+        executionStrategiesAddresses.push(executionStrategy.addy);
 
         owner = address(this);
 
@@ -71,7 +74,7 @@ abstract contract SpaceTest is Test, GasSnapshot, ISpaceEvents {
             quorum,
             votingStrategies,
             authenticators,
-            executionStrategies
+            executionStrategiesAddresses
         );
     }
 }

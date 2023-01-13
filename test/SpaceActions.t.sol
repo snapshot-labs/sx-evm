@@ -14,7 +14,7 @@ contract SpaceActionsTest is SpaceTest, SpaceErrors {
     function testPropose() public {
         uint256 proposalId = space.nextProposalId();
 
-        bytes32 executionHash = keccak256(abi.encodePacked(executionParams));
+        bytes32 executionHash = keccak256(abi.encodePacked(executionStrategy.params));
         uint32 snapshotTimestamp = uint32(block.timestamp);
         uint32 startTimestamp = uint32(snapshotTimestamp + votingDelay);
         uint32 minEndTimestamp = uint32(startTimestamp + minVotingDuration);
@@ -27,16 +27,16 @@ contract SpaceActionsTest is SpaceTest, SpaceErrors {
             startTimestamp,
             minEndTimestamp,
             maxEndTimestamp,
-            executionStrategies[0],
+            executionStrategy.addy,
             executionHash
         );
 
         vm.expectEmit(true, true, true, true);
-        emit ProposalCreated(proposalId, author, proposal, proposalMetadataUri, executionParams);
+        emit ProposalCreated(proposalId, author, proposal, proposalMetadataUri, executionStrategy.params);
         vanillaAuthenticator.authenticate(
             address(space),
             PROPOSE_SELECTOR,
-            abi.encode(author, proposalMetadataUri, executionStrategies[0], executionParams, userVotingStrategies)
+            abi.encode(author, proposalMetadataUri, executionStrategy, userVotingStrategies)
         );
 
         // Actual content of the proposal struct
@@ -54,20 +54,21 @@ contract SpaceActionsTest is SpaceTest, SpaceErrors {
     function testProposeInvalidAuth() public {
         //  Using this contract as an authenticator, which is not whitelisted
         vm.expectRevert(abi.encodeWithSelector(AuthenticatorNotWhitelisted.selector, address(this)));
-        space.propose(author, proposalMetadataUri, executionStrategies[0], executionParams, userVotingStrategies);
+        space.propose(author, proposalMetadataUri, executionStrategy, userVotingStrategies);
     }
 
     function testProposeInvalidExecutionStrategy() public {
-        address invalidExecutionStrategy = address(1);
-        vm.expectRevert(abi.encodeWithSelector(ExecutionStrategyNotWhitelisted.selector, invalidExecutionStrategy));
+        Strategy[] memory invalidExecutionStrategy = new Strategy[](1);
+        invalidExecutionStrategy[0] = Strategy(address(1), new bytes(0));
+        vm.expectRevert(abi.encodeWithSelector(ExecutionStrategyNotWhitelisted.selector, address(1)));
         vanillaAuthenticator.authenticate(
             address(space),
             PROPOSE_SELECTOR,
-            abi.encode(author, proposalMetadataUri, invalidExecutionStrategy, executionParams, userVotingStrategies)
+            abi.encode(author, proposalMetadataUri, invalidExecutionStrategy, userVotingStrategies)
         );
     }
 
-    function testProposeInvalidUserVotingStrategy() public {
+    function testProposeInvalidUsedVotingStrategy() public {
         IndexedStrategy[] memory invalidUsedStrategies = new IndexedStrategy[](1);
         invalidUsedStrategies[0] = IndexedStrategy(42, new bytes(0));
 
@@ -76,7 +77,7 @@ contract SpaceActionsTest is SpaceTest, SpaceErrors {
         vanillaAuthenticator.authenticate(
             address(space),
             PROPOSE_SELECTOR,
-            abi.encode(author, proposalMetadataUri, executionStrategies[0], executionParams, invalidUsedStrategies)
+            abi.encode(author, proposalMetadataUri, executionStrategy, invalidUsedStrategies)
         );
     }
 
@@ -91,7 +92,7 @@ contract SpaceActionsTest is SpaceTest, SpaceErrors {
         vanillaAuthenticator.authenticate(
             address(space),
             PROPOSE_SELECTOR,
-            abi.encode(author, proposalMetadataUri, executionStrategies[0], executionParams, invalidUsedStrategies)
+            abi.encode(author, proposalMetadataUri, executionStrategy, invalidUsedStrategies)
         );
     }
 

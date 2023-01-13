@@ -409,19 +409,17 @@ contract Space is ISpaceEvents, Module, SpaceErrors {
      * @notice  Creates a proposal.
      * @param   proposerAddress  The address of the proposal creator.
      * @param   metadataUri  The metadata URI for the proposal.
-     * @param   executionStrategy  The execution contract to use for this proposal.
+     * @param   executionStrategy  The execution contract and associated execution parameters to use for this proposal.
      * @param   userVotingStrategies  Strategies to use to compute the proposer voting power.
-     * @param   executionParams  The execution parameters (used if a proposal gets accepted).
      */
     function propose(
         address proposerAddress,
         string calldata metadataUri,
-        address executionStrategy,
-        bytes calldata executionParams,
+        Strategy calldata executionStrategy,
         IndexedStrategy[] calldata userVotingStrategies
     ) external {
         _assertValidAuthenticator();
-        _assertValidExecutionStrategy(executionStrategy);
+        _assertValidExecutionStrategy(executionStrategy.addy);
 
         uint32 snapshotTimestamp = uint32(block.timestamp);
 
@@ -433,7 +431,7 @@ contract Space is ISpaceEvents, Module, SpaceErrors {
         uint32 minEndTimestamp = startTimestamp + minVotingDuration;
         uint32 maxEndTimestamp = startTimestamp + maxVotingDuration;
 
-        bytes32 executionHash = keccak256(executionParams);
+        bytes32 executionHash = keccak256(executionStrategy.params);
 
         Proposal memory proposal = Proposal(
             quorum,
@@ -441,12 +439,12 @@ contract Space is ISpaceEvents, Module, SpaceErrors {
             startTimestamp,
             minEndTimestamp,
             maxEndTimestamp,
-            executionStrategy,
+            executionStrategy.addy,
             executionHash
         );
 
         proposalRegistry[nextProposalId] = proposal;
-        emit ProposalCreated(nextProposalId, proposerAddress, proposal, metadataUri, executionParams);
+        emit ProposalCreated(nextProposalId, proposerAddress, proposal, metadataUri, executionStrategy.params);
 
         nextProposalId++;
     }
