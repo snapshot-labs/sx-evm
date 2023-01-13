@@ -12,7 +12,7 @@ interface ISpaceEvents {
         bytes executionParams
     );
 
-    event VotingStrategiesAdded(VotingStrategy[] votingStrategies);
+    event VotingStrategiesAdded(Strategy[] votingStrategies);
     event VotingStrategiesRemoved(uint256[] indices);
     event ExecutionStrategiesAdded(address[] executionStrategies);
     event ExecutionStrategiesRemoved(address[] executionStrategies);

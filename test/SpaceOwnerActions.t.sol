@@ -138,15 +138,15 @@ contract SpaceOwnerActionsTest is SpaceTest, SpaceErrors {
     function testAddAndRemoveVotingStrategies() public {
         // This voting strategy array contains the same voting strategy as the initial one but
         // should be accessed with a new strategy index.
-        VotingStrategy[] memory newVotingStrategies = new VotingStrategy[](1);
-        newVotingStrategies[0] = VotingStrategy(votingStrategies[0].addy, votingStrategies[0].params);
+        Strategy[] memory newVotingStrategies = new Strategy[](1);
+        newVotingStrategies[0] = Strategy(votingStrategies[0].addy, votingStrategies[0].params);
 
         // New strategy index should be `1` (`0` is used for the first one).
         uint256[] memory newIndices = new uint256[](1);
         newIndices[0] = 1;
 
-        UserVotingStrategy[] memory newUserVotingStrategies = new UserVotingStrategy[](1);
-        newUserVotingStrategies[0] = UserVotingStrategy(newIndices[0], new bytes(0));
+        IndexedStrategy[] memory newUserVotingStrategies = new IndexedStrategy[](1);
+        newUserVotingStrategies[0] = IndexedStrategy(newIndices[0], new bytes(0));
 
         vm.expectEmit(true, true, true, true);
         emit VotingStrategiesAdded(newVotingStrategies);

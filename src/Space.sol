@@ -31,7 +31,7 @@ contract Space is ISpaceEvents, Module, SpaceErrors {
     // Array of available voting strategies that users can use to determine their voting power.
     /// @dev This needs to be an array because a mapping would limit a space to only one use per
     ///      voting strategy contract.
-    VotingStrategy[] private votingStrategies;
+    Strategy[] private votingStrategies;
 
     // Mapping of allowed execution strategies.
     mapping(address => bool) private executionStrategies;
@@ -55,7 +55,7 @@ contract Space is ISpaceEvents, Module, SpaceErrors {
         uint32 _maxVotingDuration,
         uint256 _proposalThreshold,
         uint256 _quorum,
-        VotingStrategy[] memory _votingStrategies,
+        Strategy[] memory _votingStrategies,
         address[] memory _authenticators,
         address[] memory _executionStrategies
     ) {
@@ -82,12 +82,12 @@ contract Space is ISpaceEvents, Module, SpaceErrors {
             uint32 _maxVotingDuration,
             uint256 _proposalThreshold,
             uint256 _quorum,
-            VotingStrategy[] memory _votingStrategies,
+            Strategy[] memory _votingStrategies,
             address[] memory _authenticators,
             address[] memory _executionStrategies
         ) = abi.decode(
                 initializeParams,
-                (address, uint32, uint32, uint32, uint256, uint256, VotingStrategy[], address[], address[])
+                (address, uint32, uint32, uint32, uint256, uint256, Strategy[], address[], address[])
             );
 
         if (_minVotingDuration > _maxVotingDuration) revert InvalidDuration(_minVotingDuration, _maxVotingDuration);
@@ -128,7 +128,7 @@ contract Space is ISpaceEvents, Module, SpaceErrors {
      * @dev     `_votingStrategies` should not be set to `0`.
      * @param   _votingStrategies  Array of voting strategies to add.
      */
-    function _addVotingStrategies(VotingStrategy[] memory _votingStrategies) internal {
+    function _addVotingStrategies(Strategy[] memory _votingStrategies) internal {
         if (_votingStrategies.length == 0) revert EmptyArray();
 
         for (uint256 i = 0; i < _votingStrategies.length; i++) {
@@ -247,7 +247,7 @@ contract Space is ISpaceEvents, Module, SpaceErrors {
      * @dev     No way to declare a mapping in memory so we need to use an array and go for O(n^2)...
      * @param   strats  Array to check for duplicates.
      */
-    function _assertNoDuplicateIndices(UserVotingStrategy[] memory strats) internal pure {
+    function _assertNoDuplicateIndices(IndexedStrategy[] memory strats) internal pure {
         if (strats.length > 0) {
             for (uint256 i = 0; i < strats.length - 1; i++) {
                 for (uint256 j = i + 1; j < strats.length; j++) {
@@ -269,7 +269,7 @@ contract Space is ISpaceEvents, Module, SpaceErrors {
     function _getCumulativeVotingPower(
         uint32 timestamp,
         address userAddress,
-        UserVotingStrategy[] calldata userVotingStrategies
+        IndexedStrategy[] calldata userVotingStrategies
     ) internal view returns (uint256) {
         // Ensure there are no duplicates to avoid an attack where people double count a voting strategy
         _assertNoDuplicateIndices(userVotingStrategies);
@@ -277,7 +277,7 @@ contract Space is ISpaceEvents, Module, SpaceErrors {
         uint256 totalVotingPower = 0;
         for (uint256 i = 0; i < userVotingStrategies.length; i++) {
             uint256 index = userVotingStrategies[i].index;
-            VotingStrategy memory votingStrategy = votingStrategies[index];
+            Strategy memory votingStrategy = votingStrategies[index];
             // A strategyAddress set to 0 indicates that this address has already been removed and is
             // no longer a valid voting strategy. See `_removeVotingStrategies`.
             if (votingStrategy.addy == address(0)) revert InvalidVotingStrategyIndex(i);
@@ -337,7 +337,7 @@ contract Space is ISpaceEvents, Module, SpaceErrors {
         // TODO: check it's not too big?
     }
 
-    function addVotingStrategies(VotingStrategy[] calldata _votingStrategies) external onlyOwner {
+    function addVotingStrategies(Strategy[] calldata _votingStrategies) external onlyOwner {
         _addVotingStrategies(_votingStrategies);
     }
 
@@ -418,7 +418,7 @@ contract Space is ISpaceEvents, Module, SpaceErrors {
         string calldata metadataUri,
         address executionStrategy,
         bytes calldata executionParams,
-        UserVotingStrategy[] calldata userVotingStrategies
+        IndexedStrategy[] calldata userVotingStrategies
     ) external {
         _assertValidAuthenticator();
         _assertValidExecutionStrategy(executionStrategy);

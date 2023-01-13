@@ -68,8 +68,8 @@ contract SpaceActionsTest is SpaceTest, SpaceErrors {
     }
 
     function testProposeInvalidUserVotingStrategy() public {
-        UserVotingStrategy[] memory invalidUsedStrategies = new UserVotingStrategy[](1);
-        invalidUsedStrategies[0] = UserVotingStrategy(42, new bytes(0));
+        IndexedStrategy[] memory invalidUsedStrategies = new IndexedStrategy[](1);
+        invalidUsedStrategies[0] = IndexedStrategy(42, new bytes(0));
 
         // out of bounds revert
         vm.expectRevert();
@@ -81,11 +81,11 @@ contract SpaceActionsTest is SpaceTest, SpaceErrors {
     }
 
     function testProposeDuplicateUserVotingStrategy() public {
-        UserVotingStrategy[] memory invalidUsedStrategies = new UserVotingStrategy[](4);
-        invalidUsedStrategies[0] = UserVotingStrategy(0, new bytes(0));
-        invalidUsedStrategies[1] = UserVotingStrategy(1, new bytes(0));
-        invalidUsedStrategies[2] = UserVotingStrategy(2, new bytes(0));
-        invalidUsedStrategies[3] = UserVotingStrategy(0, new bytes(0)); // Duplicate index
+        IndexedStrategy[] memory invalidUsedStrategies = new IndexedStrategy[](4);
+        invalidUsedStrategies[0] = IndexedStrategy(0, new bytes(0));
+        invalidUsedStrategies[1] = IndexedStrategy(1, new bytes(0));
+        invalidUsedStrategies[2] = IndexedStrategy(2, new bytes(0));
+        invalidUsedStrategies[3] = IndexedStrategy(0, new bytes(0)); // Duplicate index
 
         vm.expectRevert(abi.encodeWithSelector(DuplicateFound.selector, 0, 0));
         vanillaAuthenticator.authenticate(

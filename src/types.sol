@@ -17,12 +17,12 @@ struct Proposal {
     bytes32 executionHash;
 }
 
-struct VotingStrategy {
+struct Strategy {
     address addy;
     bytes params;
 }
 
-struct UserVotingStrategy {
+struct IndexedStrategy {
     uint256 index;
     bytes params;
 }

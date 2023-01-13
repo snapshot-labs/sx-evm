@@ -27,7 +27,7 @@ abstract contract SpaceTest is Test, GasSnapshot, ISpaceEvents {
     address public voter = address(3);
     address public unauthorized = address(4);
 
-    VotingStrategy[] votingStrategies;
+    Strategy[] votingStrategies;
     address[] authenticators;
     address[] executionStrategies;
 
@@ -37,7 +37,8 @@ abstract contract SpaceTest is Test, GasSnapshot, ISpaceEvents {
     uint256 public proposalThreshold;
     uint32 public quorum;
 
-    UserVotingStrategy[] public userVotingStrategies;
+    bytes public executionParams;
+    IndexedStrategy[] public userVotingStrategies;
 
     // TODO: emit in the space factory event - (once we have a factory)
     string public spaceMetadataUri = "SOC Test Space";
@@ -54,10 +55,10 @@ abstract contract SpaceTest is Test, GasSnapshot, ISpaceEvents {
         maxVotingDuration = 1000;
         proposalThreshold = 1;
         quorum = 1;
-        votingStrategies.push(VotingStrategy(address(vanillaVotingStrategy), new bytes(0)));
+        votingStrategies.push(Strategy(address(vanillaVotingStrategy), new bytes(0)));
         authenticators.push(address(vanillaAuthenticator));
         executionStrategies.push(address(vanillaExecutionStrategy), new bytes(0));
-        userVotingStrategies.push(UserVotingStrategy(0, new bytes(0)));
+        userVotingStrategies.push(IndexedStrategy(0, new bytes(0)));
 
         owner = address(this);
 

@@ -21,7 +21,7 @@ interface ISpaceOwnerActions {
 
     function setMetadataUri(string calldata metadataUri) external;
 
-    function addVotingStrategies(VotingStrategy[] calldata _votingStrategies) external;
+    function addVotingStrategies(Strategy[] calldata _votingStrategies) external;
 
     function removeVotingStrategies(uint256[] calldata indicesToRemove) external;
 
