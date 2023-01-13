@@ -39,8 +39,8 @@ contract Space is ISpaceEvents, Module, SpaceErrors {
     mapping(address => bool) private authenticators;
     // Mapping of all `Proposal`s of this space (past and present).
     mapping(uint256 => Proposal) private proposalRegistry;
-    // Mapping to keep track of whether a proposal has been executed or not.
-    mapping(uint256 => bool) private executedProposals;
+    // Mapping to keep track the ouctome of the proposals.
+    mapping(uint256 => ProposalOutcome) private executedProposals;
 
     // ------------------------------------
     // |                                  |
@@ -215,6 +215,19 @@ contract Space is ISpaceEvents, Module, SpaceErrors {
     }
 
     /**
+     * @notice  Internal function that checks if `proposalId` exists or not.
+     * @param   proposalId  The proposal to check.
+     */
+    function _assertProposalExists(uint256 proposalId) internal view {
+        Proposal memory proposal = proposalRegistry[proposalId];
+
+        // startTimestamp cannot be set to 0 when a proposal is created,
+        // so if proposal.startTimestamp is 0 it means this proposal does not exist
+        // and hence `proposalId` is invalid.
+        if (proposal.startTimestamp == 0) revert InvalidProposalId(proposalId);
+    }
+
+    /**
      * @notice  Internal function to ensure there are no duplicates in an array of uints.
      * @dev     No way to declare a mapping in memory so we need to use an array and go for O(n^2)...
      * @param   arr  Array to check for duplicates.
@@ -342,15 +355,35 @@ contract Space is ISpaceEvents, Module, SpaceErrors {
     // ------------------------------------
 
     function getProposalInfo(uint256 proposalId) external view returns (Proposal memory) {
+        _assertProposalExists(proposalId);
+
+        Proposal memory proposal = proposalRegistry[proposalId];
+        return (proposal);
+    }
+
+    function getProposalStatus(uint256 proposalId) external view returns (ProposalStatus) {
+        _assertProposalExists(proposalId);
+
         Proposal memory proposal = proposalRegistry[proposalId];
 
-        // startTimestamp cannot be set to 0 when a proposal is created,
-        // so if proposal.startTimestamp is 0 it means this proposal does not exist
-        // and hence `proposalId` is invalid.
-        if (proposal.startTimestamp == 0) revert InvalidProposalId(proposalId);
-
-        // TODO: maybe get proposal status (executed or not?)
-        return (proposal);
+        ProposalOutcome outcome = executedProposals[proposalId];
+        if (outcome == ProposalOutcome.Accepted) {
+            return ProposalStatus.Accepted;
+        } else if (outcome == ProposalOutcome.Rejected) {
+            return ProposalStatus.Rejected;
+        } else if (outcome == ProposalOutcome.Cancelled) {
+            return ProposalStatus.Cancelled;
+        } else {
+            // Proposal has not been executed yet. Let's look at the current timestamp.
+            uint256 current = block.timestamp;
+            if (current < proposal.startTimestamp) {
+                return ProposalStatus.WaitingForVotingPeriodToStart;
+            } else if (current > proposal.maxEndTimestamp) {
+                return ProposalStatus.FinalizeMe;
+            } else {
+                return ProposalStatus.VotingPeriod;
+            }
+        }
     }
 
     // ------------------------------------

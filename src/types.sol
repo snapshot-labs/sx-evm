@@ -21,3 +21,24 @@ struct VotingStrategy {
     address addy;
     bytes params;
 }
+
+struct ProposalInfo {
+    Proposal proposal;
+    ProposalStatus status;
+}
+
+enum ProposalOutcome {
+    NotExecutedYet,
+    Accepted,
+    Rejected,
+    Cancelled
+}
+
+enum ProposalStatus {
+    Accepted,
+    Rejected,
+    Cancelled,
+    WaitingForVotingPeriodToStart,
+    VotingPeriod,
+    FinalizeMe
+}
