@@ -9,8 +9,9 @@ import "forge-std/console2.sol";
 import "../src/voting-strategies/VanillaVotingStrategy.sol";
 import "../src/interfaces/ISpace.sol";
 import "../src/interfaces/space/ISpaceEvents.sol";
+import "../src/SpaceErrors.sol";
 
-contract SpaceOwnerActionsTest is SpaceTest {
+contract SpaceOwnerActionsTest is SpaceTest, SpaceErrors {
     // ------- MaxVotingDuration ----
 
     function testSetMaxVotingDuration() public {
@@ -30,7 +31,7 @@ contract SpaceOwnerActionsTest is SpaceTest {
     }
 
     function testSetInvalidMaxVotingDelay() public {
-        vm.expectRevert("Max Duration must be bigger than Min Duration");
+        vm.expectRevert(abi.encodeWithSelector(InvalidDuration.selector, minVotingDuration, minVotingDuration - 1));
         vm.prank(owner);
         space.setMaxVotingDuration(minVotingDuration - 1);
     }
@@ -53,8 +54,8 @@ contract SpaceOwnerActionsTest is SpaceTest {
         space.setMinVotingDuration(2000);
     }
 
-    function testSetInvalidMinVotingDelay() public {
-        vm.expectRevert("Min Duration must be smaller than Max Duration");
+    function testSetInvalidMinVotingDuration() public {
+        vm.expectRevert(abi.encodeWithSelector(InvalidDuration.selector, maxVotingDuration + 1, maxVotingDuration));
         vm.prank(owner);
         space.setMinVotingDuration(maxVotingDuration + 1);
     }
@@ -169,7 +170,7 @@ contract SpaceOwnerActionsTest is SpaceTest {
         space.removeVotingStrategies(newIndices);
 
         // Try creating a proposal using these strategies that were just removed.
-        vm.expectRevert("Invalid Voting Strategy Index");
+        vm.expectRevert(abi.encodeWithSelector(InvalidVotingStrategyIndex.selector, 0));
         vanillaAuthenticator.authenticate(
             address(space),
             PROPOSE_SELECTOR,
@@ -236,7 +237,7 @@ contract SpaceOwnerActionsTest is SpaceTest {
         space.removeAuthenticators(newAuths);
 
         // Ensure we can't propose with this authenticator anymore
-        vm.expectRevert("Invalid Authenticator");
+        vm.expectRevert(abi.encodeWithSelector(AuthenticatorNotWhitelisted.selector, address(this)));
         space.propose(
             author,
             proposalMetadataUri,
@@ -289,7 +290,7 @@ contract SpaceOwnerActionsTest is SpaceTest {
         space.removeExecutionStrategies(newExecutionStrategies);
 
         // Ensure we cant propose with this execution strategy anymore
-        vm.expectRevert("Invalid Execution Strategy");
+        vm.expectRevert(abi.encodeWithSelector(ExecutionStrategyNotWhitelisted.selector, newExecutionStrategies[0]));
 
         vanillaAuthenticator.authenticate(
             address(space),

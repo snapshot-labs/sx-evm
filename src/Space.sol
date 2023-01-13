@@ -4,6 +4,7 @@ import "forge-std/console2.sol";
 import "src/interfaces/IVotingStrategy.sol";
 // import "src/interfaces/ISpace.sol"; TODO: add this later when everything has been impl
 import "src/interfaces/space/ISpaceEvents.sol";
+import "src/SpaceErrors.sol";
 import "src/types.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@zodiac/core/Module.sol";
@@ -13,7 +14,7 @@ import "@zodiac/core/Module.sol";
  * @title   Space Contract.
  * @notice  Logic and bookkeeping contract.
  */
-contract Space is ISpaceEvents, Module {
+contract Space is ISpaceEvents, Module, SpaceErrors {
     // Maximum duration a proposal can last.
     uint32 public maxVotingDuration;
     // Minimum duration a proposal can last.
@@ -89,15 +90,12 @@ contract Space is ISpaceEvents, Module {
                 (address, uint32, uint32, uint32, uint256, uint256, VotingStrategy[], address[], address[])
             );
 
-        require(
-            _minVotingDuration <= _maxVotingDuration,
-            "Min duration should be smaller than or equal to max duration"
-        );
-        require(_authenticators.length > 0, "Authenticators array empty");
-        require(_executionStrategies.length > 0, "Execution Strategies array empty");
+        if (_minVotingDuration > _maxVotingDuration) revert InvalidDuration(_minVotingDuration, _maxVotingDuration);
+        if (_authenticators.length == 0) revert EmptyArray();
+        if (_executionStrategies.length == 0) revert EmptyArray();
 
         // TODO: call _addVotingStrategies and remove
-        require(_votingStrategies.length > 0, "Voting Strategies array empty");
+        if (_votingStrategies.length == 0) revert EmptyArray();
 
         transferOwnership(_owner);
 
@@ -131,12 +129,12 @@ contract Space is ISpaceEvents, Module {
      * @param   _votingStrategies  Array of voting strategies to add.
      */
     function _addVotingStrategies(VotingStrategy[] memory _votingStrategies) internal {
-        require(_votingStrategies.length > 0, "Voting Strategies array empty");
+        if (_votingStrategies.length == 0) revert EmptyArray();
 
         for (uint256 i = 0; i < _votingStrategies.length; i++) {
             // A voting strategy set to 0 is used to indicate that the voting strategy is no longer active,
             // so we need to prevent the user from adding a null invalid strategy address.
-            require(_votingStrategies[i].addy != address(0), "Invalid Voting Strategy address");
+            if (_votingStrategies[i].addy == address(0)) revert InvalidVotingStrategyAddress();
             votingStrategies.push(_votingStrategies[i]);
         }
 
@@ -205,7 +203,7 @@ contract Space is ISpaceEvents, Module {
      * @notice  Internal function to ensure `msg.sender` is in the list of allowed authenticators.
      */
     function _assertValidAuthenticator() internal view {
-        require(authenticators[msg.sender], "Invalid Authenticator");
+        if (authenticators[msg.sender] != true) revert AuthenticatorNotWhitelisted(msg.sender);
     }
 
     /**
@@ -213,7 +211,7 @@ contract Space is ISpaceEvents, Module {
      * @param   executionStrategy  The execution strategy to check.
      */
     function _assertValidExecutionStrategy(address executionStrategy) internal view {
-        require(executionStrategies[executionStrategy], "Invalid Execution Strategy");
+        if (executionStrategies[executionStrategy] != true) revert ExecutionStrategyNotWhitelisted(executionStrategy);
     }
 
     /**
@@ -225,7 +223,7 @@ contract Space is ISpaceEvents, Module {
         if (arr.length > 0) {
             for (uint256 i = 0; i < arr.length - 1; i++) {
                 for (uint256 j = i + 1; j < arr.length; j++) {
-                    require(arr[i] != arr[j], "Duplicates found"); // TODO: should we use a `if` to reduce gas cost?
+                    if (arr[i] != arr[j]) revert DuplicateFound(arr[i], arr[j]);
                 }
             }
         }
@@ -256,7 +254,7 @@ contract Space is ISpaceEvents, Module {
             VotingStrategy memory votingStrategy = votingStrategies[index];
             // A strategyAddress set to 0 indicates that this address has already been removed and is
             // no longer a valid voting strategy. See `_removeVotingStrategies`.
-            require(votingStrategy.addy != address(0), "Invalid Voting Strategy Index");
+            if (votingStrategy.addy == address(0)) revert InvalidVotingStrategyIndex(i);
             IVotingStrategy strategy = IVotingStrategy(votingStrategy.addy);
             totalVotingPower += strategy.getVotingPower(
                 timestamp,
@@ -277,14 +275,14 @@ contract Space is ISpaceEvents, Module {
     // ------------------------------------
 
     function setMaxVotingDuration(uint32 _maxVotingDuration) external onlyOwner {
-        require(_maxVotingDuration >= minVotingDuration, "Max Duration must be bigger than Min Duration");
+        if (_maxVotingDuration < minVotingDuration) revert InvalidDuration(minVotingDuration, _maxVotingDuration);
         emit MaxVotingDurationUpdated(maxVotingDuration, _maxVotingDuration);
 
         maxVotingDuration = _maxVotingDuration;
     }
 
     function setMinVotingDuration(uint32 _minVotingDuration) external onlyOwner {
-        require(_minVotingDuration <= maxVotingDuration, "Min Duration must be smaller than Max Duration");
+        if (_minVotingDuration > maxVotingDuration) revert InvalidDuration(_minVotingDuration, maxVotingDuration);
 
         emit MinVotingDurationUpdated(minVotingDuration, _minVotingDuration);
 
@@ -349,7 +347,7 @@ contract Space is ISpaceEvents, Module {
         // startTimestamp cannot be set to 0 when a proposal is created,
         // so if proposal.startTimestamp is 0 it means this proposal does not exist
         // and hence `proposalId` is invalid.
-        require(proposal.startTimestamp != 0, "Invalid proposalId");
+        if (proposal.startTimestamp == 0) revert InvalidProposalId(proposalId);
 
         // TODO: maybe get proposal status (executed or not?)
         return (proposal);
@@ -380,10 +378,8 @@ contract Space is ISpaceEvents, Module {
     ) external {
         _assertValidAuthenticator();
         _assertValidExecutionStrategy(executionStrategy);
-        require(
-            usedVotingStrategiesIndices.length == userVotingStrategyParams.length,
-            "Used Strategies and Used Strategies Parameters length mismatch"
-        );
+        if (usedVotingStrategiesIndices.length != userVotingStrategyParams.length)
+            revert StrategyAndStrategyParamsLengthMismatch();
 
         uint32 snapshotTimestamp = uint32(block.timestamp);
 
@@ -393,7 +389,7 @@ contract Space is ISpaceEvents, Module {
             usedVotingStrategiesIndices,
             userVotingStrategyParams
         );
-        require(votingPower >= proposalThreshold, "Proposal threshold not reached");
+        if (votingPower < proposalThreshold) revert ProposalThresholdNotReached(votingPower);
 
         // TODO: use SafeMath
         uint32 startTimestamp = snapshotTimestamp + votingDelay;

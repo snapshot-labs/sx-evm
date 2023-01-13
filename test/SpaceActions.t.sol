@@ -10,7 +10,7 @@ import "../src/voting-strategies/VanillaVotingStrategy.sol";
 import "../src/interfaces/space/ISpaceEvents.sol";
 import { GasSnapshot } from "forge-gas-snapshot/GasSnapshot.sol";
 
-contract SpaceActionsTest is SpaceTest {
+contract SpaceActionsTest is SpaceTest, SpaceErrors {
     function testPropose() public {
         uint256 proposalId = space.nextProposalId();
 
@@ -60,7 +60,7 @@ contract SpaceActionsTest is SpaceTest {
 
     function testProposeInvalidAuth() public {
         //  Using this contract as an authenticator, which is not whitelisted
-        vm.expectRevert("Invalid Authenticator");
+        vm.expectRevert(abi.encodeWithSelector(AuthenticatorNotWhitelisted.selector, address(this)));
         space.propose(
             author,
             proposalMetadataUri,
@@ -73,7 +73,7 @@ contract SpaceActionsTest is SpaceTest {
 
     function testProposeInvalidExecutionStrategy() public {
         address invalidExecutionStrategy = address(1);
-        vm.expectRevert("Invalid Execution Strategy");
+        vm.expectRevert(abi.encodeWithSelector(ExecutionStrategyNotWhitelisted.selector, invalidExecutionStrategy));
         vanillaAuthenticator.authenticate(
             address(space),
             PROPOSE_SELECTOR,
@@ -121,7 +121,7 @@ contract SpaceActionsTest is SpaceTest {
         userVotingStrategyParams2[2] = new bytes(0);
         userVotingStrategyParams2[3] = new bytes(0);
 
-        vm.expectRevert("Duplicates found");
+        vm.expectRevert(abi.encodeWithSelector(DuplicateFound.selector, 0, 0));
         vanillaAuthenticator.authenticate(
             address(space),
             PROPOSE_SELECTOR,
@@ -137,7 +137,7 @@ contract SpaceActionsTest is SpaceTest {
     }
 
     function testGetInvalidProposalInfo() public {
-        vm.expectRevert("Invalid proposalId");
+        vm.expectRevert(abi.encodeWithSelector(InvalidProposalId.selector, 1));
         // No proposal has been created yet
         space.getProposalInfo(1);
     }
