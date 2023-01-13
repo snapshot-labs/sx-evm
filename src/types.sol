@@ -28,6 +28,12 @@ struct ProposalInfo {
 }
 
 enum ProposalOutcome {
+    Accepted,
+    Rejected,
+    Cancelled
+}
+
+enum ExecutionStatus {
     NotExecutedYet,
     Accepted,
     Rejected,

@@ -39,8 +39,8 @@ contract Space is ISpaceEvents, Module, SpaceErrors {
     mapping(address => bool) private authenticators;
     // Mapping of all `Proposal`s of this space (past and present).
     mapping(uint256 => Proposal) private proposalRegistry;
-    // Mapping to keep track the ouctome of the proposals.
-    mapping(uint256 => ProposalOutcome) private executedProposals;
+    // Mapping to keep track the execution status of the proposals.
+    mapping(uint256 => ExecutionStatus) private executedProposals;
 
     // ------------------------------------
     // |                                  |
