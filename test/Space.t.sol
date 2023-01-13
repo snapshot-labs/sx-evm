@@ -8,6 +8,7 @@ import { GasSnapshot } from "forge-gas-snapshot/GasSnapshot.sol";
 import "../src/Space.sol";
 import "../src/authenticators/VanillaAuthenticator.sol";
 import "../src/voting-strategies/VanillaVotingStrategy.sol";
+import "../src/execution-strategies/VanillaExecutionStrategy.sol";
 import "../src/interfaces/space/ISpaceEvents.sol";
 
 abstract contract SpaceTest is Test, GasSnapshot, ISpaceEvents {
@@ -16,7 +17,7 @@ abstract contract SpaceTest is Test, GasSnapshot, ISpaceEvents {
     Space space;
     VanillaVotingStrategy vanillaVotingStrategy;
     VanillaAuthenticator vanillaAuthenticator;
-    address vanillaExecutionStrategy; // TODO: Use vanilla execution strategy contract once it's implemented
+    VanillaExecutionStrategy vanillaExecutionStrategy;
 
     // Address of the meta transaction relayer
     address public relayer = address(this);
@@ -47,6 +48,7 @@ abstract contract SpaceTest is Test, GasSnapshot, ISpaceEvents {
     function setUp() public {
         vanillaVotingStrategy = new VanillaVotingStrategy();
         vanillaAuthenticator = new VanillaAuthenticator();
+        vanillaExecutionStrategy = new VanillaExecutionStrategy();
 
         votingDelay = 0;
         minVotingDuration = 1;
@@ -55,7 +57,7 @@ abstract contract SpaceTest is Test, GasSnapshot, ISpaceEvents {
         quorum = 1;
         votingStrategies.push(VotingStrategy(address(vanillaVotingStrategy), new bytes(0)));
         authenticators.push(address(vanillaAuthenticator));
-        executionStrategies.push(address(0));
+        executionStrategies.push(address(vanillaExecutionStrategy));
         usedVotingStrategiesIndices = [0];
         userVotingStrategyParams = [new bytes(0)];
         executionParams = new bytes(0);
