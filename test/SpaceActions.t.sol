@@ -12,7 +12,7 @@ import { GasSnapshot } from "forge-gas-snapshot/GasSnapshot.sol";
 
 contract SpaceActionsTest is SpaceTest {
     function testPropose() public {
-        uint256 proposalId = space.nextProposalNonce();
+        uint256 proposalId = space.nextProposalId();
 
         bytes32 executionHash = keccak256(abi.encodePacked(executionParams));
         uint32 snapshotTimestamp = uint32(block.timestamp);

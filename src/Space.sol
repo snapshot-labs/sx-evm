@@ -19,7 +19,7 @@ contract Space is ISpaceEvents, Module {
     // Minimum duration a proposal can last.
     uint32 public minVotingDuration;
     // Next proposal nonce, increased by one everytime a new proposal is created.
-    uint256 public nextProposalNonce;
+    uint256 public nextProposalId;
     // Minimum voting power required by a user to create a new proposal (used to prevent proposal spamming).
     uint256 public proposalThreshold;
     // Total voting power that needs to participate to a vote for a vote to be considered valid.
@@ -116,7 +116,7 @@ contract Space is ISpaceEvents, Module {
         // emit ExecutionStrategiesAdded(_executionStrategies);
         // emit AuthenticatorsAdded(_authenticators);
 
-        nextProposalNonce = 1;
+        nextProposalId = 1;
     }
 
     // ------------------------------------
@@ -412,9 +412,9 @@ contract Space is ISpaceEvents, Module {
             executionHash
         );
 
-        proposalRegistry[nextProposalNonce] = proposal;
-        emit ProposalCreated(nextProposalNonce, proposerAddress, proposal, metadataUri, executionParams);
+        proposalRegistry[nextProposalId] = proposal;
+        emit ProposalCreated(nextProposalId, proposerAddress, proposal, metadataUri, executionParams);
 
-        nextProposalNonce++;
+        nextProposalId++;
     }
 }

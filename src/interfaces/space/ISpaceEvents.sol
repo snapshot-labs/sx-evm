@@ -5,7 +5,7 @@ import "src/types.sol";
 
 interface ISpaceEvents {
     event ProposalCreated(
-        uint256 nextProposalNonce,
+        uint256 nextProposalId,
         address proposerAddress,
         Proposal proposal,
         string metadataUri,
