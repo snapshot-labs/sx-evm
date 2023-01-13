@@ -243,27 +243,40 @@ contract Space is ISpaceEvents, Module, SpaceErrors {
     }
 
     /**
+     * @notice  Internal function to ensure there are no duplicates in an array of `UserVotingStrategy`.
+     * @dev     No way to declare a mapping in memory so we need to use an array and go for O(n^2)...
+     * @param   strats  Array to check for duplicates.
+     */
+    function _assertNoDuplicateIndices(UserVotingStrategy[] memory strats) internal pure {
+        if (strats.length > 0) {
+            for (uint256 i = 0; i < strats.length - 1; i++) {
+                for (uint256 j = i + 1; j < strats.length; j++) {
+                    if (strats[i].index == strats[j].index) revert DuplicateFound(strats[i].index, strats[j].index);
+                }
+            }
+        }
+    }
+
+    /**
      * @notice  Internal function that will loop over the used voting strategies and
                 return the cumulative voting power of a user.
      * @dev     
      * @param   timestamp  Timestamp of the snapshot.
      * @param   userAddress  Address for which to compute the voting power.
-     * @param   usedVotingStrategiesIndices  Indices of the desired voting strategies to check.
-     * @param   userVotingStrategyParams  Associated user parameters.
+     * @param   userVotingStrategies The desired voting strategies to check.
      * @return  uint256  The total voting power of a user (over those specified voting strategies).
      */
     function _getCumulativeVotingPower(
         uint32 timestamp,
         address userAddress,
-        uint[] calldata usedVotingStrategiesIndices,
-        bytes[] calldata userVotingStrategyParams
+        UserVotingStrategy[] calldata userVotingStrategies
     ) internal view returns (uint256) {
         // Ensure there are no duplicates to avoid an attack where people double count a voting strategy
-        _assertNoDuplicates(usedVotingStrategiesIndices);
+        _assertNoDuplicateIndices(userVotingStrategies);
 
         uint256 totalVotingPower = 0;
-        for (uint256 i = 0; i < usedVotingStrategiesIndices.length; i++) {
-            uint256 index = usedVotingStrategiesIndices[i];
+        for (uint256 i = 0; i < userVotingStrategies.length; i++) {
+            uint256 index = userVotingStrategies[i].index;
             VotingStrategy memory votingStrategy = votingStrategies[index];
             // A strategyAddress set to 0 indicates that this address has already been removed and is
             // no longer a valid voting strategy. See `_removeVotingStrategies`.
@@ -273,7 +286,7 @@ contract Space is ISpaceEvents, Module, SpaceErrors {
                 timestamp,
                 userAddress,
                 votingStrategy.params,
-                userVotingStrategyParams[i]
+                userVotingStrategies[i].params
             );
             // TODO: use SafeMath, check overflow
         }
@@ -366,12 +379,12 @@ contract Space is ISpaceEvents, Module, SpaceErrors {
 
         Proposal memory proposal = proposalRegistry[proposalId];
 
-        ProposalOutcome outcome = executedProposals[proposalId];
-        if (outcome == ProposalOutcome.Accepted) {
+        ExecutionStatus outcome = executedProposals[proposalId];
+        if (outcome == ExecutionStatus.Accepted) {
             return ProposalStatus.Accepted;
-        } else if (outcome == ProposalOutcome.Rejected) {
+        } else if (outcome == ExecutionStatus.Rejected) {
             return ProposalStatus.Rejected;
-        } else if (outcome == ProposalOutcome.Cancelled) {
+        } else if (outcome == ExecutionStatus.Cancelled) {
             return ProposalStatus.Cancelled;
         } else {
             // Proposal has not been executed yet. Let's look at the current timestamp.
@@ -397,31 +410,22 @@ contract Space is ISpaceEvents, Module, SpaceErrors {
      * @param   proposerAddress  The address of the proposal creator.
      * @param   metadataUri  The metadata URI for the proposal.
      * @param   executionStrategy  The execution contract to use for this proposal.
-     * @param   usedVotingStrategiesIndices  Indices to use to compute the proposer voting power.
-     * @param   userVotingStrategyParams  Associated parameters to use for computing the proposer voting power.
+     * @param   userVotingStrategies  Strategies to use to compute the proposer voting power.
      * @param   executionParams  The execution parameters (used if a proposal gets accepted).
      */
     function propose(
         address proposerAddress,
         string calldata metadataUri,
         address executionStrategy,
-        uint256[] calldata usedVotingStrategiesIndices,
-        bytes[] calldata userVotingStrategyParams,
-        bytes calldata executionParams
+        bytes calldata executionParams,
+        UserVotingStrategy[] calldata userVotingStrategies
     ) external {
         _assertValidAuthenticator();
         _assertValidExecutionStrategy(executionStrategy);
-        if (usedVotingStrategiesIndices.length != userVotingStrategyParams.length)
-            revert StrategyAndStrategyParamsLengthMismatch();
 
         uint32 snapshotTimestamp = uint32(block.timestamp);
 
-        uint256 votingPower = _getCumulativeVotingPower(
-            snapshotTimestamp,
-            proposerAddress,
-            usedVotingStrategiesIndices,
-            userVotingStrategyParams
-        );
+        uint256 votingPower = _getCumulativeVotingPower(snapshotTimestamp, proposerAddress, userVotingStrategies);
         if (votingPower < proposalThreshold) revert ProposalThresholdNotReached(votingPower);
 
         // TODO: use SafeMath

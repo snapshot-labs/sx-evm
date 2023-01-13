@@ -22,6 +22,11 @@ struct VotingStrategy {
     bytes params;
 }
 
+struct UserVotingStrategy {
+    uint256 index;
+    bytes params;
+}
+
 struct ProposalInfo {
     Proposal proposal;
     ProposalStatus status;

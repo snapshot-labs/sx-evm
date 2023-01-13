@@ -15,7 +15,6 @@ contract SpaceErrors {
     error AuthenticatorNotWhitelisted(address auth);
     error ExecutionStrategyNotWhitelisted(address strategy);
 
-    error StrategyAndStrategyParamsLengthMismatch();
     error ProposalThresholdNotReached(uint256 votingPower);
 
     error DuplicateFound(uint a, uint b);

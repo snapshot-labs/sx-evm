@@ -10,9 +10,10 @@ import "../src/authenticators/VanillaAuthenticator.sol";
 import "../src/voting-strategies/VanillaVotingStrategy.sol";
 import "../src/execution-strategies/VanillaExecutionStrategy.sol";
 import "../src/interfaces/space/ISpaceEvents.sol";
+import "../src/types.sol";
 
 abstract contract SpaceTest is Test, GasSnapshot, ISpaceEvents {
-    bytes4 constant PROPOSE_SELECTOR = bytes4(keccak256("propose(address,string,address,uint256[],bytes[],bytes)"));
+    bytes4 constant PROPOSE_SELECTOR = bytes4(keccak256("propose(address,string,address,bytes,(uint256,bytes)[])"));
 
     Space space;
     VanillaVotingStrategy vanillaVotingStrategy;
@@ -36,9 +37,7 @@ abstract contract SpaceTest is Test, GasSnapshot, ISpaceEvents {
     uint256 public proposalThreshold;
     uint32 public quorum;
 
-    bytes public executionParams;
-    uint256[] public usedVotingStrategiesIndices;
-    bytes[] public userVotingStrategyParams;
+    UserVotingStrategy[] public userVotingStrategies;
 
     // TODO: emit in the space factory event - (once we have a factory)
     string public spaceMetadataUri = "SOC Test Space";
@@ -57,10 +56,8 @@ abstract contract SpaceTest is Test, GasSnapshot, ISpaceEvents {
         quorum = 1;
         votingStrategies.push(VotingStrategy(address(vanillaVotingStrategy), new bytes(0)));
         authenticators.push(address(vanillaAuthenticator));
-        executionStrategies.push(address(vanillaExecutionStrategy));
-        usedVotingStrategiesIndices = [0];
-        userVotingStrategyParams = [new bytes(0)];
-        executionParams = new bytes(0);
+        executionStrategies.push(address(vanillaExecutionStrategy), new bytes(0));
+        userVotingStrategies.push(UserVotingStrategy(0, new bytes(0)));
 
         owner = address(this);
 

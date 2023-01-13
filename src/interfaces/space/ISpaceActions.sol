@@ -2,14 +2,15 @@
 
 pragma solidity ^0.8.15;
 
+import "src/types.sol";
+
 interface ISpaceActions {
     function propose(
         address proposerAddress,
         string calldata metadataUri,
         address executionStrategy,
-        uint256[] calldata usedVotingStrategiesIndices,
-        bytes[] calldata userVotingStrategyParams,
-        bytes calldata executionParams
+        bytes calldata executionParams,
+        UserVotingStrategy[] calldata userVotingStrategies
     ) external;
 
     function vote() external;

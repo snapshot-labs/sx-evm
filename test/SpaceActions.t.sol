@@ -36,14 +36,7 @@ contract SpaceActionsTest is SpaceTest, SpaceErrors {
         vanillaAuthenticator.authenticate(
             address(space),
             PROPOSE_SELECTOR,
-            abi.encode(
-                author,
-                proposalMetadataUri,
-                executionStrategies[0],
-                usedVotingStrategiesIndices,
-                userVotingStrategyParams,
-                executionParams
-            )
+            abi.encode(author, proposalMetadataUri, executionStrategies[0], executionParams, userVotingStrategies)
         );
 
         // Actual content of the proposal struct
@@ -61,14 +54,7 @@ contract SpaceActionsTest is SpaceTest, SpaceErrors {
     function testProposeInvalidAuth() public {
         //  Using this contract as an authenticator, which is not whitelisted
         vm.expectRevert(abi.encodeWithSelector(AuthenticatorNotWhitelisted.selector, address(this)));
-        space.propose(
-            author,
-            proposalMetadataUri,
-            executionStrategies[0],
-            usedVotingStrategiesIndices,
-            userVotingStrategyParams,
-            executionParams
-        );
+        space.propose(author, proposalMetadataUri, executionStrategies[0], executionParams, userVotingStrategies);
     }
 
     function testProposeInvalidExecutionStrategy() public {
@@ -77,62 +63,35 @@ contract SpaceActionsTest is SpaceTest, SpaceErrors {
         vanillaAuthenticator.authenticate(
             address(space),
             PROPOSE_SELECTOR,
-            abi.encode(
-                author,
-                proposalMetadataUri,
-                invalidExecutionStrategy,
-                usedVotingStrategiesIndices,
-                userVotingStrategyParams,
-                executionParams
-            )
+            abi.encode(author, proposalMetadataUri, invalidExecutionStrategy, executionParams, userVotingStrategies)
         );
     }
 
-    function testProposeInvalidUsedVotingStrategy() public {
-        uint256[] memory invalidUsedStrategy = new uint256[](1);
-        invalidUsedStrategy[0] = 42;
+    function testProposeInvalidUserVotingStrategy() public {
+        UserVotingStrategy[] memory invalidUsedStrategies = new UserVotingStrategy[](1);
+        invalidUsedStrategies[0] = UserVotingStrategy(42, new bytes(0));
 
         // out of bounds revert
         vm.expectRevert();
         vanillaAuthenticator.authenticate(
             address(space),
             PROPOSE_SELECTOR,
-            abi.encode(
-                author,
-                proposalMetadataUri,
-                executionStrategies[0],
-                invalidUsedStrategy,
-                userVotingStrategyParams,
-                executionParams
-            )
+            abi.encode(author, proposalMetadataUri, executionStrategies[0], executionParams, invalidUsedStrategies)
         );
     }
 
-    function testProposeDuplicateUsedVotingStrategy() public {
-        uint256[] memory invalidUsedStrategy = new uint256[](4);
-        invalidUsedStrategy[0] = 0;
-        invalidUsedStrategy[1] = 1;
-        invalidUsedStrategy[2] = 2;
-        invalidUsedStrategy[3] = 0; // Duplicate entry
-
-        bytes[] memory userVotingStrategyParams2 = new bytes[](4);
-        userVotingStrategyParams2[0] = new bytes(0);
-        userVotingStrategyParams2[1] = new bytes(0);
-        userVotingStrategyParams2[2] = new bytes(0);
-        userVotingStrategyParams2[3] = new bytes(0);
+    function testProposeDuplicateUserVotingStrategy() public {
+        UserVotingStrategy[] memory invalidUsedStrategies = new UserVotingStrategy[](4);
+        invalidUsedStrategies[0] = UserVotingStrategy(0, new bytes(0));
+        invalidUsedStrategies[1] = UserVotingStrategy(1, new bytes(0));
+        invalidUsedStrategies[2] = UserVotingStrategy(2, new bytes(0));
+        invalidUsedStrategies[3] = UserVotingStrategy(0, new bytes(0)); // Duplicate index
 
         vm.expectRevert(abi.encodeWithSelector(DuplicateFound.selector, 0, 0));
         vanillaAuthenticator.authenticate(
             address(space),
             PROPOSE_SELECTOR,
-            abi.encode(
-                author,
-                proposalMetadataUri,
-                executionStrategies[0],
-                invalidUsedStrategy,
-                userVotingStrategyParams2,
-                executionParams
-            )
+            abi.encode(author, proposalMetadataUri, executionStrategies[0], executionParams, invalidUsedStrategies)
         );
     }
 

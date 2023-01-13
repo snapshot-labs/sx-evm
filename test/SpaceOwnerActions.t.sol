@@ -145,6 +145,9 @@ contract SpaceOwnerActionsTest is SpaceTest, SpaceErrors {
         uint256[] memory newIndices = new uint256[](1);
         newIndices[0] = 1;
 
+        UserVotingStrategy[] memory newUserVotingStrategies = new UserVotingStrategy[](1);
+        newUserVotingStrategies[0] = UserVotingStrategy(newIndices[0], new bytes(0));
+
         vm.expectEmit(true, true, true, true);
         emit VotingStrategiesAdded(newVotingStrategies);
         vm.prank(owner);
@@ -154,14 +157,7 @@ contract SpaceOwnerActionsTest is SpaceTest, SpaceErrors {
         vanillaAuthenticator.authenticate(
             address(space),
             PROPOSE_SELECTOR,
-            abi.encode(
-                author,
-                proposalMetadataUri,
-                executionStrategies[0],
-                newIndices,
-                userVotingStrategyParams,
-                executionParams
-            )
+            abi.encode(author, proposalMetadataUri, executionStrategies[0], executionParams, newUserVotingStrategies)
         );
 
         // Remove the voting strategies
@@ -174,28 +170,14 @@ contract SpaceOwnerActionsTest is SpaceTest, SpaceErrors {
         vanillaAuthenticator.authenticate(
             address(space),
             PROPOSE_SELECTOR,
-            abi.encode(
-                author,
-                proposalMetadataUri,
-                executionStrategies[0],
-                newIndices,
-                userVotingStrategyParams,
-                executionParams
-            )
+            abi.encode(author, proposalMetadataUri, executionStrategies[0], executionParams, newUserVotingStrategies)
         );
 
         // Try creating a proposal with the previous voting strategy that was never removed.
         vanillaAuthenticator.authenticate(
             address(space),
             PROPOSE_SELECTOR,
-            abi.encode(
-                author,
-                proposalMetadataUri,
-                executionStrategies[0],
-                usedVotingStrategiesIndices,
-                userVotingStrategyParams,
-                executionParams
-            )
+            abi.encode(author, proposalMetadataUri, executionStrategies[0], executionParams, userVotingStrategies)
         );
     }
 
@@ -208,7 +190,8 @@ contract SpaceOwnerActionsTest is SpaceTest, SpaceErrors {
     function testUnauthorizedRemoveVotingStrategies() public {
         vm.expectRevert("Ownable: caller is not the owner");
         vm.prank(unauthorized);
-        space.removeVotingStrategies(usedVotingStrategiesIndices);
+        uint256[] memory empty = new uint256[](0);
+        space.removeVotingStrategies(empty);
     }
 
     // ------- Authenticators ----
@@ -223,14 +206,7 @@ contract SpaceOwnerActionsTest is SpaceTest, SpaceErrors {
         space.addAuthenticators(newAuths);
 
         // The new authenticator is this contract so we can call `propose` directly.
-        space.propose(
-            author,
-            proposalMetadataUri,
-            executionStrategies[0],
-            usedVotingStrategiesIndices,
-            userVotingStrategyParams,
-            executionParams
-        );
+        space.propose(author, proposalMetadataUri, executionStrategies[0], executionParams, userVotingStrategies);
 
         vm.expectEmit(true, true, true, true);
         emit AuthenticatorsRemoved(newAuths);
@@ -238,14 +214,7 @@ contract SpaceOwnerActionsTest is SpaceTest, SpaceErrors {
 
         // Ensure we can't propose with this authenticator anymore
         vm.expectRevert(abi.encodeWithSelector(AuthenticatorNotWhitelisted.selector, address(this)));
-        space.propose(
-            author,
-            proposalMetadataUri,
-            executionStrategies[0],
-            usedVotingStrategiesIndices,
-            userVotingStrategyParams,
-            executionParams
-        );
+        space.propose(author, proposalMetadataUri, executionStrategies[0], executionParams, userVotingStrategies);
     }
 
     function testUnauthorizedAddAuthenticators() public {
@@ -275,14 +244,7 @@ contract SpaceOwnerActionsTest is SpaceTest, SpaceErrors {
         vanillaAuthenticator.authenticate(
             address(space),
             PROPOSE_SELECTOR,
-            abi.encode(
-                author,
-                proposalMetadataUri,
-                newExecutionStrategies[0],
-                usedVotingStrategiesIndices,
-                userVotingStrategyParams,
-                executionParams
-            )
+            abi.encode(author, proposalMetadataUri, newExecutionStrategies[0], executionParams, userVotingStrategies)
         );
 
         vm.expectEmit(true, true, true, true);
@@ -295,14 +257,7 @@ contract SpaceOwnerActionsTest is SpaceTest, SpaceErrors {
         vanillaAuthenticator.authenticate(
             address(space),
             PROPOSE_SELECTOR,
-            abi.encode(
-                author,
-                proposalMetadataUri,
-                newExecutionStrategies[0],
-                usedVotingStrategiesIndices,
-                userVotingStrategyParams,
-                executionParams
-            )
+            abi.encode(author, proposalMetadataUri, newExecutionStrategies[0], executionParams, userVotingStrategies)
         );
     }
 
