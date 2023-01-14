@@ -19,7 +19,10 @@ contract SpaceErrors {
 
     error DuplicateFound(uint a, uint b);
 
-    error ProposalNotExecutedYet();
+    error ProposalAlreadyExecuted();
+    error MinVotingDurationHasNotElapsed();
+    error ExecutionHashMismatch();
+    error QuorumNotReached();
 
     error VotingPeriodHasEnded();
     error VotingPeriodHasNotStarted();
