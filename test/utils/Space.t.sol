@@ -12,6 +12,7 @@ import "../../src/execution-strategies/VanillaExecutionStrategy.sol";
 
 abstract contract SpaceTest is Test, GasSnapshot, ISpaceEvents, SpaceErrors {
     bytes4 constant PROPOSE_SELECTOR = bytes4(keccak256("propose(address,string,(address,bytes),(uint8,bytes)[])"));
+    bytes4 constant VOTE_SELECTOR = bytes4(keccak256("vote(address,uint256,uint8,(uint8,bytes)[])"));
 
     Space space;
     VanillaVotingStrategy vanillaVotingStrategy;
@@ -56,7 +57,7 @@ abstract contract SpaceTest is Test, GasSnapshot, ISpaceEvents, SpaceErrors {
         quorum = 1;
         votingStrategies.push(Strategy(address(vanillaVotingStrategy), new bytes(0)));
         authenticators.push(address(vanillaAuthenticator));
-        executionStrategy = Strategy(address(0), new bytes(0));
+        executionStrategy = Strategy(address(vanillaExecutionStrategy), new bytes(0));
         executionStrategies.push(executionStrategy);
         userVotingStrategies.push(IndexedStrategy(0, new bytes(0)));
         executionStrategiesAddresses.push(executionStrategy.addy);

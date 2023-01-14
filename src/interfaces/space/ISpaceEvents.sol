@@ -12,6 +12,7 @@ interface ISpaceEvents {
         bytes executionParams
     );
     event VoteCreated(uint256 proposalId, address voterAddress, Vote vote);
+    event ProposalFinalized(uint256 proposalId, ProposalOutcome outcome);
 
     event VotingStrategiesAdded(Strategy[] votingStrategies);
     event VotingStrategiesRemoved(uint8[] indices);

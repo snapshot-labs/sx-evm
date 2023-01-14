@@ -9,6 +9,7 @@ import "src/types.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@zodiac/core/Module.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import "src/interfaces/IExecutionStrategy.sol";
 
 /**
  * @author  SnapshotLabs
@@ -466,20 +467,20 @@ contract Space is ISpaceEvents, Module, SpaceErrors {
      * @param   voterAddress  Voter's address.
      * @param   proposalId  Proposal id.
      * @param   choice  Choice can be `For`, `Against` or `Abstain`.
-     * @param   usedVotingStrategies  Strategies to use to compute the voter's voting power.
+     * @param   userVotingStrategies  Strategies to use to compute the voter's voting power.
      */
     function vote(
         address voterAddress,
         uint256 proposalId,
         Choice choice,
-        IndexedStrategy[] calldata usedVotingStrategies
+        IndexedStrategy[] calldata userVotingStrategies
     ) external {
         _assertValidAuthenticator();
-        _assertProposalExists(proposalId);
 
         Proposal memory proposal = proposalRegistry[proposalId];
+        _assertProposalExists(proposal);
 
-        if (proposal.finalizationStatus != FinalizationStatus.NotExecuted) revert ProposalNotExecutedYet();
+        if (proposal.finalizationStatus != FinalizationStatus.NotExecuted) revert ProposalAlreadyExecuted();
 
         uint256 currentTimestamp = block.timestamp;
 
@@ -489,7 +490,7 @@ contract Space is ISpaceEvents, Module, SpaceErrors {
         // Ensure voter has not already voted.
         if (voteRegistry[proposalId][voterAddress] == true) revert UserHasAlreadyVoted();
 
-        uint256 votingPower = _getCumulativeVotingPower(proposal.snapshotTimestamp, voterAddress, usedVotingStrategies);
+        uint256 votingPower = _getCumulativeVotingPower(proposal.snapshotTimestamp, voterAddress, userVotingStrategies);
 
         if (votingPower == 0) revert UserHasNoVotingPower();
 
@@ -502,4 +503,63 @@ contract Space is ISpaceEvents, Module, SpaceErrors {
         Vote memory userVote = Vote(choice, votingPower);
         emit VoteCreated(proposalId, voterAddress, userVote);
     }
+
+    function finalizeProposal(uint256 proposalId, bytes calldata executionParams) external {
+        Proposal storage proposal = proposalRegistry[proposalId];
+        _assertProposalExists(proposal);
+
+        if (proposal.finalizationStatus != FinalizationStatus.NotExecuted) revert ProposalAlreadyExecuted();
+
+        uint32 currentTimestamp = uint32(block.timestamp);
+
+        if (proposal.minEndTimestamp > currentTimestamp) revert MinVotingDurationHasNotElapsed();
+
+        bytes32 recoveredHash = keccak256(executionParams);
+
+        if (proposal.executionHash != recoveredHash) revert ExecutionHashMismatch();
+
+        uint256 votesFor = votePower[proposalId][Choice.For];
+        uint256 votesAgainst = votePower[proposalId][Choice.Against];
+        uint256 votesAbstain = votePower[proposalId][Choice.Abstain];
+
+        // SafeMath
+        uint256 total = SafeMath.add(SafeMath.add(votesFor, votesAgainst), votesAbstain);
+
+        ProposalOutcome proposalOutcome;
+        // Check to see if we've reached quorum
+        if (proposal.quorum > total) {
+            // Quorum not reached, check to see if the voting period is over.
+            if (currentTimestamp < proposal.maxEndTimestamp) {
+                // Voting period is not over yet; revert.
+                revert QuorumNotReached();
+            } else {
+                // Voting period has ended but quorum wasn't reached: set outcome to `REJECTED`.
+                proposalOutcome = ProposalOutcome.Rejected;
+            }
+        } else {
+            // Quorum has been reached, determine if proposal should be accepted or rejected.
+            if (votesFor > votesAgainst) {
+                proposalOutcome = ProposalOutcome.Accepted;
+            } else {
+                proposalOutcome = ProposalOutcome.Rejected;
+            }
+        }
+
+        // Ensure the execution strategy is still valid.
+        if (executionStrategies[proposal.executionStrategy] == false) {
+            proposalOutcome = ProposalOutcome.Cancelled;
+        }
+
+        // TODO: should we check that this got executed correctly?
+        IExecutionStrategy(proposal.executionStrategy).execute(proposalOutcome, executionParams);
+
+        // TODO: should we set votePower[proposalId][choice] to 0 to get some nice ETH refund?
+        // `ProposalOutcome` and `ExecutionStatus` are almost the same enum except from their first
+        // variant, so by adding `1` we will get the corresponding `ExecutionStatus`.
+        proposal.finalizationStatus = FinalizationStatus(uint8(proposalOutcome) + 1);
+
+        emit ProposalFinalized(proposalId, proposalOutcome);
+    }
+
+    function cancelProposal(uint256 proposalId) external {}
 }
