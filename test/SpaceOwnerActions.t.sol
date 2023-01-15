@@ -11,7 +11,7 @@ import "../src/interfaces/ISpace.sol";
 import "../src/interfaces/space/ISpaceEvents.sol";
 import "../src/SpaceErrors.sol";
 
-contract SpaceOwnerActionsTest is SpaceTest, SpaceErrors {
+contract SpaceOwnerActionsTest is SpaceTest {
     // ------- MaxVotingDuration ----
 
     function testSetMaxVotingDuration() public {
@@ -31,9 +31,12 @@ contract SpaceOwnerActionsTest is SpaceTest, SpaceErrors {
     }
 
     function testSetInvalidMaxVotingDelay() public {
-        vm.expectRevert(abi.encodeWithSelector(InvalidDuration.selector, minVotingDuration, minVotingDuration - 1));
+        // Need to update the minimum voting duration
+        space.setMinVotingDuration(1);
+
+        vm.expectRevert(abi.encodeWithSelector(InvalidDuration.selector, 1, 0));
         vm.prank(owner);
-        space.setMaxVotingDuration(minVotingDuration - 1);
+        space.setMaxVotingDuration(0);
     }
 
     // ------- MinVotingDuration ----

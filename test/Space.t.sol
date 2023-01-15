@@ -11,8 +11,9 @@ import "../src/voting-strategies/VanillaVotingStrategy.sol";
 import "../src/execution-strategies/VanillaExecutionStrategy.sol";
 import "../src/interfaces/space/ISpaceEvents.sol";
 import "../src/types.sol";
+import "../src/SpaceErrors.sol";
 
-abstract contract SpaceTest is Test, GasSnapshot, ISpaceEvents {
+abstract contract SpaceTest is Test, GasSnapshot, ISpaceEvents, SpaceErrors {
     bytes4 constant PROPOSE_SELECTOR = bytes4(keccak256("propose(address,string,(address,bytes),(uint256,bytes)[])"));
     bytes4 constant VOTE_SELECTOR = bytes4(keccak256("vote(address,uint256,uint8,(uint256,bytes)[])"));
 
@@ -53,7 +54,7 @@ abstract contract SpaceTest is Test, GasSnapshot, ISpaceEvents {
         vanillaExecutionStrategy = new VanillaExecutionStrategy();
 
         votingDelay = 0;
-        minVotingDuration = 1;
+        minVotingDuration = 0;
         maxVotingDuration = 1000;
         proposalThreshold = 1;
         quorum = 1;

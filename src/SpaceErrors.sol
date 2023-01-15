@@ -22,7 +22,7 @@ contract SpaceErrors {
     error ProposalAlreadyExecuted();
     error MinVotingDurationHasNotElapsed();
     error ExecutionHashMismatch();
-    error QuorumNotReached();
+    error QuorumNotReachedYet();
 
     error VotingPeriodHasEnded();
     error VotingPeriodHasNotStarted();
