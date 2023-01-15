@@ -531,7 +531,7 @@ contract Space is ISpaceEvents, Module, SpaceErrors {
             // Quorum not reached, check to see if the voting period is over.
             if (currentTimestamp < proposal.maxEndTimestamp) {
                 // Voting period is not over yet; revert.
-                revert QuorumNotReached();
+                revert QuorumNotReachedYet();
             } else {
                 // Voting period has ended but quorum wasn't reached: set outcome to `REJECTED`.
                 proposalOutcome = ProposalOutcome.Rejected;

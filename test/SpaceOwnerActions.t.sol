@@ -23,9 +23,12 @@ contract SpaceOwnerActionsTest is SpaceTest {
     }
 
     function testSetInvalidMaxVotingDelay() public {
-        vm.expectRevert(abi.encodeWithSelector(InvalidDuration.selector, minVotingDuration, minVotingDuration - 1));
+        // Need to update the minimum voting duration
+        space.setMinVotingDuration(1);
+
+        vm.expectRevert(abi.encodeWithSelector(InvalidDuration.selector, 1, 0));
         vm.prank(owner);
-        space.setMaxVotingDuration(minVotingDuration - 1);
+        space.setMaxVotingDuration(0);
     }
 
     // ------- MinVotingDuration ----
