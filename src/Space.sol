@@ -389,10 +389,10 @@ contract Space is ISpaceEvents, Module, SpaceErrors {
                 if (current > proposal.minEndTimestamp) {
                     // We've passed `proposal.minEndTimestamp`, check if quorum has been reached.
                     if (_quorumReached(proposalId)) {
-                        // Quorum has been reached, this proposal is finalizeable.
-                        return ProposalStatus.Finalizeable;
+                        // Quorum has been reached, this proposal is finalizable.
+                        return ProposalStatus.Finalizable;
                     } else {
-                        // Quorum has not been reached so this proposal is NOT finalizeable yet.
+                        // Quorum has not been reached so this proposal is NOT finalizable yet.
                         return ProposalStatus.VotingPeriod;
                     }
                 } else {
