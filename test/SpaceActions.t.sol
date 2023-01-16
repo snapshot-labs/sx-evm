@@ -20,8 +20,9 @@ contract SpaceActionsTest is SpaceTest {
             startTimestamp,
             minEndTimestamp,
             maxEndTimestamp,
+            executionHash,
             executionStrategy.addy,
-            executionHash
+            ExecutionStatus.NotExecutedYet
         );
 
         vm.expectEmit(true, true, true, true);

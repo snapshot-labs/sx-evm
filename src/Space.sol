@@ -39,8 +39,6 @@ contract Space is ISpaceEvents, Module, SpaceErrors {
     mapping(address => bool) private authenticators;
     // Mapping of all `Proposal`s of this space (past and present).
     mapping(uint256 => Proposal) private proposalRegistry;
-    // Mapping to keep track the execution status of the proposals.
-    mapping(uint256 => ExecutionStatus) private executedProposals;
 
     // ------------------------------------
     // |                                  |
@@ -365,8 +363,7 @@ contract Space is ISpaceEvents, Module, SpaceErrors {
     function getProposal(uint256 proposalId) external view returns (Proposal memory) {
         _assertProposalExists(proposalId);
 
-        Proposal memory proposal = proposalRegistry[proposalId];
-        return (proposal);
+        return (proposalRegistry[proposalId]);
     }
 
     function getProposalStatus(uint256 proposalId) external view returns (ProposalStatus) {
@@ -374,8 +371,7 @@ contract Space is ISpaceEvents, Module, SpaceErrors {
 
         Proposal memory proposal = proposalRegistry[proposalId];
 
-        ExecutionStatus outcome = executedProposals[proposalId];
-        if (outcome == ExecutionStatus.NotExecutedYet) {
+        if (proposal.executionStatus == ExecutionStatus.NotExecutedYet) {
             // Proposal has not been executed yet. Let's look at the current timestamp.
             uint256 current = block.timestamp;
             if (current < proposal.startTimestamp) {
@@ -403,7 +399,7 @@ contract Space is ISpaceEvents, Module, SpaceErrors {
         } else {
             // Proposal has been executed. Since `ExecutionStatus` and `ProposalStatus` only differ by
             // one, we can safely cast it by substracting 1.
-            return ProposalStatus(uint8(outcome) - 1);
+            return ProposalStatus(uint8(proposal.executionStatus) - 1);
         }
     }
 
@@ -448,8 +444,9 @@ contract Space is ISpaceEvents, Module, SpaceErrors {
             startTimestamp,
             minEndTimestamp,
             maxEndTimestamp,
+            executionHash,
             executionStrategy.addy,
-            executionHash
+            ExecutionStatus.NotExecutedYet
         );
 
         proposalRegistry[nextProposalId] = proposal;

@@ -13,8 +13,9 @@ struct Proposal {
     uint32 startTimestamp;
     uint32 minEndTimestamp;
     uint32 maxEndTimestamp;
-    address executionStrategy;
     bytes32 executionHash;
+    address executionStrategy;
+    ExecutionStatus executionStatus;
 }
 
 // A struct that represents any kind of strategy (i.e a pair of `address` and `bytes`)
