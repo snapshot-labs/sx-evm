@@ -371,7 +371,7 @@ contract Space is ISpaceEvents, Module, SpaceErrors {
 
         Proposal memory proposal = proposalRegistry[proposalId];
 
-        if (proposal.executionStatus == ExecutionStatus.NotExecutedYet) {
+        if (proposal.finalizationStatus == FinalizationStatus.NotExecuted) {
             // Proposal has not been executed yet. Let's look at the current timestamp.
             uint256 current = block.timestamp;
             if (current < proposal.startTimestamp) {
@@ -397,9 +397,9 @@ contract Space is ISpaceEvents, Module, SpaceErrors {
                 }
             }
         } else {
-            // Proposal has been executed. Since `ExecutionStatus` and `ProposalStatus` only differ by
+            // Proposal has been executed. Since `FinalizationStatus` and `ProposalStatus` only differ by
             // one, we can safely cast it by substracting 1.
-            return ProposalStatus(uint8(proposal.executionStatus) - 1);
+            return ProposalStatus(uint8(proposal.finalizationStatus) - 1);
         }
     }
 
@@ -446,7 +446,7 @@ contract Space is ISpaceEvents, Module, SpaceErrors {
             maxEndTimestamp,
             executionHash,
             executionStrategy.addy,
-            ExecutionStatus.NotExecutedYet
+            FinalizationStatus.NotExecuted
         );
 
         proposalRegistry[nextProposalId] = proposal;

@@ -15,7 +15,7 @@ struct Proposal {
     uint32 maxEndTimestamp;
     bytes32 executionHash;
     address executionStrategy;
-    ExecutionStatus executionStatus;
+    FinalizationStatus finalizationStatus;
 }
 
 // A struct that represents any kind of strategy (i.e a pair of `address` and `bytes`)
@@ -37,14 +37,14 @@ enum ProposalOutcome {
     Cancelled
 }
 
-// Similar to `ProposalOutcome` except is starts with `NotExecutedYet`.
-// notice: it is important it starts with `NotExecutedYet` because it correponds to
+// Similar to `ProposalOutcome` except is starts with `NotExecuted`.
+// notice: it is important it starts with `NotExecuted` because it correponds to
 // `0` which is the default value in Solidity.
-enum ExecutionStatus {
-    NotExecutedYet,
-    Accepted,
-    Rejected,
-    Cancelled
+enum FinalizationStatus {
+    NotExecuted,
+    FinalizedAndAccepted,
+    FinalizedAndRejected,
+    FinalizedAndCancelled
 }
 
 // Status of a proposal. If executed, it will be its outcome; else it will be some
