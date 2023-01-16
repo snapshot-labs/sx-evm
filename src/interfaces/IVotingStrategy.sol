@@ -6,7 +6,7 @@ interface IVotingStrategy {
     function getVotingPower(
         uint256 timestamp,
         address voterAddress,
-        bytes memory params,
-        bytes memory userParams
-    ) external view returns (uint256 votingPower);
+        bytes calldata params,
+        bytes calldata userParams
+    ) external returns (uint256 votingPower);
 }

@@ -5,8 +5,9 @@ pragma solidity ^0.8.15;
 import "@solidity-bytes-utils/contracts/BytesLib.sol";
 import "../interfaces/IVotingStrategy.sol";
 import "../interfaces/IComp.sol";
+import "../utils/TimestampResolver.sol";
 
-contract CompVotingStrategy is IVotingStrategy {
+contract CompVotingStrategy is IVotingStrategy, TimestampResolver {
     // solhint-disable no-unused-vars
     function getVotingPower(
         uint256 timestamp,
