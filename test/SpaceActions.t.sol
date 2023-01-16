@@ -1,16 +1,9 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.15;
 
-import "forge-std/Test.sol";
 import "./Space.t.sol";
-import "forge-std/console2.sol";
-import "../src/Space.sol";
-import "../src/types.sol";
-import "../src/voting-strategies/VanillaVotingStrategy.sol";
-import "../src/interfaces/space/ISpaceEvents.sol";
-import { GasSnapshot } from "forge-gas-snapshot/GasSnapshot.sol";
 
-contract SpaceActionsTest is SpaceTest, SpaceErrors {
+contract SpaceActionsTest is SpaceTest {
     function testPropose() public {
         uint256 proposalId = space.nextProposalId();
 
