@@ -380,22 +380,35 @@ contract Space is ISpaceEvents, Module, SpaceErrors {
         Proposal memory proposal = proposalRegistry[proposalId];
 
         ExecutionStatus outcome = executedProposals[proposalId];
-        if (outcome == ExecutionStatus.Accepted) {
-            return ProposalStatus.Accepted;
-        } else if (outcome == ExecutionStatus.Rejected) {
-            return ProposalStatus.Rejected;
-        } else if (outcome == ExecutionStatus.Cancelled) {
-            return ProposalStatus.Cancelled;
-        } else {
+        if (outcome == ExecutionStatus.NotExecutedYet) {
             // Proposal has not been executed yet. Let's look at the current timestamp.
             uint256 current = block.timestamp;
             if (current < proposal.startTimestamp) {
+                // Not started yet.
                 return ProposalStatus.WaitingForVotingPeriodToStart;
             } else if (current > proposal.maxEndTimestamp) {
+                // Voting period is over, this proposal is waiting to be finalized.
                 return ProposalStatus.FinalizeMe;
             } else {
-                return ProposalStatus.VotingPeriod;
+                // We are somewhere between `proposal.startTimestamp` and `proposal.maxEndTimestamp`.
+                if (current > proposal.minEndTimestamp) {
+                    // We've passed `proposal.minEndTimestamp`, check if quorum has been reached.
+                    if (quorumReached) {
+                        // Quorum has been reached, this proposal is finalizeable.
+                        return ProposalStatus.Finalizeable;
+                    } else {
+                        // Quorum has not been reached so this proposal is NOT finalizeable yet.
+                        return ProposalStatus.VotingPeriod;
+                    }
+                } else {
+                    // `proposal.minEndTimestamp` not reached, so we're just in the regular Voting Period.
+                    return ProposalStatus.VotingPeriod;
+                }
             }
+        } else {
+            // Proposal has been executed. Since `ExecutionStatus` and `ProposalStatus` only differ by
+            // one, we can safely cast it by substracting 1.
+            return ProposalStatus(uint8(outcome) - 1);
         }
     }
 

@@ -29,12 +29,16 @@ struct IndexedStrategy {
     bytes params;
 }
 
+// Outcome of a proposal after being voted on.
 enum ProposalOutcome {
     Accepted,
     Rejected,
     Cancelled
 }
 
+// Similar to `ProposalOutcome` except is starts with `NotExecutedYet`.
+// notice: it is important it starts with `NotExecutedYet` because it correponds to
+// `0` which is the default value in Solidity.
 enum ExecutionStatus {
     NotExecutedYet,
     Accepted,
@@ -42,11 +46,14 @@ enum ExecutionStatus {
     Cancelled
 }
 
+// Status of a proposal. If executed, it will be its outcome; else it will be some
+// information regarding its current status.
 enum ProposalStatus {
     Accepted,
     Rejected,
     Cancelled,
     WaitingForVotingPeriodToStart,
     VotingPeriod,
+    Finalizeable,
     FinalizeMe
 }
