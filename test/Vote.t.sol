@@ -49,7 +49,7 @@ contract VoteTest is SpaceTest {
         uint256 proposalId = createProposal();
         uint256 invalidProposalId = proposalId + 1;
 
-        vm.expectRevert(abi.encodeWithSelector(InvalidProposalId.selector, invalidProposalId));
+        vm.expectRevert(abi.encodeWithSelector(InvalidProposal.selector));
         vote(invalidProposalId, Choice.For, userVotingStrategies);
     }
 

@@ -44,7 +44,7 @@ contract FinalizeProposalTest is SpaceTest {
 
         vote(proposalId, Choice.For, userVotingStrategies);
 
-        vm.expectRevert(abi.encodeWithSelector(InvalidProposalId.selector, invalidProposalId));
+        vm.expectRevert(abi.encodeWithSelector(InvalidProposal.selector));
         space.finalizeProposal(invalidProposalId, executionStrategy.params);
     }
 

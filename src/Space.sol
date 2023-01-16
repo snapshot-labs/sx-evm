@@ -505,6 +505,8 @@ contract Space is ISpaceEvents, Module, SpaceErrors {
     }
 
     function finalizeProposal(uint256 proposalId, bytes calldata executionParams) external {
+        // TODO: check if we should use `memory` here and only use `storage` in the end
+        // of this function when we actually modify the proposal
         Proposal storage proposal = proposalRegistry[proposalId];
         _assertProposalExists(proposal);
 
