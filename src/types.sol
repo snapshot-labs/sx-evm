@@ -54,6 +54,6 @@ enum ProposalStatus {
     Cancelled,
     WaitingForVotingPeriodToStart,
     VotingPeriod,
-    Finalizable,
-    FinalizeMe
+    VotingPeriodFinalizable,
+    Finalizable
 }

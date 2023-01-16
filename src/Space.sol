@@ -383,14 +383,14 @@ contract Space is ISpaceEvents, Module, SpaceErrors {
                 return ProposalStatus.WaitingForVotingPeriodToStart;
             } else if (current > proposal.maxEndTimestamp) {
                 // Voting period is over, this proposal is waiting to be finalized.
-                return ProposalStatus.FinalizeMe;
+                return ProposalStatus.Finalizable;
             } else {
                 // We are somewhere between `proposal.startTimestamp` and `proposal.maxEndTimestamp`.
                 if (current > proposal.minEndTimestamp) {
                     // We've passed `proposal.minEndTimestamp`, check if quorum has been reached.
                     if (_quorumReached(proposalId)) {
                         // Quorum has been reached, this proposal is finalizable.
-                        return ProposalStatus.Finalizable;
+                        return ProposalStatus.VotingPeriodFinalizable;
                     } else {
                         // Quorum has not been reached so this proposal is NOT finalizable yet.
                         return ProposalStatus.VotingPeriod;
