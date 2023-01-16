@@ -294,6 +294,16 @@ contract Space is ISpaceEvents, Module, SpaceErrors {
         return totalVotingPower;
     }
 
+    // TODO: fix this function once we have `vote`
+    /**
+     * @notice  Returns whether the quorum has been reached for this particular proposal or not.
+     * @param   proposalId  The proposal ID.
+     * @return  bool  Whether or not the quorum has been reached.
+     */
+    function _quorumReached(uint256 proposalId) internal view returns (bool) {
+        return (true);
+    }
+
     // ------------------------------------
     // |                                  |
     // |             SETTERS              |
@@ -393,7 +403,7 @@ contract Space is ISpaceEvents, Module, SpaceErrors {
                 // We are somewhere between `proposal.startTimestamp` and `proposal.maxEndTimestamp`.
                 if (current > proposal.minEndTimestamp) {
                     // We've passed `proposal.minEndTimestamp`, check if quorum has been reached.
-                    if (quorumReached) {
+                    if (_quorumReached(proposalId)) {
                         // Quorum has been reached, this proposal is finalizeable.
                         return ProposalStatus.Finalizeable;
                     } else {
@@ -434,6 +444,7 @@ contract Space is ISpaceEvents, Module, SpaceErrors {
         _assertValidAuthenticator();
         _assertValidExecutionStrategy(executionStrategy.addy);
 
+        // Casting to `uint32` is fine because this gives us until year ~2106.
         uint32 snapshotTimestamp = uint32(block.timestamp);
 
         uint256 votingPower = _getCumulativeVotingPower(snapshotTimestamp, proposerAddress, userVotingStrategies);
