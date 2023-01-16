@@ -40,7 +40,7 @@ contract SpaceActionsTest is SpaceTest, SpaceErrors {
         );
 
         // Actual content of the proposal struct
-        Proposal memory _proposal = space.getProposalInfo(proposalId);
+        Proposal memory _proposal = space.getProposal(proposalId);
 
         // Checking expectations and actual values match
         assertEq(_proposal.quorum, proposal.quorum, "Quorum not set properly");
@@ -96,9 +96,9 @@ contract SpaceActionsTest is SpaceTest, SpaceErrors {
         );
     }
 
-    function testGetInvalidProposalInfo() public {
+    function testGetInvalidProposal() public {
         vm.expectRevert(abi.encodeWithSelector(InvalidProposalId.selector, 1));
         // No proposal has been created yet
-        space.getProposalInfo(1);
+        space.getProposal(1);
     }
 }

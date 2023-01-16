@@ -17,19 +17,16 @@ struct Proposal {
     bytes32 executionHash;
 }
 
+// A struct that represents any kind of strategy (i.e a pair of `address` and `bytes`)
 struct Strategy {
     address addy;
     bytes params;
 }
 
+// Similar to `Strategy` except it's an `index` (uint256) and not an `address`
 struct IndexedStrategy {
     uint256 index;
     bytes params;
-}
-
-struct ProposalInfo {
-    Proposal proposal;
-    ProposalStatus status;
 }
 
 enum ProposalOutcome {

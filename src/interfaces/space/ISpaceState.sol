@@ -2,10 +2,12 @@
 
 pragma solidity ^0.8.15;
 
+import "src/types.sol";
+
 interface ISpaceState {
     function hasVoted(uint256 proposalId, address voter) external view returns (bool);
 
-    function getProposalInfo(uint256 proposalId) external view returns (bool);
+    function getProposal(uint256 proposalId) external view returns (Proposal memory);
 
     function maxVotingDuration() external view returns (uint32);
 

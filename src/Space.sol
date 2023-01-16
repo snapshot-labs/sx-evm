@@ -367,7 +367,7 @@ contract Space is ISpaceEvents, Module, SpaceErrors {
     // |                                  |
     // ------------------------------------
 
-    function getProposalInfo(uint256 proposalId) external view returns (Proposal memory) {
+    function getProposal(uint256 proposalId) external view returns (Proposal memory) {
         _assertProposalExists(proposalId);
 
         Proposal memory proposal = proposalRegistry[proposalId];
