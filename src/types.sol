@@ -24,9 +24,9 @@ struct Strategy {
     bytes params;
 }
 
-// Similar to `Strategy` except it's an `index` (uint256) and not an `address`
+// Similar to `Strategy` except it's an `index` (uint8) and not an `address`
 struct IndexedStrategy {
-    uint256 index;
+    uint8 index;
     bytes params;
 }
 

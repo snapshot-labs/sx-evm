@@ -52,13 +52,15 @@ contract SpaceActionsTest is SpaceTest {
     }
 
     function testProposeInvalidExecutionStrategy() public {
-        Strategy[] memory invalidExecutionStrategy = new Strategy[](1);
-        invalidExecutionStrategy[0] = Strategy(address(1), new bytes(0));
-        vm.expectRevert(abi.encodeWithSelector(ExecutionStrategyNotWhitelisted.selector, address(1)));
+        Strategy[] memory invalidExecutionStrategies = new Strategy[](1);
+        invalidExecutionStrategies[0] = Strategy(address(42), new bytes(0));
+        vm.expectRevert(
+            abi.encodeWithSelector(ExecutionStrategyNotWhitelisted.selector, invalidExecutionStrategies[0].addy)
+        );
         vanillaAuthenticator.authenticate(
             address(space),
             PROPOSE_SELECTOR,
-            abi.encode(author, proposalMetadataUri, invalidExecutionStrategy, userVotingStrategies)
+            abi.encode(author, proposalMetadataUri, invalidExecutionStrategies[0], userVotingStrategies)
         );
     }
 

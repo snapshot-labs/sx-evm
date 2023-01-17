@@ -131,10 +131,10 @@ contract SpaceOwnerActionsTest is SpaceTest {
         // This voting strategy array contains the same voting strategy as the initial one but
         // should be accessed with a new strategy index.
         Strategy[] memory newVotingStrategies = new Strategy[](1);
-        newVotingStrategies[0] = Strategy(votingStrategies[0].addy, votingStrategies[0].params);
+        newVotingStrategies[0] = votingStrategies[0];
 
         // New strategy index should be `1` (`0` is used for the first one).
-        uint256[] memory newIndices = new uint256[](1);
+        uint8[] memory newIndices = new uint8[](1);
         newIndices[0] = 1;
 
         IndexedStrategy[] memory newUserVotingStrategies = new IndexedStrategy[](1);
@@ -182,7 +182,7 @@ contract SpaceOwnerActionsTest is SpaceTest {
     function testUnauthorizedRemoveVotingStrategies() public {
         vm.expectRevert("Ownable: caller is not the owner");
         vm.prank(unauthorized);
-        uint256[] memory empty = new uint256[](0);
+        uint8[] memory empty = new uint8[](0);
         space.removeVotingStrategies(empty);
     }
 

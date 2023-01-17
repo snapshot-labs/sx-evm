@@ -144,8 +144,8 @@ contract Space is ISpaceEvents, Module, SpaceErrors {
      * @dev     Does not shrink the array but simply sets the values to 0.
      * @param   indicesToRemove  Indices of the strategies to remove.
      */
-    function _removeVotingStrategies(uint256[] memory indicesToRemove) internal {
-        for (uint256 i = 0; i < indicesToRemove.length; i++) {
+    function _removeVotingStrategies(uint8[] memory indicesToRemove) internal {
+        for (uint8 i = 0; i < indicesToRemove.length; i++) {
             votingStrategies[indicesToRemove[i]].addy = address(0);
             votingStrategies[indicesToRemove[i]].params = new bytes(0);
         }
@@ -206,10 +206,11 @@ contract Space is ISpaceEvents, Module, SpaceErrors {
 
     /**
      * @notice  Internal function to ensure `executionStrategy` is in the list of allowed execution strategies.
-     * @param   executionStrategy  The execution strategy to check.
+     * @param   executionStrategyAddress  The execution strategy to check.
      */
-    function _assertValidExecutionStrategy(address executionStrategy) internal view {
-        if (executionStrategies[executionStrategy] != true) revert ExecutionStrategyNotWhitelisted(executionStrategy);
+    function _assertValidExecutionStrategy(address executionStrategyAddress) internal view {
+        if (executionStrategies[executionStrategyAddress] != true)
+            revert ExecutionStrategyNotWhitelisted(executionStrategyAddress);
     }
 
     /**
@@ -334,7 +335,7 @@ contract Space is ISpaceEvents, Module, SpaceErrors {
         _addVotingStrategies(_votingStrategies);
     }
 
-    function removeVotingStrategies(uint256[] calldata indicesToRemove) external onlyOwner {
+    function removeVotingStrategies(uint8[] calldata indicesToRemove) external onlyOwner {
         _removeVotingStrategies(indicesToRemove);
     }
 
@@ -423,6 +424,8 @@ contract Space is ISpaceEvents, Module, SpaceErrors {
         IndexedStrategy[] calldata userVotingStrategies
     ) external {
         _assertValidAuthenticator();
+        console2.log(executionStrategy.addy);
+        // console2.log(executionStrategy.params);
         _assertValidExecutionStrategy(executionStrategy.addy);
 
         // Casting to `uint32` is fine because this gives us until year ~2106.
