@@ -215,15 +215,13 @@ contract Space is ISpaceEvents, Module, SpaceErrors {
 
     /**
      * @notice  Internal function that checks if `proposalId` exists or not.
-     * @param   proposalId  The proposal to check.
+     * @param   proposal  The proposal to check.
      */
-    function _assertProposalExists(uint256 proposalId) internal view {
-        Proposal memory proposal = proposalRegistry[proposalId];
-
+    function _assertProposalExists(Proposal memory proposal) internal view {
         // startTimestamp cannot be set to 0 when a proposal is created,
         // so if proposal.startTimestamp is 0 it means this proposal does not exist
         // and hence `proposalId` is invalid.
-        if (proposal.startTimestamp == 0) revert InvalidProposalId(proposalId);
+        if (proposal.startTimestamp == 0) revert InvalidProposal();
     }
 
     /**
@@ -362,15 +360,15 @@ contract Space is ISpaceEvents, Module, SpaceErrors {
     // ------------------------------------
 
     function getProposal(uint256 proposalId) external view returns (Proposal memory) {
-        _assertProposalExists(proposalId);
+        Proposal memory proposal = proposalRegistry[proposalId];
+        _assertProposalExists(proposal);
 
-        return (proposalRegistry[proposalId]);
+        return (proposal);
     }
 
     function getProposalStatus(uint256 proposalId) external view returns (ProposalStatus) {
-        _assertProposalExists(proposalId);
-
         Proposal memory proposal = proposalRegistry[proposalId];
+        _assertProposalExists(proposal);
 
         if (proposal.finalizationStatus == FinalizationStatus.NotExecuted) {
             // Proposal has not been executed yet. Let's look at the current timestamp.

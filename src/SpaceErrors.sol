@@ -10,7 +10,7 @@ contract SpaceErrors {
     // All voting strategies addresses must be != address(0).
     error InvalidVotingStrategyAddress();
     error InvalidVotingStrategyIndex(uint256 index);
-    error InvalidProposalId(uint256 proposalId);
+    error InvalidProposal();
 
     error AuthenticatorNotWhitelisted(address auth);
     error ExecutionStrategyNotWhitelisted(address strategy);
