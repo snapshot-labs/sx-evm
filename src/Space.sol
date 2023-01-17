@@ -7,7 +7,6 @@ import "src/SpaceErrors.sol";
 import "src/types.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@zodiac/core/Module.sol";
-import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "src/interfaces/IExecutionStrategy.sol";
 
 /**
@@ -40,10 +39,10 @@ contract Space is ISpaceEvents, Module, SpaceErrors {
     mapping(address => bool) private authenticators;
     // Mapping of all `Proposal`s of this space (past and present).
     mapping(uint256 => Proposal) private proposalRegistry;
-    // TODO: comment
+    // Mapping used to know if a voter already voted on a specific proposal. Here to prevent double voting.
     mapping(uint256 => mapping(address => bool)) private voteRegistry;
-    // TODO: comment
-    mapping(uint256 => mapping(Choice => uint256)) private votePower; // TODO: chance this name cuz it sucks
+    // Mapping used to check the current voting power in favor of a `Choice` for a specific proposal.
+    mapping(uint256 => mapping(Choice => uint256)) private votePower;
 
     // ------------------------------------
     // |                                  |
@@ -269,13 +268,14 @@ contract Space is ISpaceEvents, Module, SpaceErrors {
             // no longer a valid voting strategy. See `_removeVotingStrategies`.
             if (votingStrategy.addy == address(0)) revert InvalidVotingStrategyIndex(i);
             IVotingStrategy strategy = IVotingStrategy(votingStrategy.addy);
+
+            // With solc 0.8, this will revert in case of overflow.
             totalVotingPower += strategy.getVotingPower(
                 timestamp,
                 userAddress,
                 votingStrategy.params,
                 userVotingStrategies[i].params
             );
-            // TODO: use SafeMath, check overflow
         }
 
         return totalVotingPower;
@@ -435,7 +435,6 @@ contract Space is ISpaceEvents, Module, SpaceErrors {
         uint256 votingPower = _getCumulativeVotingPower(snapshotTimestamp, proposerAddress, userVotingStrategies);
         if (votingPower < proposalThreshold) revert ProposalThresholdNotReached(votingPower);
 
-        // TODO: use SafeMath
         uint32 startTimestamp = snapshotTimestamp + votingDelay;
         uint32 minEndTimestamp = startTimestamp + minVotingDuration;
         uint32 maxEndTimestamp = startTimestamp + maxVotingDuration;
@@ -492,7 +491,8 @@ contract Space is ISpaceEvents, Module, SpaceErrors {
         if (votingPower == 0) revert UserHasNoVotingPower();
 
         uint256 previousVotingPower = votePower[proposalId][choice];
-        uint256 newVotingPower = SafeMath.add(previousVotingPower, votingPower);
+        // With solc 0.8, this will revert if an overflow occurs.
+        uint256 newVotingPower = previousVotingPower + votingPower;
 
         votePower[proposalId][choice] = newVotingPower;
         voteRegistry[proposalId][voterAddress] = true;
@@ -520,8 +520,8 @@ contract Space is ISpaceEvents, Module, SpaceErrors {
         uint256 votesAgainst = votePower[proposalId][Choice.Against];
         uint256 votesAbstain = votePower[proposalId][Choice.Abstain];
 
-        // SafeMath
-        uint256 total = SafeMath.add(SafeMath.add(votesFor, votesAgainst), votesAbstain);
+        // With solc 0.8, this will revert if an overflow occurs.
+        uint256 total = votesFor + votesAgainst + votesAbstain;
 
         ProposalOutcome proposalOutcome;
         // Check to see if we've reached quorum
