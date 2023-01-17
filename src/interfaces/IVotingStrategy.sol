@@ -14,7 +14,7 @@ interface IVotingStrategy {
     /// @return votingPower The voting power of the address at the given timestamp
     /// If there is no voting power, return 0.
     function getVotingPower(
-        uint256 timestamp,
+        uint32 timestamp,
         address voterAddress,
         bytes calldata params,
         bytes calldata userParams
