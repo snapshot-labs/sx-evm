@@ -501,6 +501,11 @@ contract Space is ISpaceEvents, Module, SpaceErrors {
         emit VoteCreated(proposalId, voterAddress, userVote);
     }
 
+    /**
+     * @notice  Finalize a proposal.
+     * @param   proposalId  The proposal to cancel
+     * @param   executionParams  The execution parameters, as described in `propose()`.
+     */
     function finalizeProposal(uint256 proposalId, bytes calldata executionParams) external {
         // TODO: check if we should use `memory` here and only use `storage` in the end
         // of this function when we actually modify the proposal
@@ -558,6 +563,11 @@ contract Space is ISpaceEvents, Module, SpaceErrors {
         emit ProposalFinalized(proposalId, proposalOutcome);
     }
 
+    /**
+     * @notice  Cancel a proposal. Only callable by the owner.
+     * @param   proposalId  The proposal to cancel
+     * @param   executionParams  The execution parameters, as described in `propose()`.
+     */
     function cancelProposal(uint256 proposalId, bytes calldata executionParams) external onlyOwner {
         Proposal storage proposal = proposalRegistry[proposalId];
         _assertProposalExists(proposal);
