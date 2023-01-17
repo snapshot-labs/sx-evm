@@ -4,6 +4,88 @@ pragma solidity ^0.8.15;
 import "./utils/Space.t.sol";
 
 contract SpaceOwnerActionsTest is SpaceTest {
+    // Utillity
+    function createProposal(
+        address _author,
+        string memory _metadataUri,
+        Strategy memory _executionStrategy,
+        IndexedStrategy[] memory _userVotingStrategies
+    ) internal returns (uint256) {
+        vanillaAuthenticator.authenticate(
+            address(space),
+            PROPOSE_SELECTOR,
+            abi.encode(_author, _metadataUri, _executionStrategy, _userVotingStrategies)
+        );
+
+        return space.nextProposalId() - 1;
+    }
+
+    // Utillity
+    function vote(
+        address _author,
+        uint256 _proposalId,
+        Choice _choice,
+        IndexedStrategy[] memory _userVotingStrategies
+    ) internal {
+        vanillaAuthenticator.authenticate(
+            address(space),
+            VOTE_SELECTOR,
+            abi.encode(_author, _proposalId, _choice, _userVotingStrategies)
+        );
+    }
+
+    // ------- Cancel Proposal ----
+    function testCancel() public {
+        uint256 proposalId = createProposal(author, proposalMetadataUri, executionStrategy, userVotingStrategies);
+
+        vote(author, proposalId, Choice.For, userVotingStrategies);
+
+        // Check that the event gets fired correctly.
+        vm.expectEmit(true, true, true, true);
+        emit ProposalFinalized(proposalId, ProposalOutcome.Cancelled);
+
+        space.cancelProposal(proposalId, executionStrategy.params);
+    }
+
+    function testCancelInvalidProposal() public {
+        uint256 proposalId = createProposal(author, proposalMetadataUri, executionStrategy, userVotingStrategies);
+        uint256 invalidProposalId = proposalId + 1;
+
+        vote(author, proposalId, Choice.For, userVotingStrategies);
+
+        vm.expectRevert(abi.encodeWithSelector(InvalidProposal.selector));
+        space.cancelProposal(invalidProposalId, executionStrategy.params);
+    }
+
+    function testCancelUnauthorized() public {
+        uint256 proposalId = createProposal(author, proposalMetadataUri, executionStrategy, userVotingStrategies);
+
+        vote(author, proposalId, Choice.For, userVotingStrategies);
+
+        vm.expectRevert("Ownable: caller is not the owner");
+        vm.prank(unauthorized);
+        space.cancelProposal(proposalId, executionStrategy.params);
+    }
+
+    function testCancelAlreadyExecuted() public {
+        uint256 proposalId = createProposal(author, proposalMetadataUri, executionStrategy, userVotingStrategies);
+
+        vote(author, proposalId, Choice.For, userVotingStrategies);
+        space.finalizeProposal(proposalId, executionStrategy.params);
+
+        vm.expectRevert(abi.encodeWithSelector(ProposalAlreadyExecuted.selector));
+        space.cancelProposal(proposalId, executionStrategy.params);
+    }
+
+    function testCancelExecutionMismatch() public {
+        uint256 proposalId = createProposal(author, proposalMetadataUri, executionStrategy, userVotingStrategies);
+
+        vote(author, proposalId, Choice.For, userVotingStrategies);
+
+        vm.expectRevert(abi.encodeWithSelector(ExecutionHashMismatch.selector));
+        space.cancelProposal(proposalId, new bytes(4242));
+    }
+
     // ------- MaxVotingDuration ----
 
     function testSetMaxVotingDuration() public {
@@ -43,7 +125,7 @@ contract SpaceOwnerActionsTest is SpaceTest {
         assertEq(space.minVotingDuration(), nextDuration, "Min Voting Duration did not get updated");
     }
 
-    function testUnauthorizedSetMinVotingDuration() public {
+    function testSetMinVotingDurationUnauthorized() public {
         vm.expectRevert("Ownable: caller is not the owner");
         vm.prank(unauthorized);
         space.setMinVotingDuration(2000);
@@ -66,7 +148,7 @@ contract SpaceOwnerActionsTest is SpaceTest {
         // Metadata Uri is not stored in the contract state so we can't check it
     }
 
-    function testUnauthorizedSetMetadataUri() public {
+    function testSetMetadataUriUnauthorized() public {
         string memory newMetadataUri = "All your bases are belong to us";
         vm.expectRevert("Ownable: caller is not the owner");
         vm.prank(unauthorized);
@@ -85,7 +167,7 @@ contract SpaceOwnerActionsTest is SpaceTest {
         assertEq(space.proposalThreshold(), nextThreshold, "Proposal Threshold did not get updated");
     }
 
-    function testUnauthorizedSetProposalThreshold() public {
+    function testSetProposalThresholdUnauthorized() public {
         vm.expectRevert("Ownable: caller is not the owner");
         vm.prank(unauthorized);
         space.setProposalThreshold(2);
@@ -103,7 +185,7 @@ contract SpaceOwnerActionsTest is SpaceTest {
         assertEq(space.quorum(), newQuorum, "Quorum did not get updated");
     }
 
-    function testUnauthorizedSetQuorum() public {
+    function testSetQuorumUnauthorized() public {
         vm.expectRevert("Ownable: caller is not the owner");
         vm.prank(unauthorized);
         space.setQuorum(2);
@@ -121,7 +203,7 @@ contract SpaceOwnerActionsTest is SpaceTest {
         assertEq(space.votingDelay(), nextDelay, "Voting Delay did not get updated");
     }
 
-    function testUnauthorizedSetVotingDelay() public {
+    function testSetVotingDelayUnauthorized() public {
         uint32 nextDelay = 10;
         vm.expectRevert("Ownable: caller is not the owner");
         vm.prank(unauthorized);
@@ -149,11 +231,7 @@ contract SpaceOwnerActionsTest is SpaceTest {
         space.addVotingStrategies(newVotingStrategies);
 
         // Try creating a proposal using these new strategies.
-        vanillaAuthenticator.authenticate(
-            address(space),
-            PROPOSE_SELECTOR,
-            abi.encode(author, proposalMetadataUri, executionStrategy, newUserVotingStrategies)
-        );
+        createProposal(author, proposalMetadataUri, executionStrategy, newUserVotingStrategies);
 
         // Remove the voting strategies
         vm.expectEmit(true, true, true, true);
@@ -162,27 +240,19 @@ contract SpaceOwnerActionsTest is SpaceTest {
 
         // Try creating a proposal using these strategies that were just removed.
         vm.expectRevert(abi.encodeWithSelector(InvalidVotingStrategyIndex.selector, 0));
-        vanillaAuthenticator.authenticate(
-            address(space),
-            PROPOSE_SELECTOR,
-            abi.encode(author, proposalMetadataUri, executionStrategy, newUserVotingStrategies)
-        );
+        createProposal(author, proposalMetadataUri, executionStrategy, newUserVotingStrategies);
 
         // Try creating a proposal with the previous voting strategy that was never removed.
-        vanillaAuthenticator.authenticate(
-            address(space),
-            PROPOSE_SELECTOR,
-            abi.encode(author, proposalMetadataUri, executionStrategy, userVotingStrategies)
-        );
+        createProposal(author, proposalMetadataUri, executionStrategy, userVotingStrategies);
     }
 
-    function testUnauthorizedAddVotingStrategies() public {
+    function testAddVotingStrategiesUnauthorized() public {
         vm.expectRevert("Ownable: caller is not the owner");
         vm.prank(unauthorized);
         space.addVotingStrategies(votingStrategies);
     }
 
-    function testUnauthorizedRemoveVotingStrategies() public {
+    function testRemoveVotingStrategiesUnauthorized() public {
         vm.expectRevert("Ownable: caller is not the owner");
         vm.prank(unauthorized);
         uint8[] memory empty = new uint8[](0);
@@ -212,13 +282,13 @@ contract SpaceOwnerActionsTest is SpaceTest {
         space.propose(author, proposalMetadataUri, executionStrategy, userVotingStrategies);
     }
 
-    function testUnauthorizedAddAuthenticators() public {
+    function testAddAuthenticatorsUnauthorized() public {
         vm.expectRevert("Ownable: caller is not the owner");
         vm.prank(unauthorized);
         space.removeAuthenticators(authenticators);
     }
 
-    function testUnauthorizedRemoveAuthenticators() public {
+    function testRemoveAuthenticatorsUnauthorized() public {
         vm.expectRevert("Ownable: caller is not the owner");
         vm.prank(unauthorized);
         space.removeAuthenticators(authenticators);
@@ -227,46 +297,48 @@ contract SpaceOwnerActionsTest is SpaceTest {
     // ------- ExecutionStrategies ----
 
     function testAddAndRemoveExecutionStrategies() public {
-        // TODO: test finalizeProposal here once we have it
-        address[] memory newExecutionStrategiesAddresses = new address[](1);
-        newExecutionStrategiesAddresses[0] = address(42);
-
         Strategy[] memory newExecutionStrategies = new Strategy[](1);
-        newExecutionStrategies[0] = Strategy(newExecutionStrategiesAddresses[0], new bytes(0));
+        VanillaExecutionStrategy _vanilla = new VanillaExecutionStrategy();
+        newExecutionStrategies[0] = Strategy(address(_vanilla), new bytes(0));
+
+        address[] memory newExecutionStrategiesAddresses = new address[](1);
+        newExecutionStrategiesAddresses[0] = newExecutionStrategies[0].addy;
 
         vm.expectEmit(true, true, true, true);
         emit ExecutionStrategiesAdded(newExecutionStrategiesAddresses);
         space.addExecutionStrategies(newExecutionStrategiesAddresses);
 
-        vanillaAuthenticator.authenticate(
-            address(space),
-            PROPOSE_SELECTOR,
-            abi.encode(author, proposalMetadataUri, newExecutionStrategies[0], userVotingStrategies)
+        uint256 proposalId = createProposal(
+            author,
+            proposalMetadataUri,
+            newExecutionStrategies[0],
+            userVotingStrategies
         );
 
+        vote(author, proposalId, Choice.For, userVotingStrategies);
+
+        // Ensure we can finalize
+        space.finalizeProposal(proposalId, newExecutionStrategies[0].params);
+
+        // Remove this strategy
         vm.expectEmit(true, true, true, true);
         emit ExecutionStrategiesRemoved(newExecutionStrategiesAddresses);
         space.removeExecutionStrategies(newExecutionStrategiesAddresses);
 
-        // Ensure we cant propose with this execution strategy anymore
+        // Ensure we can't propose with this execution strategy anymore
         vm.expectRevert(
             abi.encodeWithSelector(ExecutionStrategyNotWhitelisted.selector, newExecutionStrategiesAddresses[0])
         );
-
-        vanillaAuthenticator.authenticate(
-            address(space),
-            PROPOSE_SELECTOR,
-            abi.encode(author, proposalMetadataUri, newExecutionStrategies[0], userVotingStrategies)
-        );
+        createProposal(author, proposalMetadataUri, newExecutionStrategies[0], userVotingStrategies);
     }
 
-    function testUnauthorizedAddExecutionStrategy() public {
+    function testAddExecutionStrategyUnauthorized() public {
         vm.expectRevert("Ownable: caller is not the owner");
         vm.prank(unauthorized);
         space.removeExecutionStrategies(executionStrategiesAddresses);
     }
 
-    function testUnauthorizedRemoveExecutionStrategy() public {
+    function testRemoveExecutionStrategyUnauthorized() public {
         vm.expectRevert("Ownable: caller is not the owner");
         vm.prank(unauthorized);
         space.removeExecutionStrategies(executionStrategiesAddresses);

@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.15;
-import "forge-std/console2.sol";
 import "src/interfaces/IVotingStrategy.sol";
 // import "src/interfaces/ISpace.sol"; TODO: add this later when everything has been impl
 import "src/interfaces/space/ISpaceEvents.sol";
@@ -428,8 +427,6 @@ contract Space is ISpaceEvents, Module, SpaceErrors {
         IndexedStrategy[] calldata userVotingStrategies
     ) external {
         _assertValidAuthenticator();
-        console2.log(executionStrategy.addy);
-        // console2.log(executionStrategy.params);
         _assertValidExecutionStrategy(executionStrategy.addy);
 
         // Casting to `uint32` is fine because this gives us until year ~2106.
@@ -517,7 +514,6 @@ contract Space is ISpaceEvents, Module, SpaceErrors {
         if (proposal.minEndTimestamp > currentTimestamp) revert MinVotingDurationHasNotElapsed();
 
         bytes32 recoveredHash = keccak256(executionParams);
-
         if (proposal.executionHash != recoveredHash) revert ExecutionHashMismatch();
 
         uint256 votesFor = votePower[proposalId][Choice.For];
@@ -552,7 +548,6 @@ contract Space is ISpaceEvents, Module, SpaceErrors {
             proposalOutcome = ProposalOutcome.Cancelled;
         }
 
-        // TODO: should we check that this got executed correctly?
         IExecutionStrategy(proposal.executionStrategy).execute(proposalOutcome, executionParams);
 
         // TODO: should we set votePower[proposalId][choice] to 0 to get some nice ETH refund?
@@ -563,5 +558,20 @@ contract Space is ISpaceEvents, Module, SpaceErrors {
         emit ProposalFinalized(proposalId, proposalOutcome);
     }
 
-    function cancelProposal(uint256 proposalId) external {}
+    function cancelProposal(uint256 proposalId, bytes calldata executionParams) external onlyOwner {
+        Proposal storage proposal = proposalRegistry[proposalId];
+        _assertProposalExists(proposal);
+
+        if (proposal.finalizationStatus != FinalizationStatus.NotExecuted) revert ProposalAlreadyExecuted();
+
+        bytes32 recoveredHash = keccak256(executionParams);
+        if (proposal.executionHash != recoveredHash) revert ExecutionHashMismatch();
+
+        ProposalOutcome proposalOutcome = ProposalOutcome.Cancelled;
+
+        IExecutionStrategy(proposal.executionStrategy).execute(proposalOutcome, executionParams);
+
+        proposal.finalizationStatus = FinalizationStatus.FinalizedAndCancelled;
+        emit ProposalFinalized(proposalId, proposalOutcome);
+    }
 }
