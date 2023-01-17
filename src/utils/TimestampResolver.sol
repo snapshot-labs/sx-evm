@@ -6,16 +6,23 @@ abstract contract TimestampResolver {
     error TimestampInFuture();
     mapping(uint256 => uint256) public timestampToBlockNumber;
 
-    function resolveSnapshotTimestamp(uint256 timestamp) external returns (uint256) {
+    /// @notice Resolves a timestamp to a block number in such a way that the same timestamp
+    /// always resolves to the same block number. If the timestamp is in the future, reverts.
+    /// @param timestamp The timestamp to resolve
+    /// @return blockNumber The block number that the timestamp resolves to
+    function resolveSnapshotTimestamp(uint256 timestamp) internal returns (uint256 blockNumber) {
         if (timestamp > block.timestamp) revert TimestampInFuture();
 
-        uint256 blockNumber = timestampToBlockNumber[timestamp];
+        blockNumber = timestampToBlockNumber[timestamp];
         if (blockNumber != 0) {
             // Timestamp already resolved, return the previously resolved block number
             return blockNumber;
         }
-        // Timestamp not yet resolved, resolve it to the current block number and return it
-        timestampToBlockNumber[timestamp] = block.number;
-        return block.number;
+        // Timestamp not yet resolved, resolve it to the current block number - 1 and return it
+        // We resolve to the current block number - 1 so that Comp style getPastVotes/getPriorVotes
+        // functions can be used in same block as when the resolution is made
+        blockNumber = block.number - 1;
+        timestampToBlockNumber[timestamp] = blockNumber;
+        return blockNumber;
     }
 }
