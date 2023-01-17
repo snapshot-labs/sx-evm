@@ -551,8 +551,8 @@ contract Space is ISpaceEvents, Module, SpaceErrors {
         IExecutionStrategy(proposal.executionStrategy).execute(proposalOutcome, executionParams);
 
         // TODO: should we set votePower[proposalId][choice] to 0 to get some nice ETH refund?
-        // `ProposalOutcome` and `ExecutionStatus` are almost the same enum except from their first
-        // variant, so by adding `1` we will get the corresponding `ExecutionStatus`.
+        // `ProposalOutcome` and `FinalizatonStatus` are almost the same enum except from their first
+        // variant, so by adding `1` we will get the corresponding `FinalizationStatus`.
         proposal.finalizationStatus = FinalizationStatus(uint8(proposalOutcome) + 1);
 
         emit ProposalFinalized(proposalId, proposalOutcome);
