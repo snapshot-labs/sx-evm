@@ -23,7 +23,7 @@ contract CompVotingStrategy is IVotingStrategy, TimestampResolver {
     /// @notice Extracts an address from a byte array
     /// @param _bytes The byte array to extract the address from
     /// @param _start The index to start extracting the address from
-    /// @dev Minor modifications from function in library:
+    /// @dev Function from the library, with the require switched for a revert statement:
     /// https://github.com/GNSPS/solidity-bytes-utils/blob/master/contracts/BytesLib.sol
     function BytesToAddress(bytes memory _bytes, uint256 _start) internal pure returns (address) {
         if (_bytes.length < _start + 20) revert InvalidByteArray();
