@@ -6,10 +6,10 @@ import "../interfaces/IVotingStrategy.sol";
 
 contract VanillaVotingStrategy is IVotingStrategy {
     function getVotingPower(
-        uint256 /* timestamp */,
+        uint32 /* timestamp */,
         address /* voterAddress */,
-        bytes memory /* params */,
-        bytes memory /* userParams */
+        bytes calldata /* params */,
+        bytes calldata /* userParams */
     ) external pure override returns (uint256) {
         return 1;
     }
