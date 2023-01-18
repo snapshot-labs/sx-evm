@@ -10,10 +10,10 @@ contract CompVotingStrategy is IVotingStrategy, TimestampResolver {
     error InvalidBytesArray();
 
     function getVotingPower(
-        uint256 timestamp,
+        uint32 timestamp,
         address voterAddress,
-        bytes memory params,
-        bytes memory /* userParams */
+        bytes calldata params,
+        bytes calldata /* userParams */
     ) external override returns (uint256) {
         address tokenAddress = BytesToAddress(params, 0);
         uint256 blockNumber = resolveSnapshotTimestamp(timestamp);
