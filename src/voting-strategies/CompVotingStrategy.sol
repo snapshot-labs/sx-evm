@@ -7,7 +7,7 @@ import "../interfaces/IComp.sol";
 import "../utils/TimestampResolver.sol";
 
 contract CompVotingStrategy is IVotingStrategy, TimestampResolver {
-    error InvalidBytesArray();
+    error InvalidByteArray();
 
     function getVotingPower(
         uint32 timestamp,
@@ -20,13 +20,13 @@ contract CompVotingStrategy is IVotingStrategy, TimestampResolver {
         return uint256(IComp(tokenAddress).getPriorVotes(voterAddress, blockNumber));
     }
 
-    /// @notice Extracts an address from a bytes array
-    /// @param _bytes The bytes array to extract the address from
+    /// @notice Extracts an address from a byte array
+    /// @param _bytes The byte array to extract the address from
     /// @param _start The index to start extracting the address from
     /// @dev Minor modifications from function in library:
     /// https://github.com/GNSPS/solidity-bytes-utils/blob/master/contracts/BytesLib.sol
     function BytesToAddress(bytes memory _bytes, uint256 _start) internal pure returns (address) {
-        if (_bytes.length < _start + 20) revert InvalidBytesArray();
+        if (_bytes.length < _start + 20) revert InvalidByteArray();
         address tempAddress;
 
         assembly {

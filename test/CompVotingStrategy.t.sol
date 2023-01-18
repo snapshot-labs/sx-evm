@@ -6,7 +6,7 @@ import "../src/voting-strategies/CompVotingStrategy.sol";
 import "./mocks/CompToken.sol";
 
 contract CompVotingStrategyTest is Test {
-    error InvalidBytesArray();
+    error InvalidByteArray();
 
     CompVotingStrategy public compVotingStrategy;
     CompToken public compToken;
@@ -53,7 +53,7 @@ contract CompVotingStrategyTest is Test {
         compToken.mint(user, 1);
         compToken.delegate(user);
         vm.roll(block.number + 1);
-        vm.expectRevert(InvalidBytesArray.selector);
+        vm.expectRevert(InvalidByteArray.selector);
         // Params array is too short
         compVotingStrategy.getVotingPower(uint32(block.timestamp), user, abi.encodePacked("1234"), "");
     }
