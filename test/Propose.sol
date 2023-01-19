@@ -3,7 +3,7 @@ pragma solidity ^0.8.15;
 
 import "./utils/Space.t.sol";
 
-contract SpaceActionsTest is SpaceTest {
+contract ProposeTest is SpaceTest {
     function testPropose() public {
         uint256 proposalId = space.nextProposalId();
 
