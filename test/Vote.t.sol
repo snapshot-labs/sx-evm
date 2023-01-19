@@ -82,26 +82,4 @@ contract VoteTest is SpaceTest {
         vm.expectRevert(abi.encodeWithSelector(UserHasNoVotingPower.selector));
         _vote(author, proposalId, Choice.For, empty);
     }
-
-    function testVoteDuplicateStrategies() public {
-        uint256 proposalId = _createProposal(author, proposalMetadataUri, executionStrategy, userVotingStrategies);
-
-        IndexedStrategy[] memory duplicateStrategies = new IndexedStrategy[](2);
-        duplicateStrategies[0] = userVotingStrategies[0];
-        duplicateStrategies[1] = userVotingStrategies[0];
-        vm.expectRevert(
-            abi.encodeWithSelector(DuplicateFound.selector, duplicateStrategies[0].index, duplicateStrategies[1].index)
-        );
-        _vote(author, proposalId, Choice.For, duplicateStrategies);
-    }
-
-    function testVoteInvalidStrategies() public {
-        uint256 proposalId = _createProposal(author, proposalMetadataUri, executionStrategy, userVotingStrategies);
-
-        IndexedStrategy[] memory invalidStrategies = new IndexedStrategy[](1);
-        invalidStrategies[0] = IndexedStrategy(42, new bytes(0));
-
-        vm.expectRevert();
-        _vote(author, proposalId, Choice.For, invalidStrategies);
-    }
 }

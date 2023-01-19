@@ -23,7 +23,7 @@ interface ISpaceOwnerActions {
 
     function addVotingStrategies(Strategy[] calldata _votingStrategies) external;
 
-    function removeVotingStrategies(uint256[] calldata indicesToRemove) external;
+    function removeVotingStrategies(uint8[] calldata indicesToRemove) external;
 
     function addAuthenticators(address[] calldata _authenticators) external;
 
