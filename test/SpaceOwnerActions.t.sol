@@ -4,41 +4,11 @@ pragma solidity ^0.8.15;
 import "./utils/Space.t.sol";
 
 contract SpaceOwnerActionsTest is SpaceTest {
-    // Utillity
-    function createProposal(
-        address _author,
-        string memory _metadataUri,
-        Strategy memory _executionStrategy,
-        IndexedStrategy[] memory _userVotingStrategies
-    ) internal returns (uint256) {
-        vanillaAuthenticator.authenticate(
-            address(space),
-            PROPOSE_SELECTOR,
-            abi.encode(_author, _metadataUri, _executionStrategy, _userVotingStrategies)
-        );
-
-        return space.nextProposalId() - 1;
-    }
-
-    // Utillity
-    function vote(
-        address _author,
-        uint256 _proposalId,
-        Choice _choice,
-        IndexedStrategy[] memory _userVotingStrategies
-    ) internal {
-        vanillaAuthenticator.authenticate(
-            address(space),
-            VOTE_SELECTOR,
-            abi.encode(_author, _proposalId, _choice, _userVotingStrategies)
-        );
-    }
-
     // ------- Cancel Proposal ----
     function testCancel() public {
-        uint256 proposalId = createProposal(author, proposalMetadataUri, executionStrategy, userVotingStrategies);
+        uint256 proposalId = _createProposal(author, proposalMetadataUri, executionStrategy, userVotingStrategies);
 
-        vote(author, proposalId, Choice.For, userVotingStrategies);
+        _vote(author, proposalId, Choice.For, userVotingStrategies);
 
         // Check that the event gets fired correctly.
         vm.expectEmit(true, true, true, true);
@@ -48,19 +18,19 @@ contract SpaceOwnerActionsTest is SpaceTest {
     }
 
     function testCancelInvalidProposal() public {
-        uint256 proposalId = createProposal(author, proposalMetadataUri, executionStrategy, userVotingStrategies);
+        uint256 proposalId = _createProposal(author, proposalMetadataUri, executionStrategy, userVotingStrategies);
         uint256 invalidProposalId = proposalId + 1;
 
-        vote(author, proposalId, Choice.For, userVotingStrategies);
+        _vote(author, proposalId, Choice.For, userVotingStrategies);
 
         vm.expectRevert(abi.encodeWithSelector(InvalidProposal.selector));
         space.cancelProposal(invalidProposalId, executionStrategy.params);
     }
 
     function testCancelUnauthorized() public {
-        uint256 proposalId = createProposal(author, proposalMetadataUri, executionStrategy, userVotingStrategies);
+        uint256 proposalId = _createProposal(author, proposalMetadataUri, executionStrategy, userVotingStrategies);
 
-        vote(author, proposalId, Choice.For, userVotingStrategies);
+        _vote(author, proposalId, Choice.For, userVotingStrategies);
 
         vm.expectRevert("Ownable: caller is not the owner");
         vm.prank(unauthorized);
@@ -68,9 +38,9 @@ contract SpaceOwnerActionsTest is SpaceTest {
     }
 
     function testCancelAlreadyExecuted() public {
-        uint256 proposalId = createProposal(author, proposalMetadataUri, executionStrategy, userVotingStrategies);
+        uint256 proposalId = _createProposal(author, proposalMetadataUri, executionStrategy, userVotingStrategies);
 
-        vote(author, proposalId, Choice.For, userVotingStrategies);
+        _vote(author, proposalId, Choice.For, userVotingStrategies);
         space.finalizeProposal(proposalId, executionStrategy.params);
 
         vm.expectRevert(abi.encodeWithSelector(ProposalAlreadyExecuted.selector));
@@ -78,9 +48,9 @@ contract SpaceOwnerActionsTest is SpaceTest {
     }
 
     function testCancelExecutionMismatch() public {
-        uint256 proposalId = createProposal(author, proposalMetadataUri, executionStrategy, userVotingStrategies);
+        uint256 proposalId = _createProposal(author, proposalMetadataUri, executionStrategy, userVotingStrategies);
 
-        vote(author, proposalId, Choice.For, userVotingStrategies);
+        _vote(author, proposalId, Choice.For, userVotingStrategies);
 
         vm.expectRevert(abi.encodeWithSelector(ExecutionHashMismatch.selector));
         space.cancelProposal(proposalId, new bytes(4242));
@@ -231,7 +201,7 @@ contract SpaceOwnerActionsTest is SpaceTest {
         space.addVotingStrategies(newVotingStrategies);
 
         // Try creating a proposal using these new strategies.
-        createProposal(author, proposalMetadataUri, executionStrategy, newUserVotingStrategies);
+        _createProposal(author, proposalMetadataUri, executionStrategy, newUserVotingStrategies);
 
         // Remove the voting strategies
         vm.expectEmit(true, true, true, true);
@@ -240,10 +210,10 @@ contract SpaceOwnerActionsTest is SpaceTest {
 
         // Try creating a proposal using these strategies that were just removed.
         vm.expectRevert(abi.encodeWithSelector(InvalidVotingStrategyIndex.selector, 0));
-        createProposal(author, proposalMetadataUri, executionStrategy, newUserVotingStrategies);
+        _createProposal(author, proposalMetadataUri, executionStrategy, newUserVotingStrategies);
 
         // Try creating a proposal with the previous voting strategy that was never removed.
-        createProposal(author, proposalMetadataUri, executionStrategy, userVotingStrategies);
+        _createProposal(author, proposalMetadataUri, executionStrategy, userVotingStrategies);
     }
 
     function testAddVotingStrategiesUnauthorized() public {
@@ -308,14 +278,14 @@ contract SpaceOwnerActionsTest is SpaceTest {
         emit ExecutionStrategiesAdded(newExecutionStrategiesAddresses);
         space.addExecutionStrategies(newExecutionStrategiesAddresses);
 
-        uint256 proposalId = createProposal(
+        uint256 proposalId = _createProposal(
             author,
             proposalMetadataUri,
             newExecutionStrategies[0],
             userVotingStrategies
         );
 
-        vote(author, proposalId, Choice.For, userVotingStrategies);
+        _vote(author, proposalId, Choice.For, userVotingStrategies);
 
         // Ensure we can finalize
         space.finalizeProposal(proposalId, newExecutionStrategies[0].params);
@@ -329,7 +299,7 @@ contract SpaceOwnerActionsTest is SpaceTest {
         vm.expectRevert(
             abi.encodeWithSelector(ExecutionStrategyNotWhitelisted.selector, newExecutionStrategiesAddresses[0])
         );
-        createProposal(author, proposalMetadataUri, newExecutionStrategies[0], userVotingStrategies);
+        _createProposal(author, proposalMetadataUri, newExecutionStrategies[0], userVotingStrategies);
     }
 
     function testAddExecutionStrategyUnauthorized() public {

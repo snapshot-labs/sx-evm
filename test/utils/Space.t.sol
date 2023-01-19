@@ -79,4 +79,32 @@ abstract contract SpaceTest is Test, GasSnapshot, ISpaceEvents, SpaceErrors {
             executionStrategiesAddresses
         );
     }
+
+    function _createProposal(
+        address _author,
+        string memory _metadataUri,
+        Strategy memory _executionStrategy,
+        IndexedStrategy[] memory _userVotingStrategies
+    ) internal returns (uint256) {
+        vanillaAuthenticator.authenticate(
+            address(space),
+            PROPOSE_SELECTOR,
+            abi.encode(_author, _metadataUri, _executionStrategy, _userVotingStrategies)
+        );
+
+        return space.nextProposalId() - 1;
+    }
+
+    function _vote(
+        address _author,
+        uint256 _proposalId,
+        Choice _choice,
+        IndexedStrategy[] memory _userVotingStrategies
+    ) internal {
+        vanillaAuthenticator.authenticate(
+            address(space),
+            VOTE_SELECTOR,
+            abi.encode(_author, _proposalId, _choice, _userVotingStrategies)
+        );
+    }
 }

@@ -27,10 +27,12 @@ contract SpaceActionsTest is SpaceTest {
 
         vm.expectEmit(true, true, true, true);
         emit ProposalCreated(proposalId, author, proposal, proposalMetadataUri, executionStrategy.params);
-        vanillaAuthenticator.authenticate(
-            address(space),
-            PROPOSE_SELECTOR,
-            abi.encode(author, proposalMetadataUri, executionStrategy, userVotingStrategies)
+
+        uint256 actualProposalId = _createProposal(
+            author,
+            proposalMetadataUri,
+            executionStrategy,
+            userVotingStrategies
         );
 
         // Actual content of the proposal struct
@@ -57,11 +59,8 @@ contract SpaceActionsTest is SpaceTest {
         vm.expectRevert(
             abi.encodeWithSelector(ExecutionStrategyNotWhitelisted.selector, invalidExecutionStrategies[0].addy)
         );
-        vanillaAuthenticator.authenticate(
-            address(space),
-            PROPOSE_SELECTOR,
-            abi.encode(author, proposalMetadataUri, invalidExecutionStrategies[0], userVotingStrategies)
-        );
+
+        _createProposal(author, proposalMetadataUri, invalidExecutionStrategies[0], userVotingStrategies);
     }
 
     function testProposeInvalidUsedVotingStrategy() public {
@@ -70,11 +69,7 @@ contract SpaceActionsTest is SpaceTest {
 
         // out of bounds revert
         vm.expectRevert();
-        vanillaAuthenticator.authenticate(
-            address(space),
-            PROPOSE_SELECTOR,
-            abi.encode(author, proposalMetadataUri, executionStrategy, invalidUsedStrategies)
-        );
+        _createProposal(author, proposalMetadataUri, executionStrategy, invalidUsedStrategies);
     }
 
     function testProposeDuplicateUserVotingStrategy() public {
@@ -85,10 +80,6 @@ contract SpaceActionsTest is SpaceTest {
         invalidUsedStrategies[3] = IndexedStrategy(0, new bytes(0)); // Duplicate index
 
         vm.expectRevert(abi.encodeWithSelector(DuplicateFound.selector, 0, 0));
-        vanillaAuthenticator.authenticate(
-            address(space),
-            PROPOSE_SELECTOR,
-            abi.encode(author, proposalMetadataUri, executionStrategy, invalidUsedStrategies)
-        );
+        _createProposal(author, proposalMetadataUri, executionStrategy, invalidUsedStrategies);
     }
 }

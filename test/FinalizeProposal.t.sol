@@ -8,38 +8,10 @@ import "../src/SpaceErrors.sol";
 import "../src/types.sol";
 
 contract FinalizeProposalTest is SpaceTest {
-    function createProposal(
-        address _author,
-        string memory _metadataUri,
-        Strategy memory _executionStrategy,
-        IndexedStrategy[] memory _userVotingStrategies
-    ) internal returns (uint256) {
-        vanillaAuthenticator.authenticate(
-            address(space),
-            PROPOSE_SELECTOR,
-            abi.encode(_author, _metadataUri, _executionStrategy, _userVotingStrategies)
-        );
-
-        return space.nextProposalId() - 1;
-    }
-
-    function vote(
-        address _author,
-        uint256 _proposalId,
-        Choice _choice,
-        IndexedStrategy[] memory _userVotingStrategies
-    ) internal {
-        vanillaAuthenticator.authenticate(
-            address(space),
-            VOTE_SELECTOR,
-            abi.encode(_author, _proposalId, _choice, _userVotingStrategies)
-        );
-    }
-
     function testFinalize() public {
-        uint256 proposalId = createProposal(author, proposalMetadataUri, executionStrategy, userVotingStrategies);
+        uint256 proposalId = _createProposal(author, proposalMetadataUri, executionStrategy, userVotingStrategies);
 
-        vote(author, proposalId, Choice.For, userVotingStrategies);
+        _vote(author, proposalId, Choice.For, userVotingStrategies);
 
         // Check that the event gets fired correctly.
         vm.expectEmit(true, true, true, true);
@@ -49,19 +21,19 @@ contract FinalizeProposalTest is SpaceTest {
     }
 
     function testFinalizeInvalidProposal() public {
-        uint256 proposalId = createProposal(author, proposalMetadataUri, executionStrategy, userVotingStrategies);
+        uint256 proposalId = _createProposal(author, proposalMetadataUri, executionStrategy, userVotingStrategies);
         uint256 invalidProposalId = proposalId + 1;
 
-        vote(author, proposalId, Choice.For, userVotingStrategies);
+        _vote(author, proposalId, Choice.For, userVotingStrategies);
 
         vm.expectRevert(abi.encodeWithSelector(InvalidProposal.selector));
         space.finalizeProposal(invalidProposalId, executionStrategy.params);
     }
 
     function testFinalizeAlreadyExecuted() public {
-        uint256 proposalId = createProposal(author, proposalMetadataUri, executionStrategy, userVotingStrategies);
+        uint256 proposalId = _createProposal(author, proposalMetadataUri, executionStrategy, userVotingStrategies);
 
-        vote(author, proposalId, Choice.For, userVotingStrategies);
+        _vote(author, proposalId, Choice.For, userVotingStrategies);
         space.finalizeProposal(proposalId, executionStrategy.params);
 
         vm.expectRevert(abi.encodeWithSelector(ProposalAlreadyExecuted.selector));
@@ -80,14 +52,14 @@ contract FinalizeProposalTest is SpaceTest {
         // Add the strategy
         space.addExecutionStrategies(newExecutionStrategiesAddresses);
 
-        uint256 proposalId = createProposal(
+        uint256 proposalId = _createProposal(
             author,
             proposalMetadataUri,
             newExecutionStrategies[0],
             userVotingStrategies
         );
 
-        vote(author, proposalId, Choice.For, userVotingStrategies);
+        _vote(author, proposalId, Choice.For, userVotingStrategies);
 
         // Remove the strategy
         space.removeExecutionStrategies(newExecutionStrategiesAddresses);
@@ -105,9 +77,9 @@ contract FinalizeProposalTest is SpaceTest {
     function testFinalizeMinDurationNotElapsed() public {
         space.setMinVotingDuration(100);
 
-        uint256 proposalId = createProposal(author, proposalMetadataUri, executionStrategy, userVotingStrategies);
+        uint256 proposalId = _createProposal(author, proposalMetadataUri, executionStrategy, userVotingStrategies);
 
-        vote(author, proposalId, Choice.For, userVotingStrategies);
+        _vote(author, proposalId, Choice.For, userVotingStrategies);
 
         vm.expectRevert(abi.encodeWithSelector(MinVotingDurationHasNotElapsed.selector));
         space.finalizeProposal(proposalId, executionStrategy.params);
@@ -118,23 +90,23 @@ contract FinalizeProposalTest is SpaceTest {
     }
 
     function testFinalizeExecutionMismatch() public {
-        uint256 proposalId = createProposal(author, proposalMetadataUri, executionStrategy, userVotingStrategies);
+        uint256 proposalId = _createProposal(author, proposalMetadataUri, executionStrategy, userVotingStrategies);
 
-        vote(author, proposalId, Choice.For, userVotingStrategies);
+        _vote(author, proposalId, Choice.For, userVotingStrategies);
 
         vm.expectRevert(abi.encodeWithSelector(ExecutionHashMismatch.selector));
         space.finalizeProposal(proposalId, new bytes(4242));
     }
 
     function testFinalizeQuorumNotReachedYet() public {
-        uint256 proposalId = createProposal(author, proposalMetadataUri, executionStrategy, userVotingStrategies);
+        uint256 proposalId = _createProposal(author, proposalMetadataUri, executionStrategy, userVotingStrategies);
 
         vm.expectRevert(abi.encodeWithSelector(QuorumNotReachedYet.selector));
         space.finalizeProposal(proposalId, executionStrategy.params);
     }
 
     function testFinalizeQuorumNotReachedAtAll() public {
-        uint256 proposalId = createProposal(author, proposalMetadataUri, executionStrategy, userVotingStrategies);
+        uint256 proposalId = _createProposal(author, proposalMetadataUri, executionStrategy, userVotingStrategies);
 
         vm.warp(block.timestamp + space.maxVotingDuration());
 
@@ -147,8 +119,8 @@ contract FinalizeProposalTest is SpaceTest {
     }
 
     function testFinalizeFor() public {
-        uint256 proposalId = createProposal(author, proposalMetadataUri, executionStrategy, userVotingStrategies);
-        vote(author, proposalId, Choice.For, userVotingStrategies);
+        uint256 proposalId = _createProposal(author, proposalMetadataUri, executionStrategy, userVotingStrategies);
+        _vote(author, proposalId, Choice.For, userVotingStrategies);
 
         space.finalizeProposal(proposalId, executionStrategy.params);
         // Ensure proposal is `Accepted`.
@@ -157,8 +129,8 @@ contract FinalizeProposalTest is SpaceTest {
     }
 
     function testFinalizeAgainst() public {
-        uint256 proposalId = createProposal(author, proposalMetadataUri, executionStrategy, userVotingStrategies);
-        vote(author, proposalId, Choice.Against, userVotingStrategies);
+        uint256 proposalId = _createProposal(author, proposalMetadataUri, executionStrategy, userVotingStrategies);
+        _vote(author, proposalId, Choice.Against, userVotingStrategies);
 
         space.finalizeProposal(proposalId, executionStrategy.params);
         // Ensure proposal is `Rejected`.
@@ -167,8 +139,8 @@ contract FinalizeProposalTest is SpaceTest {
     }
 
     function testFinalizeAbstain() public {
-        uint256 proposalId = createProposal(author, proposalMetadataUri, executionStrategy, userVotingStrategies);
-        vote(author, proposalId, Choice.Abstain, userVotingStrategies);
+        uint256 proposalId = _createProposal(author, proposalMetadataUri, executionStrategy, userVotingStrategies);
+        _vote(author, proposalId, Choice.Abstain, userVotingStrategies);
 
         space.finalizeProposal(proposalId, executionStrategy.params);
         // Ensure proposal is `Rejected`.
