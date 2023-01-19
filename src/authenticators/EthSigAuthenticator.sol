@@ -8,8 +8,7 @@ import "./SignatureVerifier.sol";
 contract EthSigAuthenticator is Authenticator, SignatureVerifier {
     error InvalidFunctionSelector();
 
-    bytes4 private constant PROPOSE_SELECTOR =
-        bytes4(keccak256("propose(address,string,address,uint256[],bytes[],bytes)"));
+    constructor(string memory name, string memory version) SignatureVerifier(name, version) {}
 
     function authenticate(
         uint8 v,
@@ -18,7 +17,7 @@ contract EthSigAuthenticator is Authenticator, SignatureVerifier {
         uint256 salt,
         address target,
         bytes4 functionSelector,
-        bytes memory data
+        bytes calldata data
     ) external {
         if (functionSelector == PROPOSE_SELECTOR) {
             _verifyProposeSig(v, r, s, salt, target, data);
