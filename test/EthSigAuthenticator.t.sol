@@ -2,34 +2,53 @@
 
 pragma solidity ^0.8.15;
 
-import "./Authenticator.t.sol";
+import "./utils/Space.t.sol";
+import "./utils/Authenticator.t.sol";
+import "./utils/SigUtils.sol";
 import "../src/authenticators/EthSigAuthenticator.sol";
 
-contract EthSigAuthenticatorTest is AuthenticatorTest, SigUtils {
-    string constant name = "SnapshotX";
-    string constant version = "1";
+import "forge-std/console2.sol";
 
-    EthSigAuthenticator public auth;
+contract EthSigAuthenticatorTest is SpaceTest, SigUtils {
+    string private constant name = "SOC";
+    string private constant version = "1";
 
-    // uint256 public constant authorKey = 1234;
+    EthSigAuthenticator public ethSigAuth;
 
-    // address public constant author = vm.addr(authorKey);
+    constructor() SigUtils(name, version) {}
 
     function setUp() public virtual override {
         super.setUp();
-        auth = new EthSigAuthenticator();
+
+        // Adding the eth sig authenticator to the space
+        ethSigAuth = new EthSigAuthenticator(name, version);
+        address[] memory newAuths = new address[](1);
+        newAuths[0] = address(ethSigAuth);
+        space.addAuthenticators(newAuths);
     }
 
     function testAuthenticate() public {
-        _generateProposeDigest(
-            address(auth),
-            address(target),
-            address(target),
-            "metadataUri",
-            address(target),
-            new uint256[](0),
-            new bytes(0),
-            0
+        uint256 salt = 0;
+        bytes32 digest = _getProposeDigest(
+            address(ethSigAuth),
+            address(space),
+            address(author),
+            proposalMetadataUri,
+            executionStrategy,
+            userVotingStrategies,
+            salt
+        );
+        console2.logBytes32(digest);
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(authorKey, digest);
+
+        ethSigAuth.authenticate(
+            v,
+            r,
+            s,
+            salt,
+            address(space),
+            PROPOSE_SELECTOR,
+            abi.encode(author, proposalMetadataUri, executionStrategy, userVotingStrategies)
         );
         // auth.authenticate(address(target), target.foo.selector, abi.encode(5));
         // assertEq(target.x(), 5);

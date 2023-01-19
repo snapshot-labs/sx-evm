@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.15;
 
-import "./Authenticator.t.sol";
+import "./utils/Authenticator.t.sol";
 import "../src/authenticators/VanillaAuthenticator.sol";
 
 contract VanillaAuthenticatorTest is AuthenticatorTest {
