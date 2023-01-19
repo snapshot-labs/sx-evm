@@ -154,6 +154,7 @@ contract Space is ISpaceEvents, Module, SpaceErrors {
             votingStrategies[indicesToRemove[i]].params = new bytes(0);
         }
 
+        // TODO: should we check that there are still voting strategies left after this?
         emit VotingStrategiesRemoved(indicesToRemove);
     }
 
@@ -176,6 +177,7 @@ contract Space is ISpaceEvents, Module, SpaceErrors {
         for (uint256 i = 0; i < _authenticators.length; i++) {
             authenticators[_authenticators[i]] = false;
         }
+        // TODO: should we check that there are still authenticators left? same for other setters..
         emit AuthenticatorsRemoved(_authenticators);
     }
 
