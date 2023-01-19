@@ -281,14 +281,23 @@ contract Space is ISpaceEvents, Module, SpaceErrors {
         return totalVotingPower;
     }
 
-    // TODO: fix this function once we have `vote`
     /**
-     * @notice  Returns whether the quorum has been reached for this particular proposal or not.
-     * @param   proposalId  The proposal ID.
+     * @notice  Returns some information regarding state of quorum and votes.
+     * @param   quorum  The quorum to reach.
+     * @param   proposalId  The proposal id.
      * @return  bool  Whether or not the quorum has been reached.
      */
-    function _quorumReached(uint256 proposalId) internal view returns (bool) {
-        return (true);
+    function _quorumInfo(uint256 quorum, uint256 proposalId) internal view returns (bool, uint256, uint256, uint256) {
+        uint256 votesFor = votePower[proposalId][Choice.For];
+        uint256 votesAgainst = votePower[proposalId][Choice.Against];
+        uint256 votesAbstain = votePower[proposalId][Choice.Abstain];
+
+        // With solc 0.8, this will revert if an overflow occurs.
+        uint256 total = votesFor + votesAgainst + votesAbstain;
+
+        bool quorumReached = total >= quorum;
+
+        return (quorumReached, votesFor, votesAgainst, votesAbstain);
     }
 
     // ------------------------------------
@@ -375,6 +384,8 @@ contract Space is ISpaceEvents, Module, SpaceErrors {
         Proposal memory proposal = proposalRegistry[proposalId];
         _assertProposalExists(proposal);
 
+        (bool quorumReached, , , ) = _quorumInfo(proposal.quorum, proposalId);
+
         if (proposal.finalizationStatus == FinalizationStatus.NotExecuted) {
             // Proposal has not been executed yet. Let's look at the current timestamp.
             uint256 current = block.timestamp;
@@ -388,7 +399,7 @@ contract Space is ISpaceEvents, Module, SpaceErrors {
                 // We are somewhere between `proposal.startTimestamp` and `proposal.maxEndTimestamp`.
                 if (current > proposal.minEndTimestamp) {
                     // We've passed `proposal.minEndTimestamp`, check if quorum has been reached.
-                    if (_quorumReached(proposalId)) {
+                    if (quorumReached) {
                         // Quorum has been reached, this proposal is finalizable.
                         return ProposalStatus.VotingPeriodFinalizable;
                     } else {
@@ -521,29 +532,26 @@ contract Space is ISpaceEvents, Module, SpaceErrors {
         bytes32 recoveredHash = keccak256(executionParams);
         if (proposal.executionHash != recoveredHash) revert ExecutionHashMismatch();
 
-        uint256 votesFor = votePower[proposalId][Choice.For];
-        uint256 votesAgainst = votePower[proposalId][Choice.Against];
-        uint256 votesAbstain = votePower[proposalId][Choice.Abstain];
-
-        // With solc 0.8, this will revert if an overflow occurs.
-        uint256 total = votesFor + votesAgainst + votesAbstain;
+        (bool quorumReached, uint256 votesFor, uint256 votesAgainst, uint256 votesAbstain) = _quorumInfo(
+            proposal.quorum,
+            proposalId
+        );
 
         ProposalOutcome proposalOutcome;
-        // Check to see if we've reached quorum
-        if (proposal.quorum > total) {
+        if (quorumReached) {
+            // Quorum has been reached, determine if proposal should be accepted or rejected.
+            if (votesFor > votesAgainst) {
+                proposalOutcome = ProposalOutcome.Accepted;
+            } else {
+                proposalOutcome = ProposalOutcome.Rejected;
+            }
+        } else {
             // Quorum not reached, check to see if the voting period is over.
             if (currentTimestamp < proposal.maxEndTimestamp) {
                 // Voting period is not over yet; revert.
                 revert QuorumNotReachedYet();
             } else {
                 // Voting period has ended but quorum wasn't reached: set outcome to `REJECTED`.
-                proposalOutcome = ProposalOutcome.Rejected;
-            }
-        } else {
-            // Quorum has been reached, determine if proposal should be accepted or rejected.
-            if (votesFor > votesAgainst) {
-                proposalOutcome = ProposalOutcome.Accepted;
-            } else {
                 proposalOutcome = ProposalOutcome.Rejected;
             }
         }
