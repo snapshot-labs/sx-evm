@@ -5,7 +5,7 @@ import "./utils/Space.t.sol";
 
 contract SpaceOwnerActionsTest is SpaceTest {
     // ------- Cancel Proposal ----
-    function testCancel() public {
+    function testCancelWorks() public {
         uint256 proposalId = _createProposal(author, proposalMetadataUri, executionStrategy, userVotingStrategies);
 
         _vote(author, proposalId, Choice.For, userVotingStrategies);

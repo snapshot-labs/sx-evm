@@ -8,7 +8,7 @@ import "../src/SpaceErrors.sol";
 import "../src/types.sol";
 
 contract FinalizeProposalTest is SpaceTest {
-    function testFinalize() public {
+    function testFinalizeWorks() public {
         uint256 proposalId = _createProposal(author, proposalMetadataUri, executionStrategy, userVotingStrategies);
 
         _vote(author, proposalId, Choice.For, userVotingStrategies);

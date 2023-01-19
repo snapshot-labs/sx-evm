@@ -8,7 +8,7 @@ import "../src/SpaceErrors.sol";
 import "../src/types.sol";
 
 contract VoteTest is SpaceTest {
-    function testVote() public {
+    function testVoteWorks() public {
         uint256 proposalId = _createProposal(author, proposalMetadataUri, executionStrategy, userVotingStrategies);
 
         vm.expectEmit(true, true, true, true);

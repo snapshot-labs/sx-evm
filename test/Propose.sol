@@ -4,7 +4,7 @@ pragma solidity ^0.8.15;
 import "./utils/Space.t.sol";
 
 contract ProposeTest is SpaceTest {
-    function testPropose() public {
+    function testProposeWorks() public {
         uint256 proposalId = space.nextProposalId();
 
         bytes32 executionHash = keccak256(abi.encodePacked(executionStrategy.params));
