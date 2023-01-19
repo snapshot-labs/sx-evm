@@ -478,7 +478,7 @@ contract Space is ISpaceEvents, Module, SpaceErrors {
 
         if (proposal.finalizationStatus != FinalizationStatus.NotExecuted) revert ProposalAlreadyExecuted();
 
-        uint256 currentTimestamp = block.timestamp;
+        uint32 currentTimestamp = uint32(block.timestamp);
 
         if (currentTimestamp >= proposal.maxEndTimestamp) revert VotingPeriodHasEnded();
         if (currentTimestamp < proposal.startTimestamp) revert VotingPeriodHasNotStarted();
