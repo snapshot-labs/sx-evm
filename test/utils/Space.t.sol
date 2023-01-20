@@ -20,13 +20,14 @@ abstract contract SpaceTest is Test, GasSnapshot, ISpaceEvents, SpaceErrors {
 
     uint256 public constant authorKey = 1234;
     uint256 public constant voterKey = 5678;
+    uint256 public constant unauthorizedKey = 4321;
 
     // Address of the meta transaction relayer
     address public relayer = address(this);
     address public owner = address(1);
     address public author = vm.addr(authorKey);
     address public voter = vm.addr(voterKey);
-    address public unauthorized = address(4);
+    address public unauthorized = vm.addr(unauthorizedKey);
 
     Strategy[] votingStrategies;
     address[] authenticators;

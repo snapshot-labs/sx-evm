@@ -7,9 +7,11 @@ import "./utils/Authenticator.t.sol";
 import "./utils/SigUtils.sol";
 import "../src/authenticators/EthSigAuthenticator.sol";
 
-import "forge-std/console2.sol";
-
 contract EthSigAuthenticatorTest is SpaceTest, SigUtils {
+    error InvalidSignature();
+    error InvalidFunctionSelector();
+    error SaltAlreadyUsed();
+
     string private constant name = "SOC";
     string private constant version = "1";
 
@@ -27,7 +29,7 @@ contract EthSigAuthenticatorTest is SpaceTest, SigUtils {
         space.addAuthenticators(newAuths);
     }
 
-    function testAuthenticate() public {
+    function testAuthenticatePropose() public {
         uint256 salt = 0;
         bytes32 digest = _getProposeDigest(
             address(ethSigAuth),
@@ -38,7 +40,6 @@ contract EthSigAuthenticatorTest is SpaceTest, SigUtils {
             userVotingStrategies,
             salt
         );
-        console2.logBytes32(digest);
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(authorKey, digest);
 
         ethSigAuth.authenticate(
@@ -50,12 +51,118 @@ contract EthSigAuthenticatorTest is SpaceTest, SigUtils {
             PROPOSE_SELECTOR,
             abi.encode(author, proposalMetadataUri, executionStrategy, userVotingStrategies)
         );
-        // auth.authenticate(address(target), target.foo.selector, abi.encode(5));
-        // assertEq(target.x(), 5);
     }
 
-    function testAuthenticateRevert() public {
-        // vm.expectRevert(TooBig.selector);
-        // auth.authenticate(address(target), target.foo.selector, abi.encode(11));
+    function testAuthenticateProposeInvalidSigner() public {
+        uint256 salt = 0;
+        bytes32 digest = _getProposeDigest(
+            address(ethSigAuth),
+            address(space),
+            address(author),
+            proposalMetadataUri,
+            executionStrategy,
+            userVotingStrategies,
+            salt
+        );
+
+        // Sign with a key that does not correspond to the proposal author's address 
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(unauthorizedKey, digest);
+
+        vm.expectRevert(InvalidSignature.selector);
+        ethSigAuth.authenticate(
+            v,
+            r,
+            s,
+            salt,
+            address(space),
+            PROPOSE_SELECTOR,
+            abi.encode(author, proposalMetadataUri, executionStrategy, userVotingStrategies)
+        );
     }
+
+    function testAuthenticateInvalidSignature() public {
+        uint256 salt = 0;
+        // signing with a incorrect message
+        bytes32 digest = _getProposeDigest(
+            address(ethSigAuth),
+            address(space),
+            address(author),
+            "invalid metadata uri",
+            executionStrategy,
+            userVotingStrategies,
+            salt
+        );
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(authorKey, digest);
+
+        vm.expectRevert(InvalidSignature.selector);
+        ethSigAuth.authenticate(
+            v,
+            r,
+            s,
+            salt,
+            address(space),
+            PROPOSE_SELECTOR,
+            abi.encode(author, proposalMetadataUri, executionStrategy, userVotingStrategies)
+        );
+    }
+
+    function testAuthenticateProposeReusedSignature() public {
+        uint256 salt = 0;
+        bytes32 digest = _getProposeDigest(
+            address(ethSigAuth),
+            address(space),
+            address(author),
+            proposalMetadataUri,
+            executionStrategy,
+            userVotingStrategies,
+            salt
+        );
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(authorKey, digest);
+        ethSigAuth.authenticate(
+            v,
+            r,
+            s,
+            salt,
+            address(space),
+            PROPOSE_SELECTOR,
+            abi.encode(author, proposalMetadataUri, executionStrategy, userVotingStrategies)
+        );
+
+        vm.expectRevert(SaltAlreadyUsed.selector);
+        ethSigAuth.authenticate(
+            v,
+            r,
+            s,
+            salt,
+            address(space),
+            PROPOSE_SELECTOR,
+            abi.encode(author, proposalMetadataUri, executionStrategy, userVotingStrategies)
+        );
+    }
+
+    function testAuthenticateProposeInvalidSelector() public {
+        uint256 salt = 0;
+        bytes32 digest = _getProposeDigest(
+            address(ethSigAuth),
+            address(space),
+            address(author),
+            proposalMetadataUri,
+            executionStrategy,
+            userVotingStrategies,
+            salt
+        );
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(authorKey, digest);
+
+        vm.expectRevert(InvalidFunctionSelector.selector);
+        ethSigAuth.authenticate(
+            v,
+            r,
+            s,
+            salt,
+            address(space),
+            bytes4(0xdeadbeef),
+            abi.encode(author, proposalMetadataUri, executionStrategy, userVotingStrategies)
+        );
+    }
+
 }
