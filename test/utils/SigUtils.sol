@@ -38,7 +38,13 @@ abstract contract SigUtils {
             abi.encodePacked(
                 "\x19\x01",
                 keccak256(
-                    abi.encode(DOMAIN_TYPEHASH, keccak256(bytes(name)), keccak256(bytes(version)), block.chainid, authenticator)
+                    abi.encode(
+                        DOMAIN_TYPEHASH,
+                        keccak256(bytes(name)),
+                        keccak256(bytes(version)),
+                        block.chainid,
+                        authenticator
+                    )
                 ),
                 keccak256(
                     abi.encode(

@@ -65,7 +65,7 @@ contract EthSigAuthenticatorTest is SpaceTest, SigUtils {
             salt
         );
 
-        // Sign with a key that does not correspond to the proposal author's address 
+        // Sign with a key that does not correspond to the proposal author's address
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(unauthorizedKey, digest);
 
         vm.expectRevert(InvalidSignature.selector);
@@ -164,5 +164,4 @@ contract EthSigAuthenticatorTest is SpaceTest, SigUtils {
             abi.encode(author, proposalMetadataUri, executionStrategy, userVotingStrategies)
         );
     }
-
 }

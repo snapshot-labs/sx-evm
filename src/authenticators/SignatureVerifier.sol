@@ -24,14 +24,7 @@ abstract contract SignatureVerifier is EIP712 {
 
     constructor(string memory name, string memory version) EIP712(name, version) {}
 
-    function _verifyProposeSig(
-        uint8 v,
-        bytes32 r,
-        bytes32 s,
-        uint256 salt,
-        address space,
-        bytes memory data
-    ) internal {
+    function _verifyProposeSig(uint8 v, bytes32 r, bytes32 s, uint256 salt, address space, bytes memory data) internal {
         (
             address author,
             string memory metadataUri,
@@ -61,7 +54,7 @@ abstract contract SignatureVerifier is EIP712 {
         );
 
         if (recoveredAddress != address(0) && recoveredAddress != author) revert InvalidSignature();
-        
+
         // Mark salt as used to prevent replay attacks
         usedSalts[author][salt] = true;
     }
