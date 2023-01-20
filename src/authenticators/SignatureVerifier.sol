@@ -12,12 +12,15 @@ abstract contract SignatureVerifier is EIP712 {
     using SOCHash for IndexedStrategy[];
 
     error InvalidSignature();
+    error SaltAlreadyUsed();
 
     bytes32 private constant PROPOSE_TYPEHASH =
         keccak256(
             "Propose(address space,address author,string metadataUri,Strategy executionStrategy,"
             "IndexedStrategy[] userVotingStrategies,uint256 salt)"
         );
+
+    mapping(address => mapping(uint256 => bool)) private usedSalts;
 
     constructor(string memory name, string memory version) EIP712(name, version) {}
 
@@ -28,7 +31,7 @@ abstract contract SignatureVerifier is EIP712 {
         uint256 salt,
         address space,
         bytes memory data
-    ) internal view {
+    ) internal {
         (
             address author,
             string memory metadataUri,
@@ -36,7 +39,9 @@ abstract contract SignatureVerifier is EIP712 {
             IndexedStrategy[] memory usedVotingStrategies
         ) = abi.decode(data, (address, string, Strategy, IndexedStrategy[]));
 
-        address _author = ECDSA.recover(
+        if (usedSalts[author][salt]) revert SaltAlreadyUsed();
+
+        address recoveredAddress = ECDSA.recover(
             _hashTypedDataV4(
                 keccak256(
                     abi.encode(
@@ -55,6 +60,9 @@ abstract contract SignatureVerifier is EIP712 {
             s
         );
 
-        if (_author != author) revert InvalidSignature();
+        if (recoveredAddress != address(0) && recoveredAddress != author) revert InvalidSignature();
+        
+        // Mark salt as used to prevent replay attacks
+        usedSalts[author][salt] = true;
     }
 }
