@@ -164,4 +164,150 @@ contract EthSigAuthenticatorTest is SpaceTest, SigUtils {
             abi.encode(author, proposalMetadataUri, executionStrategy, userVotingStrategies)
         );
     }
+
+    function testAuthenticateVote() public {
+        // Creating demo proposal using vanilla authenticator (both vanilla and eth sig authenticators are whitelisted)
+        uint256 proposalId = _createProposal(author, proposalMetadataUri, executionStrategy, userVotingStrategies);
+
+        uint256 salt = 0;
+        bytes32 digest = _getVoteDigest(
+            address(ethSigAuth),
+            address(space),
+            voter,
+            proposalId,
+            Choice.For,
+            userVotingStrategies,
+            salt
+        );
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(voterKey, digest);
+
+        ethSigAuth.authenticate(
+            v,
+            r,
+            s,
+            salt,
+            address(space),
+            VOTE_SELECTOR,
+            abi.encode(voter, proposalId, Choice.For, userVotingStrategies)
+        );
+    }
+
+    function testAuthenticateVoteInvalidSigner() public {
+        uint256 proposalId = _createProposal(author, proposalMetadataUri, executionStrategy, userVotingStrategies);
+
+        uint256 salt = 0;
+        bytes32 digest = _getVoteDigest(
+            address(ethSigAuth),
+            address(space),
+            voter,
+            proposalId,
+            Choice.For,
+            userVotingStrategies,
+            salt
+        );
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(unauthorizedKey, digest);
+
+        vm.expectRevert(InvalidSignature.selector);
+        ethSigAuth.authenticate(
+            v,
+            r,
+            s,
+            salt,
+            address(space),
+            VOTE_SELECTOR,
+            abi.encode(voter, proposalId, Choice.For, userVotingStrategies)
+        );
+    }
+
+    function testAuthenticateVoteInvalidSignature() public {
+        uint256 proposalId = _createProposal(author, proposalMetadataUri, executionStrategy, userVotingStrategies);
+
+        uint256 salt = 0;
+        // Signing with an incorrect vote choice
+        bytes32 digest = _getVoteDigest(
+            address(ethSigAuth),
+            address(space),
+            voter,
+            proposalId,
+            Choice.Against,
+            userVotingStrategies,
+            salt
+        );
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(voterKey, digest);
+
+        vm.expectRevert(InvalidSignature.selector);
+        ethSigAuth.authenticate(
+            v,
+            r,
+            s,
+            salt,
+            address(space),
+            VOTE_SELECTOR,
+            abi.encode(voter, proposalId, Choice.For, userVotingStrategies)
+        );
+    }
+
+    function testAuthenticateVoteReusedSignature() public {
+        uint256 proposalId = _createProposal(author, proposalMetadataUri, executionStrategy, userVotingStrategies);
+
+        uint256 salt = 0;
+        bytes32 digest = _getVoteDigest(
+            address(ethSigAuth),
+            address(space),
+            voter,
+            proposalId,
+            Choice.For,
+            userVotingStrategies,
+            salt
+        );
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(voterKey, digest);
+
+        ethSigAuth.authenticate(
+            v,
+            r,
+            s,
+            salt,
+            address(space),
+            VOTE_SELECTOR,
+            abi.encode(voter, proposalId, Choice.For, userVotingStrategies)
+        );
+
+        vm.expectRevert(SaltAlreadyUsed.selector);
+        ethSigAuth.authenticate(
+            v,
+            r,
+            s,
+            salt,
+            address(space),
+            VOTE_SELECTOR,
+            abi.encode(voter, proposalId, Choice.For, userVotingStrategies)
+        );
+    }
+
+    function testAuthenticateVoteInvalidSelector() public {
+        uint256 proposalId = _createProposal(author, proposalMetadataUri, executionStrategy, userVotingStrategies);
+
+        uint256 salt = 0;
+        bytes32 digest = _getVoteDigest(
+            address(ethSigAuth),
+            address(space),
+            voter,
+            proposalId,
+            Choice.For,
+            userVotingStrategies,
+            salt
+        );
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(voterKey, digest);
+
+        vm.expectRevert(InvalidFunctionSelector.selector);
+        ethSigAuth.authenticate(
+            v,
+            r,
+            s,
+            salt,
+            address(space),
+            bytes4(0xdeadbeef),
+            abi.encode(voter, proposalId, Choice.For, userVotingStrategies)
+        );
+    }
 }
