@@ -21,6 +21,8 @@ contract EthSigAuthenticator is Authenticator, SignatureVerifier {
     ) external {
         if (functionSelector == PROPOSE_SELECTOR) {
             _verifyProposeSig(v, r, s, salt, target, data);
+        } else if (functionSelector == VOTE_SELECTOR) {
+            _verifyVoteSig(v, r, s, salt, target, data);
         } else {
             revert InvalidFunctionSelector();
         }

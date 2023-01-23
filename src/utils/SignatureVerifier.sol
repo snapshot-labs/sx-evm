@@ -19,6 +19,11 @@ abstract contract SignatureVerifier is EIP712 {
             "Propose(address space,address author,string metadataUri,Strategy executionStrategy,"
             "IndexedStrategy[] userVotingStrategies,uint256 salt)"
         );
+    bytes32 private constant VOTE_TYPEHASH =
+        keccak256(
+            "Vote(address space,address voter,uint256 proposalId,Choice choice,"
+            "IndexedStrategy[] userVotingStrategies,uint256 salt)"
+        );
 
     mapping(address => mapping(uint256 => bool)) private usedSalts;
 
@@ -29,7 +34,7 @@ abstract contract SignatureVerifier is EIP712 {
             address author,
             string memory metadataUri,
             Strategy memory executionStrategy,
-            IndexedStrategy[] memory usedVotingStrategies
+            IndexedStrategy[] memory userVotingStrategies
         ) = abi.decode(data, (address, string, Strategy, IndexedStrategy[]));
 
         if (usedSalts[author][salt]) revert SaltAlreadyUsed();
@@ -43,7 +48,7 @@ abstract contract SignatureVerifier is EIP712 {
                         author,
                         keccak256(bytes(metadataUri)),
                         executionStrategy.hash(),
-                        usedVotingStrategies.hash(),
+                        userVotingStrategies.hash(),
                         salt
                     )
                 )
@@ -57,5 +62,28 @@ abstract contract SignatureVerifier is EIP712 {
 
         // Mark salt as used to prevent replay attacks
         usedSalts[author][salt] = true;
+    }
+
+    function _verifyVoteSig(uint8 v, bytes32 r, bytes32 s, uint256 salt, address space, bytes memory data) internal {
+        (address voter, uint256 proposeId, Choice choice, IndexedStrategy[] memory userVotingStrategies) = abi.decode(
+            data,
+            (address, uint256, Choice, IndexedStrategy[])
+        );
+
+        if (usedSalts[voter][salt]) revert SaltAlreadyUsed();
+
+        address recoveredAddress = ECDSA.recover(
+            _hashTypedDataV4(
+                keccak256(abi.encode(VOTE_TYPEHASH, space, voter, proposeId, choice, userVotingStrategies.hash(), salt))
+            ),
+            v,
+            r,
+            s
+        );
+
+        if (recoveredAddress != address(0) && recoveredAddress != voter) revert InvalidSignature();
+
+        // Mark salt as used to prevent replay attacks
+        usedSalts[voter][salt] = true;
     }
 }
