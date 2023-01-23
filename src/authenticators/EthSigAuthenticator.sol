@@ -3,7 +3,7 @@
 pragma solidity ^0.8.15;
 
 import "./Authenticator.sol";
-import "./SignatureVerifier.sol";
+import "../utils/SignatureVerifier.sol";
 
 contract EthSigAuthenticator is Authenticator, SignatureVerifier {
     error InvalidFunctionSelector();
