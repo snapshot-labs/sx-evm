@@ -9,6 +9,6 @@ contract VanillaExecutionStrategy is IExecutionStrategy {
 
     // solhint-disable no-unused-vars
     function execute(ProposalOutcome proposalOutcome, bytes memory executionParams) external override {
-            numExecuted++;
+        numExecuted++;
     }
 }
