@@ -4,7 +4,7 @@ pragma solidity ^0.8.15;
 
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
-abstract contract SpaceManager is OwnableUpgradeable {
+contract SpaceManager is OwnableUpgradeable {
     mapping(address => bool) internal spaces;
 
     function enableSpace(address space) public onlyOwner {
