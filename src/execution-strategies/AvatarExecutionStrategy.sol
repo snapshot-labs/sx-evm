@@ -2,7 +2,6 @@
 
 pragma solidity ^0.8.15;
 
-// import "@gnosis.pm/safe-contracts/contracts/common/Enum.sol";
 import "@zodiac/interfaces/IAvatar.sol";
 import "../interfaces/IExecutionStrategy.sol";
 import "../utils/SpaceManager.sol";
@@ -45,20 +44,25 @@ contract AvatarExecutionStrategy is SpaceManager, IExecutionStrategy {
 
     function execute(ProposalOutcome proposalOutcome, bytes memory executionParams) external override {
         if (spaces[msg.sender] == false) revert SpaceNotEnabled();
-
         if (proposalOutcome == ProposalOutcome.Accepted) {
             _execute(executionParams);
         }
     }
 
     function _execute(bytes memory executionParams) internal {
+        // bytes memory data = abi.encodeWithSignature("multiSend(bytes)", executionParams);
         // If any transaction fails, the entire batch will fail.
-        bool success = IAvatar(target).execTransactionFromModule(
-            multisend,
-            0,
-            executionParams,
-            Enum.Operation.DelegateCall
-        );
-        if (!success) revert TransactionsFailed();
+
+        MetaTransaction[] memory transactions = abi.decode(executionParams, (MetaTransaction[]));
+        for (uint256 i = 0; i < transactions.length; i++) {
+            bool success = IAvatar(target).execTransactionFromModule(
+                transactions[i].to,
+                transactions[i].value,
+                transactions[i].data,
+                transactions[i].operation
+            );
+            // If any transaction fails, the entire execution will revert
+            if (!success) revert TransactionsFailed();
+        }
     }
 }
