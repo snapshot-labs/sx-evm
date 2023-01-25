@@ -2,11 +2,12 @@
 
 pragma solidity ^0.8.15;
 
-import "@gnosis.pm/safe-contracts/contracts/common/Enum.sol";
+// import "@gnosis.pm/safe-contracts/contracts/common/Enum.sol";
 import "@zodiac/interfaces/IAvatar.sol";
 import "../interfaces/IExecutionStrategy.sol";
 import "../utils/SpaceManager.sol";
 
+/// @title Execution strategy that executes transactions on an Avatar contract
 contract AvatarExecutionStrategy is SpaceManager, IExecutionStrategy {
     error SpaceNotEnabled();
     error TransactionsFailed();
@@ -29,9 +30,9 @@ contract AvatarExecutionStrategy is SpaceManager, IExecutionStrategy {
         );
         __Ownable_init();
         transferOwnership(_owner);
+        __SpaceManager_init(_spaces);
         target = _target;
         multisend = _multisend;
-        enableSpaces(_spaces);
     }
 
     function setTarget(address _target) external onlyOwner {
