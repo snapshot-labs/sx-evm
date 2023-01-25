@@ -7,24 +7,18 @@ import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 contract SpaceManager is OwnableUpgradeable {
     mapping(address => bool) internal spaces;
 
+    function __SpaceManager_init(address[] memory _spaces) internal initializer {
+        for (uint256 i = 0; i < _spaces.length; i++) {
+            spaces[_spaces[i]] = true;
+        }
+    }
+
     function enableSpace(address space) public onlyOwner {
         spaces[space] = true;
     }
 
-    function enableSpaces(address[] memory _spaces) public onlyOwner {
-        for (uint256 i = 0; i < _spaces.length; i++) {
-            enableSpace(_spaces[i]);
-        }
-    }
-
     function disableSpace(address space) public onlyOwner {
         spaces[space] = false;
-    }
-
-    function disableSpaces(address[] memory _spaces) public onlyOwner {
-        for (uint256 i = 0; i < _spaces.length; i++) {
-            disableSpace(_spaces[i]);
-        }
     }
 
     function isSpaceEnabled(address space) external view returns (bool) {
