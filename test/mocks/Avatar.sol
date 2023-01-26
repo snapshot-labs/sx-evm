@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.15;
 
-contract TestAvatar {
+contract Avatar {
     address public module;
 
     receive() external payable {}
