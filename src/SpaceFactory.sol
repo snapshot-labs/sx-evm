@@ -66,4 +66,3 @@ contract SpaceFactory {
         );
     }
 }
-
