@@ -100,8 +100,6 @@ contract Space is ISpace, Ownable {
             if (_votingStrategies[i].addy == address(0)) revert InvalidVotingStrategyAddress();
             votingStrategies.push(_votingStrategies[i]);
         }
-
-        emit VotingStrategiesAdded(_votingStrategies);
     }
 
     /**
@@ -116,7 +114,6 @@ contract Space is ISpace, Ownable {
         }
 
         // TODO: should we check that there are still voting strategies left after this?
-        emit VotingStrategiesRemoved(indicesToRemove);
     }
 
     /**
@@ -127,7 +124,6 @@ contract Space is ISpace, Ownable {
         for (uint256 i = 0; i < _authenticators.length; i++) {
             authenticators[_authenticators[i]] = true;
         }
-        emit AuthenticatorsAdded(_authenticators);
     }
 
     /**
@@ -139,7 +135,6 @@ contract Space is ISpace, Ownable {
             authenticators[_authenticators[i]] = false;
         }
         // TODO: should we check that there are still authenticators left? same for other setters..
-        emit AuthenticatorsRemoved(_authenticators);
     }
 
     /**
@@ -150,7 +145,6 @@ contract Space is ISpace, Ownable {
         for (uint256 i = 0; i < _executionStrategies.length; i++) {
             executionStrategies[_executionStrategies[i]] = true;
         }
-        emit ExecutionStrategiesAdded(_executionStrategies);
     }
 
     /**
@@ -161,7 +155,6 @@ contract Space is ISpace, Ownable {
         for (uint256 i = 0; i < _executionStrategies.length; i++) {
             executionStrategies[_executionStrategies[i]] = false;
         }
-        emit ExecutionStrategiesRemoved(_executionStrategies);
     }
 
     /**
@@ -184,7 +177,7 @@ contract Space is ISpace, Ownable {
      * @notice  Internal function that checks if `proposalId` exists or not.
      * @param   proposal  The proposal to check.
      */
-    function _assertProposalExists(Proposal memory proposal) internal view {
+    function _assertProposalExists(Proposal memory proposal) internal pure {
         // startTimestamp cannot be set to 0 when a proposal is created,
         // so if proposal.startTimestamp is 0 it means this proposal does not exist
         // and hence `proposalId` is invalid.
@@ -246,19 +239,20 @@ contract Space is ISpace, Ownable {
 
     /**
      * @notice  Returns some information regarding state of quorum and votes.
-     * @param   quorum  The quorum to reach.
-     * @param   proposalId  The proposal id.
+     * @param   _quorum  The quorum to reach.
+     * @param   _proposalId  The proposal id.
      * @return  bool  Whether or not the quorum has been reached.
+     * TODO: Is this function useful? Doesnt seem like a particularly useful abstraction.
      */
-    function _quorumInfo(uint256 quorum, uint256 proposalId) internal view returns (bool, uint256, uint256, uint256) {
-        uint256 votesFor = votePower[proposalId][Choice.For];
-        uint256 votesAgainst = votePower[proposalId][Choice.Against];
-        uint256 votesAbstain = votePower[proposalId][Choice.Abstain];
+    function _quorumInfo(uint256 _quorum, uint256 _proposalId) internal view returns (bool, uint256, uint256, uint256) {
+        uint256 votesFor = votePower[_proposalId][Choice.For];
+        uint256 votesAgainst = votePower[_proposalId][Choice.Against];
+        uint256 votesAbstain = votePower[_proposalId][Choice.Abstain];
 
         // With solc 0.8, this will revert if an overflow occurs.
         uint256 total = votesFor + votesAgainst + votesAbstain;
 
-        bool quorumReached = total >= quorum;
+        bool quorumReached = total >= _quorum;
 
         return (quorumReached, votesFor, votesAgainst, votesAbstain);
     }
@@ -271,6 +265,7 @@ contract Space is ISpace, Ownable {
 
     function setController(address _newController) external override onlyOwner {
         transferOwnership(_newController);
+        emit ControllerUpdated(owner(), _newController);
     }
 
     function setMaxVotingDuration(uint32 _maxVotingDuration) external override onlyOwner {
@@ -312,26 +307,32 @@ contract Space is ISpace, Ownable {
 
     function addVotingStrategies(Strategy[] calldata _votingStrategies) external override onlyOwner {
         _addVotingStrategies(_votingStrategies);
+        emit VotingStrategiesAdded(_votingStrategies);
     }
 
     function removeVotingStrategies(uint8[] calldata indicesToRemove) external override onlyOwner {
         _removeVotingStrategies(indicesToRemove);
+        emit VotingStrategiesRemoved(indicesToRemove);
     }
 
     function addAuthenticators(address[] calldata _authenticators) external override onlyOwner {
         _addAuthenticators(_authenticators);
+        emit AuthenticatorsAdded(_authenticators);
     }
 
     function removeAuthenticators(address[] calldata _authenticators) external override onlyOwner {
         _removeAuthenticators(_authenticators);
+        emit AuthenticatorsRemoved(_authenticators);
     }
 
     function addExecutionStrategies(address[] calldata _executionStrategies) external override onlyOwner {
         _addExecutionStrategies(_executionStrategies);
+        emit ExecutionStrategiesAdded(_executionStrategies);
     }
 
     function removeExecutionStrategies(address[] calldata _executionStrategies) external override onlyOwner {
         _removeExecutionStrategies(_executionStrategies);
+        emit ExecutionStrategiesRemoved(_executionStrategies);
     }
 
     // ------------------------------------
@@ -339,6 +340,10 @@ contract Space is ISpace, Ownable {
     // |             GETTERS              |
     // |                                  |
     // ------------------------------------
+
+    function getController() external view override returns (address) {
+        return owner();
+    }
 
     function getProposal(uint256 proposalId) external view override returns (Proposal memory) {
         Proposal memory proposal = proposalRegistry[proposalId];
@@ -506,10 +511,7 @@ contract Space is ISpace, Ownable {
         bytes32 recoveredHash = keccak256(executionParams);
         if (proposal.executionHash != recoveredHash) revert ExecutionHashMismatch();
 
-        (bool quorumReached, uint256 votesFor, uint256 votesAgainst, uint256 votesAbstain) = _quorumInfo(
-            proposal.quorum,
-            proposalId
-        );
+        (bool quorumReached, uint256 votesFor, uint256 votesAgainst, ) = _quorumInfo(proposal.quorum, proposalId);
 
         ProposalOutcome proposalOutcome;
         if (quorumReached) {
