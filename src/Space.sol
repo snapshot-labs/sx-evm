@@ -76,7 +76,8 @@ contract Space is ISpace, Ownable {
 
         nextProposalId = 1;
 
-        // No event events emitted here because the constructor is called by the factory, which emits a space creation event
+        // No event events emitted here because the constructor is called by the factory,
+        // which emits a space creation event.
     }
 
     // ------------------------------------
@@ -339,14 +340,14 @@ contract Space is ISpace, Ownable {
     // |                                  |
     // ------------------------------------
 
-    function getProposal(uint256 proposalId) external override view returns (Proposal memory) {
+    function getProposal(uint256 proposalId) external view override returns (Proposal memory) {
         Proposal memory proposal = proposalRegistry[proposalId];
         _assertProposalExists(proposal);
 
         return (proposal);
     }
 
-    function getProposalStatus(uint256 proposalId) external override view returns (ProposalStatus) {
+    function getProposalStatus(uint256 proposalId) external view override returns (ProposalStatus) {
         Proposal memory proposal = proposalRegistry[proposalId];
         _assertProposalExists(proposal);
 
@@ -384,7 +385,7 @@ contract Space is ISpace, Ownable {
         }
     }
 
-    function hasVoted(uint256 proposalId, address voter) external override view returns (bool) {
+    function hasVoted(uint256 proposalId, address voter) external view override returns (bool) {
         Proposal memory proposal = proposalRegistry[proposalId];
         _assertProposalExists(proposal);
 
