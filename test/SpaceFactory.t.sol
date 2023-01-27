@@ -33,7 +33,8 @@ contract SpaceFactoryTest is SpaceTest, ISpaceFactoryEvents {
             quorum,
             votingStrategies,
             authenticators,
-            executionStrategiesAddresses
+            executionStrategiesAddresses,
+            bytes32(0)
         );
     }
 }

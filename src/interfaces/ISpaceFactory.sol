@@ -15,6 +15,7 @@ interface ISpaceFactory is ISpaceFactoryEvents {
         uint256 quorum,
         Strategy[] calldata votingStrategies,
         address[] calldata authenticators,
-        address[] calldata executionStrategiesAddresses
+        address[] calldata executionStrategiesAddresses,
+        bytes32 salt
     ) external;
 }

@@ -1,5 +1,7 @@
-// SPDX-License-Identifier: UNLICENSED
+// SPDX-License-Identifier: MIT
+
 pragma solidity ^0.8.15;
+
 import "./Space.sol";
 import "./interfaces/ISpaceFactory.sol";
 import "./types.sol";
@@ -9,8 +11,6 @@ import "./types.sol";
  * @title   Space Factory Contract.
  */
 contract SpaceFactory is ISpaceFactory {
-    Space[] public spaces;
-
     function createSpace(
         address owner,
         uint32 votingDelay,
@@ -20,10 +20,11 @@ contract SpaceFactory is ISpaceFactory {
         uint256 quorum,
         Strategy[] calldata votingStrategies,
         address[] calldata authenticators,
-        address[] calldata executionStrategiesAddresses
+        address[] calldata executionStrategiesAddresses,
+        bytes32 salt
     ) external {
-        spaces.push(
-            new Space(
+        address space = address(
+            new Space{ salt: salt }(
                 owner,
                 votingDelay,
                 minVotingDuration,
