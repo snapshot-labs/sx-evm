@@ -6,13 +6,29 @@ import "./Space.sol";
 import "./interfaces/ISpaceFactory.sol";
 import "./types.sol";
 
+import "forge-std/console2.sol";
+
 /**
- * @author  SnapshotLabs
- * @title   Space Factory Contract.
+ * @title   Space Factory
+ * @notice  A contract to deploy and track spaces
+ * @author  Snapshot Labs
  */
-contract SpaceFactory is ISpaceFactory {
+contract SpaceFactory {
+    event SpaceCreated(
+        address space,
+        address controller,
+        uint32 votingDelay,
+        uint32 minVotingDuration,
+        uint32 maxVotingDuration,
+        uint256 proposalThreshold,
+        uint256 quorum,
+        Strategy[] votingStrategies,
+        address[] authenticators,
+        address[] executionStrategies
+    );
+
     function createSpace(
-        address owner,
+        address controller,
         uint32 votingDelay,
         uint32 minVotingDuration,
         uint32 maxVotingDuration,
@@ -20,12 +36,11 @@ contract SpaceFactory is ISpaceFactory {
         uint256 quorum,
         Strategy[] calldata votingStrategies,
         address[] calldata authenticators,
-        address[] calldata executionStrategiesAddresses,
-        bytes32 salt
+        address[] calldata executionStrategies
     ) external {
         address space = address(
-            new Space{ salt: salt }(
-                owner,
+            new Space{ salt: keccak256(abi.encode(controller)) }(
+                controller,
                 votingDelay,
                 minVotingDuration,
                 maxVotingDuration,
@@ -33,12 +48,13 @@ contract SpaceFactory is ISpaceFactory {
                 quorum,
                 votingStrategies,
                 authenticators,
-                executionStrategiesAddresses
+                executionStrategies
             )
         );
 
         emit SpaceCreated(
-            owner,
+            space,
+            controller,
             votingDelay,
             minVotingDuration,
             maxVotingDuration,
@@ -46,7 +62,8 @@ contract SpaceFactory is ISpaceFactory {
             quorum,
             votingStrategies,
             authenticators,
-            executionStrategiesAddresses
+            executionStrategies
         );
     }
 }
+
