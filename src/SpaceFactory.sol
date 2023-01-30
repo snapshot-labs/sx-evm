@@ -24,7 +24,7 @@ contract SpaceFactory is ISpaceFactory {
         address[] calldata executionStrategies,
         bytes32 salt
     ) external override {
-        address space = address(
+        try
             new Space{ salt: salt }(
                 controller,
                 votingDelay,
@@ -36,19 +36,21 @@ contract SpaceFactory is ISpaceFactory {
                 authenticators,
                 executionStrategies
             )
-        );
-
-        emit SpaceCreated(
-            space,
-            controller,
-            votingDelay,
-            minVotingDuration,
-            maxVotingDuration,
-            proposalThreshold,
-            quorum,
-            votingStrategies,
-            authenticators,
-            executionStrategies
-        );
+        returns (Space space) {
+            emit SpaceCreated(
+                address(space),
+                controller,
+                votingDelay,
+                minVotingDuration,
+                maxVotingDuration,
+                proposalThreshold,
+                quorum,
+                votingStrategies,
+                authenticators,
+                executionStrategies
+            );
+        } catch {
+            revert SpaceCreationFailed();
+        }
     }
 }

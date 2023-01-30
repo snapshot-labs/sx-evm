@@ -7,8 +7,9 @@ import "../src/voting-strategies/VanillaVotingStrategy.sol";
 import "../src/execution-strategies/VanillaExecutionStrategy.sol";
 import "../src/SpaceFactory.sol";
 import "../src/interfaces/space-factory/ISpaceFactoryEvents.sol";
+import "../src/interfaces/space-factory/ISpaceFactoryErrors.sol";
 
-contract SpaceFactoryTest is ISpaceFactoryEvents, Test {
+contract SpaceFactoryTest is Test, ISpaceFactoryEvents, ISpaceFactoryErrors {
     SpaceFactory public factory;
 
     VanillaVotingStrategy vanillaVotingStrategy;
@@ -106,7 +107,7 @@ contract SpaceFactoryTest is ISpaceFactoryEvents, Test {
 
         // Reusing the same salt should revert as the computed space address will be
         // the same as the first deployment.
-        vm.expectRevert(); // EVM revert
+        vm.expectRevert(abi.encodePacked(SpaceCreationFailed.selector)); // EVM revert
         factory.createSpace(
             controller,
             votingDelay,
