@@ -6,27 +6,12 @@ import "./Space.sol";
 import "./interfaces/ISpaceFactory.sol";
 import "./types.sol";
 
-import "forge-std/console2.sol";
-
 /**
  * @title   Space Factory
  * @notice  A contract to deploy and track spaces
  * @author  Snapshot Labs
  */
-contract SpaceFactory {
-    event SpaceCreated(
-        address space,
-        address controller,
-        uint32 votingDelay,
-        uint32 minVotingDuration,
-        uint32 maxVotingDuration,
-        uint256 proposalThreshold,
-        uint256 quorum,
-        Strategy[] votingStrategies,
-        address[] authenticators,
-        address[] executionStrategies
-    );
-
+contract SpaceFactory is ISpaceFactory {
     function createSpace(
         address controller,
         uint32 votingDelay,
@@ -36,10 +21,11 @@ contract SpaceFactory {
         uint256 quorum,
         Strategy[] calldata votingStrategies,
         address[] calldata authenticators,
-        address[] calldata executionStrategies
-    ) external {
+        address[] calldata executionStrategies,
+        bytes32 salt
+    ) external override {
         address space = address(
-            new Space{ salt: keccak256(abi.encode(controller)) }(
+            new Space{ salt: salt }(
                 controller,
                 votingDelay,
                 minVotingDuration,
@@ -66,4 +52,3 @@ contract SpaceFactory {
         );
     }
 }
-

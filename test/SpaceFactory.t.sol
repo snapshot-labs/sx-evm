@@ -6,23 +6,9 @@ import "../src/authenticators/VanillaAuthenticator.sol";
 import "../src/voting-strategies/VanillaVotingStrategy.sol";
 import "../src/execution-strategies/VanillaExecutionStrategy.sol";
 import "../src/SpaceFactory.sol";
+import "../src/interfaces/space-factory/ISpaceFactoryEvents.sol";
 
-import "forge-std/console2.sol";
-
-contract SpaceFactoryTest is Test {
-    event SpaceCreated(
-        address space,
-        address controller,
-        uint32 votingDelay,
-        uint32 minVotingDuration,
-        uint32 maxVotingDuration,
-        uint256 proposalThreshold,
-        uint256 quorum,
-        Strategy[] votingStrategies,
-        address[] authenticators,
-        address[] executionStrategiesAddresses
-    );
-
+contract SpaceFactoryTest is ISpaceFactoryEvents, Test {
     SpaceFactory public factory;
 
     VanillaVotingStrategy vanillaVotingStrategy;
@@ -104,18 +90,6 @@ contract SpaceFactoryTest is Test {
 
     function testCreateSpaceReusedSalt() public {
         bytes32 salt = bytes32(keccak256(abi.encodePacked("random salt")));
-        address space = _getSpaceAddress(
-            controller,
-            votingDelay,
-            minVotingDuration,
-            maxVotingDuration,
-            proposalThreshold,
-            quorum,
-            votingStrategies,
-            authenticators,
-            executionStrategies,
-            salt
-        );
 
         factory.createSpace(
             controller,

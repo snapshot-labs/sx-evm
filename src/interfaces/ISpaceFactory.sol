@@ -2,22 +2,10 @@
 
 pragma solidity ^0.8.15;
 
+import "./space-factory/ISpaceFactoryEvents.sol";
 import "../types.sol";
 
-interface ISpaceFactory {
-    event SpaceCreated(
-        address space,
-        address owner,
-        uint32 votingDelay,
-        uint32 minVotingDuration,
-        uint32 maxVotingDuration,
-        uint256 proposalThreshold,
-        uint256 quorum,
-        Strategy[] votingStrategies,
-        address[] authenticators,
-        address[] executionStrategiesAddresses
-    );
-
+interface ISpaceFactory is ISpaceFactoryEvents {
     function createSpace(
         address owner,
         uint32 votingDelay,
