@@ -123,12 +123,12 @@ contract Space is ISpace, Ownable {
     /**
      * @notice  Internal function to remove voting strategies.
      * @dev     Does not shrink the array but simply sets the values to 0.
-     * @param   _votingStrategyIndicies  Indices of the strategies to remove.
+     * @param   _votingStrategyIndices  Indices of the strategies to remove.
      */
-    function _removeVotingStrategies(uint8[] memory _votingStrategyIndicies) internal {
-        for (uint8 i = 0; i < _votingStrategyIndicies.length; i++) {
-            votingStrategies[_votingStrategyIndicies[i]].addy = address(0);
-            votingStrategies[_votingStrategyIndicies[i]].params = new bytes(0);
+    function _removeVotingStrategies(uint8[] memory _votingStrategyIndices) internal {
+        for (uint8 i = 0; i < _votingStrategyIndices.length; i++) {
+            votingStrategies[_votingStrategyIndices[i]].addy = address(0);
+            votingStrategies[_votingStrategyIndices[i]].params = new bytes(0);
         }
 
         // TODO: should we check that there are still voting strategies left after this?
@@ -320,9 +320,9 @@ contract Space is ISpace, Ownable {
         emit VotingStrategiesAdded(_votingStrategies);
     }
 
-    function removeVotingStrategies(uint8[] calldata _votingStrategyIndicies) external override onlyOwner {
-        _removeVotingStrategies(_votingStrategyIndicies);
-        emit VotingStrategiesRemoved(_votingStrategyIndicies);
+    function removeVotingStrategies(uint8[] calldata _votingStrategyIndices) external override onlyOwner {
+        _removeVotingStrategies(_votingStrategyIndices);
+        emit VotingStrategiesRemoved(_votingStrategyIndices);
     }
 
     function addAuthenticators(address[] calldata _authenticators) external override onlyOwner {
