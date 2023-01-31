@@ -282,18 +282,18 @@ contract Space is ISpace, Ownable {
     // ------------------------------------
 
     function setController(address _controller) external override onlyOwner {
-        emit ControllerUpdated(owner(), _controller);
         transferOwnership(_controller);
+        emit ControllerUpdated(_controller);
     }
 
     function setMaxVotingDuration(uint32 _maxVotingDuration) external override onlyOwner {
-        emit MaxVotingDurationUpdated(maxVotingDuration, _maxVotingDuration);
         _setMaxVotingDuration(_maxVotingDuration);
+        emit MaxVotingDurationUpdated(_maxVotingDuration);
     }
 
     function setMinVotingDuration(uint32 _minVotingDuration) external override onlyOwner {
-        emit MinVotingDurationUpdated(minVotingDuration, _minVotingDuration);
         _setMinVotingDuration(_minVotingDuration);
+        emit MinVotingDurationUpdated(_minVotingDuration);
     }
 
     function setMetadataUri(string calldata _metadataUri) external override onlyOwner {
@@ -301,18 +301,18 @@ contract Space is ISpace, Ownable {
     }
 
     function setProposalThreshold(uint256 _proposalThreshold) external override onlyOwner {
-        emit ProposalThresholdUpdated(proposalThreshold, _proposalThreshold);
         _setProposalThreshold(_proposalThreshold);
+        emit ProposalThresholdUpdated(_proposalThreshold);
     }
 
     function setQuorum(uint256 _quorum) external override onlyOwner {
-        emit QuorumUpdated(quorum, _quorum);
         _setQuorum(_quorum);
+        emit QuorumUpdated(_quorum);
     }
 
     function setVotingDelay(uint32 _votingDelay) external override onlyOwner {
-        emit VotingDelayUpdated(votingDelay, _votingDelay);
         _setVotingDelay(_votingDelay);
+        emit VotingDelayUpdated(_votingDelay);
     }
 
     function addVotingStrategies(Strategy[] calldata _votingStrategies) external override onlyOwner {
