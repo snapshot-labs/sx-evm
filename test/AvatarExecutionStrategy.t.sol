@@ -138,6 +138,14 @@ contract AvatarExecutionStrategyTest is Test {
         avatarExecutionStrategy.enableSpace(space);
     }
 
+    function testEnableSpaceTwice() public {
+        // This space is already enabled
+        address space = address(this);
+        vm.prank(owner);
+        vm.expectRevert(InvalidSpace.selector);
+        avatarExecutionStrategy.enableSpace(space);
+    }
+
     function testUnauthorizedEnableSpace() public {
         address space = address(0xbeef);
         vm.prank(unauthorized);

@@ -28,7 +28,7 @@ contract SpaceManager is OwnableUpgradeable {
     /// @notice Enable a space.
     /// @param space Address of the space.
     function enableSpace(address space) public onlyOwner {
-        if (space == address(0)) revert InvalidSpace();
+        if (space == address(0) || isSpaceEnabled(space)) revert InvalidSpace();
         spaces[space] = true;
         emit SpaceEnabled(space);
     }
@@ -44,7 +44,7 @@ contract SpaceManager is OwnableUpgradeable {
     /// @notice Check if a space is enabled.
     /// @param space Address of the space.
     /// @return bool whether the space is enabled.
-    function isSpaceEnabled(address space) external view returns (bool) {
+    function isSpaceEnabled(address space) public view returns (bool) {
         return spaces[space];
     }
 }
