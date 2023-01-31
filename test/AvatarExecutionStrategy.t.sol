@@ -64,6 +64,23 @@ contract AvatarExecutionStrategyTest is Test {
         assertEq(avatar.isModuleEnabled(address(0xbeef)), true);
     }
 
+    function testInvalidMultiTx() public {
+        MetaTransaction[] memory transactions = new MetaTransaction[](2);
+        transactions[0] = MetaTransaction(
+            address(avatar),
+            0,
+            abi.encodeWithSignature("enableModule(address)", address(0xbeef)),
+            Enum.Operation.Call
+        );
+        // invalid tx
+        transactions[1] = MetaTransaction(address(owner), 1001, "", Enum.Operation.Call);
+        vm.expectRevert(TransactionsFailed.selector);
+        avatarExecutionStrategy.execute(ProposalOutcome.Accepted, abi.encode(transactions));
+        // both txs should have reverted despite the first one being valid
+        assertEq(owner.balance, 0);
+        assertEq(avatar.isModuleEnabled(address(0xbeef)), false);
+    }
+
     function testInvalidTx() public {
         // This transaction will fail because the avatar does not have enough funds
         MetaTransaction[] memory transactions = new MetaTransaction[](1);
