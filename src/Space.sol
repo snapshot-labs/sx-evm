@@ -1,12 +1,11 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.15;
-import "src/interfaces/IVotingStrategy.sol";
-// import "src/interfaces/ISpace.sol"; TODO: add this later when everything has been impl
-import "src/interfaces/space/ISpaceEvents.sol";
-import "src/SpaceErrors.sol";
-import "src/types.sol";
+
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "@zodiac/core/Module.sol";
+
+import "src/interfaces/ISpace.sol";
+import "src/types.sol";
+import "src/interfaces/IVotingStrategy.sol";
 import "src/interfaces/IExecutionStrategy.sol";
 
 /**
@@ -14,7 +13,7 @@ import "src/interfaces/IExecutionStrategy.sol";
  * @title   Space Contract.
  * @notice  Logic and bookkeeping contract.
  */
-contract Space is ISpaceEvents, Module, SpaceErrors {
+contract Space is ISpace, Ownable {
     // Maximum duration a proposal can last.
     uint32 public maxVotingDuration;
     // Minimum duration a proposal can last.
@@ -51,7 +50,7 @@ contract Space is ISpaceEvents, Module, SpaceErrors {
     // ------------------------------------
 
     constructor(
-        address _owner,
+        address _controller,
         uint32 _votingDelay,
         uint32 _minVotingDuration,
         uint32 _maxVotingDuration,
@@ -61,62 +60,20 @@ contract Space is ISpaceEvents, Module, SpaceErrors {
         address[] memory _authenticators,
         address[] memory _executionStrategies
     ) {
-        bytes memory initParams = abi.encode(
-            _owner,
-            _votingDelay,
-            _minVotingDuration,
-            _maxVotingDuration,
-            _proposalThreshold,
-            _quorum,
-            _votingStrategies,
-            _authenticators,
-            _executionStrategies
-        );
-        setUp(initParams);
-    }
-
-    function setUp(bytes memory initializeParams) public override initializer {
-        __Ownable_init();
-        (
-            address _owner,
-            uint32 _votingDelay,
-            uint32 _minVotingDuration,
-            uint32 _maxVotingDuration,
-            uint256 _proposalThreshold,
-            uint256 _quorum,
-            Strategy[] memory _votingStrategies,
-            address[] memory _authenticators,
-            address[] memory _executionStrategies
-        ) = abi.decode(
-                initializeParams,
-                (address, uint32, uint32, uint32, uint256, uint256, Strategy[], address[], address[])
-            );
-
-        if (_minVotingDuration > _maxVotingDuration) revert InvalidDuration(_minVotingDuration, _maxVotingDuration);
-        if (_authenticators.length == 0) revert EmptyArray();
-        if (_executionStrategies.length == 0) revert EmptyArray();
-
-        // TODO: call _addVotingStrategies and remove
-        if (_votingStrategies.length == 0) revert EmptyArray();
-
-        transferOwnership(_owner);
-
-        votingDelay = _votingDelay;
-        minVotingDuration = _minVotingDuration;
-        maxVotingDuration = _maxVotingDuration;
-        proposalThreshold = _proposalThreshold;
-        quorum = _quorum;
-
+        transferOwnership(_controller);
+        _setMaxVotingDuration(_maxVotingDuration);
+        _setMinVotingDuration(_minVotingDuration);
+        _setProposalThreshold(_proposalThreshold);
+        _setQuorum(_quorum);
+        _setVotingDelay(_votingDelay);
         _addVotingStrategies(_votingStrategies);
         _addAuthenticators(_authenticators);
         _addExecutionStrategies(_executionStrategies);
 
-        // TODO: decide if we wish to emit the events or not
-        // emit VotingStrategiesAdded(_votingStrategies, _votingStrategiesParams);
-        // emit ExecutionStrategiesAdded(_executionStrategies);
-        // emit AuthenticatorsAdded(_authenticators);
-
         nextProposalId = 1;
+
+        // No event events emitted here because the constructor is called by the factory,
+        // which emits a space creation event.
     }
 
     // ------------------------------------
@@ -124,6 +81,28 @@ contract Space is ISpaceEvents, Module, SpaceErrors {
     // |            INTERNAL              |
     // |                                  |
     // ------------------------------------
+
+    function _setMaxVotingDuration(uint32 _maxVotingDuration) internal {
+        if (_maxVotingDuration < minVotingDuration) revert InvalidDuration(minVotingDuration, _maxVotingDuration);
+        maxVotingDuration = _maxVotingDuration;
+    }
+
+    function _setMinVotingDuration(uint32 _minVotingDuration) internal {
+        if (_minVotingDuration > maxVotingDuration) revert InvalidDuration(_minVotingDuration, maxVotingDuration);
+        minVotingDuration = _minVotingDuration;
+    }
+
+    function _setProposalThreshold(uint256 _proposalThreshold) internal {
+        proposalThreshold = _proposalThreshold;
+    }
+
+    function _setQuorum(uint256 _quorum) internal {
+        quorum = _quorum;
+    }
+
+    function _setVotingDelay(uint32 _votingDelay) internal {
+        votingDelay = _votingDelay;
+    }
 
     /**
      * @notice  Internal function to add voting strategies.
@@ -139,23 +118,20 @@ contract Space is ISpaceEvents, Module, SpaceErrors {
             if (_votingStrategies[i].addy == address(0)) revert InvalidVotingStrategyAddress();
             votingStrategies.push(_votingStrategies[i]);
         }
-
-        emit VotingStrategiesAdded(_votingStrategies);
     }
 
     /**
      * @notice  Internal function to remove voting strategies.
      * @dev     Does not shrink the array but simply sets the values to 0.
-     * @param   indicesToRemove  Indices of the strategies to remove.
+     * @param   _votingStrategyIndices  Indices of the strategies to remove.
      */
-    function _removeVotingStrategies(uint8[] memory indicesToRemove) internal {
-        for (uint8 i = 0; i < indicesToRemove.length; i++) {
-            votingStrategies[indicesToRemove[i]].addy = address(0);
-            votingStrategies[indicesToRemove[i]].params = new bytes(0);
+    function _removeVotingStrategies(uint8[] memory _votingStrategyIndices) internal {
+        for (uint8 i = 0; i < _votingStrategyIndices.length; i++) {
+            votingStrategies[_votingStrategyIndices[i]].addy = address(0);
+            votingStrategies[_votingStrategyIndices[i]].params = new bytes(0);
         }
 
         // TODO: should we check that there are still voting strategies left after this?
-        emit VotingStrategiesRemoved(indicesToRemove);
     }
 
     /**
@@ -166,7 +142,6 @@ contract Space is ISpaceEvents, Module, SpaceErrors {
         for (uint256 i = 0; i < _authenticators.length; i++) {
             authenticators[_authenticators[i]] = true;
         }
-        emit AuthenticatorsAdded(_authenticators);
     }
 
     /**
@@ -178,7 +153,6 @@ contract Space is ISpaceEvents, Module, SpaceErrors {
             authenticators[_authenticators[i]] = false;
         }
         // TODO: should we check that there are still authenticators left? same for other setters..
-        emit AuthenticatorsRemoved(_authenticators);
     }
 
     /**
@@ -189,7 +163,6 @@ contract Space is ISpaceEvents, Module, SpaceErrors {
         for (uint256 i = 0; i < _executionStrategies.length; i++) {
             executionStrategies[_executionStrategies[i]] = true;
         }
-        emit ExecutionStrategiesAdded(_executionStrategies);
     }
 
     /**
@@ -200,7 +173,6 @@ contract Space is ISpaceEvents, Module, SpaceErrors {
         for (uint256 i = 0; i < _executionStrategies.length; i++) {
             executionStrategies[_executionStrategies[i]] = false;
         }
-        emit ExecutionStrategiesRemoved(_executionStrategies);
     }
 
     /**
@@ -223,7 +195,7 @@ contract Space is ISpaceEvents, Module, SpaceErrors {
      * @notice  Internal function that checks if `proposalId` exists or not.
      * @param   proposal  The proposal to check.
      */
-    function _assertProposalExists(Proposal memory proposal) internal view {
+    function _assertProposalExists(Proposal memory proposal) internal pure {
         // startTimestamp cannot be set to 0 when a proposal is created,
         // so if proposal.startTimestamp is 0 it means this proposal does not exist
         // and hence `proposalId` is invalid.
@@ -285,19 +257,20 @@ contract Space is ISpaceEvents, Module, SpaceErrors {
 
     /**
      * @notice  Returns some information regarding state of quorum and votes.
-     * @param   quorum  The quorum to reach.
-     * @param   proposalId  The proposal id.
+     * @param   _quorum  The quorum to reach.
+     * @param   _proposalId  The proposal id.
      * @return  bool  Whether or not the quorum has been reached.
+     * TODO: Is this function useful? Doesnt seem like a particularly useful abstraction.
      */
-    function _quorumInfo(uint256 quorum, uint256 proposalId) internal view returns (bool, uint256, uint256, uint256) {
-        uint256 votesFor = votePower[proposalId][Choice.For];
-        uint256 votesAgainst = votePower[proposalId][Choice.Against];
-        uint256 votesAbstain = votePower[proposalId][Choice.Abstain];
+    function _quorumInfo(uint256 _quorum, uint256 _proposalId) internal view returns (bool, uint256, uint256, uint256) {
+        uint256 votesFor = votePower[_proposalId][Choice.For];
+        uint256 votesAgainst = votePower[_proposalId][Choice.Against];
+        uint256 votesAbstain = votePower[_proposalId][Choice.Abstain];
 
         // With solc 0.8, this will revert if an overflow occurs.
         uint256 total = votesFor + votesAgainst + votesAbstain;
 
-        bool quorumReached = total >= quorum;
+        bool quorumReached = total >= _quorum;
 
         return (quorumReached, votesFor, votesAgainst, votesAbstain);
     }
@@ -308,65 +281,68 @@ contract Space is ISpaceEvents, Module, SpaceErrors {
     // |                                  |
     // ------------------------------------
 
-    function setMaxVotingDuration(uint32 _maxVotingDuration) external onlyOwner {
-        if (_maxVotingDuration < minVotingDuration) revert InvalidDuration(minVotingDuration, _maxVotingDuration);
-        emit MaxVotingDurationUpdated(maxVotingDuration, _maxVotingDuration);
-
-        maxVotingDuration = _maxVotingDuration;
+    function setController(address _controller) external override onlyOwner {
+        transferOwnership(_controller);
+        emit ControllerUpdated(_controller);
     }
 
-    function setMinVotingDuration(uint32 _minVotingDuration) external onlyOwner {
-        if (_minVotingDuration > maxVotingDuration) revert InvalidDuration(_minVotingDuration, maxVotingDuration);
-
-        emit MinVotingDurationUpdated(minVotingDuration, _minVotingDuration);
-
-        minVotingDuration = _minVotingDuration;
+    function setMaxVotingDuration(uint32 _maxVotingDuration) external override onlyOwner {
+        _setMaxVotingDuration(_maxVotingDuration);
+        emit MaxVotingDurationUpdated(_maxVotingDuration);
     }
 
-    function setMetadataUri(string calldata _metadataUri) external onlyOwner {
+    function setMinVotingDuration(uint32 _minVotingDuration) external override onlyOwner {
+        _setMinVotingDuration(_minVotingDuration);
+        emit MinVotingDurationUpdated(_minVotingDuration);
+    }
+
+    function setMetadataUri(string calldata _metadataUri) external override onlyOwner {
         emit MetadataUriUpdated(_metadataUri);
     }
 
-    function setProposalThreshold(uint256 _threshold) external onlyOwner {
-        emit ProposalThresholdUpdated(proposalThreshold, _threshold);
-
-        proposalThreshold = _threshold;
+    function setProposalThreshold(uint256 _proposalThreshold) external override onlyOwner {
+        _setProposalThreshold(_proposalThreshold);
+        emit ProposalThresholdUpdated(_proposalThreshold);
     }
 
-    function setQuorum(uint256 _quorum) external onlyOwner {
-        emit QuorumUpdated(quorum, _quorum);
-        quorum = _quorum;
+    function setQuorum(uint256 _quorum) external override onlyOwner {
+        _setQuorum(_quorum);
+        emit QuorumUpdated(_quorum);
     }
 
-    function setVotingDelay(uint32 _votingDelay) external onlyOwner {
-        emit VotingDelayUpdated(votingDelay, _votingDelay);
-
-        votingDelay = _votingDelay;
-        // TODO: check it's not too big?
+    function setVotingDelay(uint32 _votingDelay) external override onlyOwner {
+        _setVotingDelay(_votingDelay);
+        emit VotingDelayUpdated(_votingDelay);
     }
 
-    function addVotingStrategies(Strategy[] calldata _votingStrategies) external onlyOwner {
+    function addVotingStrategies(Strategy[] calldata _votingStrategies) external override onlyOwner {
         _addVotingStrategies(_votingStrategies);
+        emit VotingStrategiesAdded(_votingStrategies);
     }
 
-    function removeVotingStrategies(uint8[] calldata indicesToRemove) external onlyOwner {
-        _removeVotingStrategies(indicesToRemove);
+    function removeVotingStrategies(uint8[] calldata _votingStrategyIndices) external override onlyOwner {
+        _removeVotingStrategies(_votingStrategyIndices);
+        emit VotingStrategiesRemoved(_votingStrategyIndices);
     }
 
-    function addAuthenticators(address[] calldata _authenticators) external onlyOwner {
+    function addAuthenticators(address[] calldata _authenticators) external override onlyOwner {
         _addAuthenticators(_authenticators);
+        emit AuthenticatorsAdded(_authenticators);
     }
 
-    function removeAuthenticators(address[] calldata _authenticators) external onlyOwner {
+    function removeAuthenticators(address[] calldata _authenticators) external override onlyOwner {
         _removeAuthenticators(_authenticators);
+        emit AuthenticatorsRemoved(_authenticators);
     }
 
-    function addExecutionStrategies(address[] calldata _executionStrategies) external onlyOwner {
+    function addExecutionStrategies(address[] calldata _executionStrategies) external override onlyOwner {
         _addExecutionStrategies(_executionStrategies);
+        emit ExecutionStrategiesAdded(_executionStrategies);
     }
 
-    function removeExecutionStrategies(address[] calldata _executionStrategies) external onlyOwner {
+    function removeExecutionStrategies(address[] calldata _executionStrategies) external override onlyOwner {
         _removeExecutionStrategies(_executionStrategies);
+        emit ExecutionStrategiesRemoved(_executionStrategies);
     }
 
     // ------------------------------------
@@ -375,14 +351,18 @@ contract Space is ISpaceEvents, Module, SpaceErrors {
     // |                                  |
     // ------------------------------------
 
-    function getProposal(uint256 proposalId) external view returns (Proposal memory) {
+    function getController() external view override returns (address) {
+        return owner();
+    }
+
+    function getProposal(uint256 proposalId) external view override returns (Proposal memory) {
         Proposal memory proposal = proposalRegistry[proposalId];
         _assertProposalExists(proposal);
 
         return (proposal);
     }
 
-    function getProposalStatus(uint256 proposalId) external view returns (ProposalStatus) {
+    function getProposalStatus(uint256 proposalId) external view override returns (ProposalStatus) {
         Proposal memory proposal = proposalRegistry[proposalId];
         _assertProposalExists(proposal);
 
@@ -420,6 +400,13 @@ contract Space is ISpaceEvents, Module, SpaceErrors {
         }
     }
 
+    function hasVoted(uint256 proposalId, address voter) external view override returns (bool) {
+        Proposal memory proposal = proposalRegistry[proposalId];
+        _assertProposalExists(proposal);
+
+        return voteRegistry[proposalId][voter];
+    }
+
     // ------------------------------------
     // |                                  |
     // |             CORE                 |
@@ -438,7 +425,7 @@ contract Space is ISpaceEvents, Module, SpaceErrors {
         string calldata metadataUri,
         Strategy calldata executionStrategy,
         IndexedStrategy[] calldata userVotingStrategies
-    ) external {
+    ) external override {
         _assertValidAuthenticator();
         _assertValidExecutionStrategy(executionStrategy.addy);
 
@@ -483,7 +470,7 @@ contract Space is ISpaceEvents, Module, SpaceErrors {
         uint256 proposalId,
         Choice choice,
         IndexedStrategy[] calldata userVotingStrategies
-    ) external {
+    ) external override {
         _assertValidAuthenticator();
 
         Proposal memory proposal = proposalRegistry[proposalId];
@@ -519,7 +506,7 @@ contract Space is ISpaceEvents, Module, SpaceErrors {
      * @param   proposalId  The proposal to cancel
      * @param   executionParams  The execution parameters, as described in `propose()`.
      */
-    function finalizeProposal(uint256 proposalId, bytes calldata executionParams) external {
+    function finalizeProposal(uint256 proposalId, bytes calldata executionParams) external override {
         // TODO: check if we should use `memory` here and only use `storage` in the end
         // of this function when we actually modify the proposal
         Proposal storage proposal = proposalRegistry[proposalId];
@@ -534,10 +521,7 @@ contract Space is ISpaceEvents, Module, SpaceErrors {
         bytes32 recoveredHash = keccak256(executionParams);
         if (proposal.executionHash != recoveredHash) revert ExecutionHashMismatch();
 
-        (bool quorumReached, uint256 votesFor, uint256 votesAgainst, uint256 votesAbstain) = _quorumInfo(
-            proposal.quorum,
-            proposalId
-        );
+        (bool quorumReached, uint256 votesFor, uint256 votesAgainst, ) = _quorumInfo(proposal.quorum, proposalId);
 
         ProposalOutcome proposalOutcome;
         if (quorumReached) {
@@ -578,7 +562,7 @@ contract Space is ISpaceEvents, Module, SpaceErrors {
      * @param   proposalId  The proposal to cancel
      * @param   executionParams  The execution parameters, as described in `propose()`.
      */
-    function cancelProposal(uint256 proposalId, bytes calldata executionParams) external onlyOwner {
+    function cancelProposal(uint256 proposalId, bytes calldata executionParams) external override onlyOwner {
         Proposal storage proposal = proposalRegistry[proposalId];
         _assertProposalExists(proposal);
 

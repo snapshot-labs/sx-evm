@@ -2,6 +2,8 @@
 
 pragma solidity ^0.8.15;
 
+import "@gnosis.pm/safe-contracts/contracts/common/Enum.sol";
+
 struct Proposal {
     // We store the quroum for each proposal so that if the quorum is changed mid proposal,
     // the proposal will still use the previous quorum *
@@ -60,12 +62,19 @@ enum ProposalStatus {
 }
 
 enum Choice {
-    For,
     Against,
+    For,
     Abstain
 }
 
 struct Vote {
     Choice choice;
     uint256 votingPower;
+}
+
+struct MetaTransaction {
+    address to;
+    uint256 value;
+    bytes data;
+    Enum.Operation operation;
 }

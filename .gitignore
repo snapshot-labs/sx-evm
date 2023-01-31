@@ -5,6 +5,4 @@ node_modules
 .env
 
 # broadcasts
-!/broadcast
-/broadcast/*
-/broadcast/*/31337/
+/broadcast/
