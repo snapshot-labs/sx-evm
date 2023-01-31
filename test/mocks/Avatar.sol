@@ -2,21 +2,25 @@
 
 pragma solidity ^0.8.15;
 
+import "@zodiac/interfaces/IAvatar.sol";
+
 contract Avatar {
-    address public module;
+    error NotAuthorized();
+
+    mapping(address => bool) internal modules;
 
     receive() external payable {}
 
     function enableModule(address _module) external {
-        module = _module;
+        modules[_module] = true;
     }
 
-    function disableModule(address, address) external {
-        module = address(0);
+    function disableModule(address _module) external {
+        modules[_module] = false;
     }
 
     function isModuleEnabled(address _module) external view returns (bool) {
-        if (module == _module) {
+        if (modules[_module]) {
             return true;
         } else {
             return false;
@@ -29,7 +33,7 @@ contract Avatar {
         bytes calldata data,
         uint8 operation
     ) external returns (bool success) {
-        require(msg.sender == module, "Not authorized");
+        if (!modules[msg.sender]) revert NotAuthorized();
         if (operation == 1) (success, ) = to.delegatecall(data);
         else (success, ) = to.call{ value: value }(data);
     }
@@ -38,10 +42,7 @@ contract Avatar {
         address,
         uint256 pageSize
     ) external view returns (address[] memory array, address next) {
-        // Init array with max page size
-        array = new address[](pageSize);
-
-        array[0] = module;
-        next = module;
+        // Unimplemented
+        return (new address[](0), address(0));
     }
 }
