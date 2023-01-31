@@ -68,13 +68,13 @@ contract SpaceOwnerActionsTest is SpaceTest {
         assertEq(space.maxVotingDuration(), nextDuration, "Max Voting Duration did not get updated");
     }
 
-    function testUnauthorizedSetMaxVotingDelay() public {
+    function testUnauthorizedSetMaxVotingDuration() public {
         vm.expectRevert("Ownable: caller is not the owner");
         vm.prank(unauthorized);
         space.setMaxVotingDuration(2000);
     }
 
-    function testSetInvalidMaxVotingDelay() public {
+    function testSetInvalidMaxVotingDuration() public {
         // Need to update the minimum voting duration
         space.setMinVotingDuration(1);
 
