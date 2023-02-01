@@ -30,10 +30,14 @@ contract PopulateVanillaSpace is Script {
         executionStrategy = Strategy(address(vanillaExecutionStrategy), new bytes(0));
         userVotingStrategies.push(IndexedStrategy(0, new bytes(0)));
 
-        uint256 proposalId = _createProposal(address(this), proposalMetadataUri, executionStrategy, userVotingStrategies);
+        uint256 proposalId = _createProposal(
+            address(this),
+            proposalMetadataUri,
+            executionStrategy,
+            userVotingStrategies
+        );
 
         _vote(address(this), proposalId, Choice.For, userVotingStrategies);
-
     }
 
     function _createProposal(
