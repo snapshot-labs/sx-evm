@@ -22,7 +22,8 @@ contract ProposeTest is SpaceTest {
             maxEndTimestamp,
             executionHash,
             executionStrategy.addy,
-            FinalizationStatus.NotExecuted
+            FinalizationStatus.NotExecuted,
+            votingStrategies
         );
 
         vm.expectEmit(true, true, true, true);
