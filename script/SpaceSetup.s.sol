@@ -74,4 +74,3 @@ contract SpaceSetup is Script {
         vm.stopBroadcast();
     }
 }
-
