@@ -263,7 +263,8 @@ contract Space is ISpace, Ownable {
      * @param   userAddress  Address for which to compute the voting power.
      * @param   userVotingStrategies The desired voting strategies to check.
      * @param   _votingStrategies The array of voting strategies that are used for this proposal.
-                We cannot use the `votingStrategies` state variable because it might have updated since the proposal was created.
+                We cannot use the `votingStrategies` state variable because it might have updated 
+                since the proposal was created.
      * @return  uint256  The total voting power of a user (over those specified voting strategies).
      */
     function _getCumulativeVotingPower(
