@@ -219,7 +219,7 @@ contract Space is ISpace, Ownable {
 
     /**
      * @notice  Internal function that will loop over the used voting strategies and
-                return the cumulative voting power of a user.
+                return the cumulative voting power of a user when creating a proposal.
      * @dev     
      * @param   timestamp  Timestamp of the snapshot.
      * @param   userAddress  Address for which to compute the voting power.
@@ -257,11 +257,13 @@ contract Space is ISpace, Ownable {
 
     /**
      * @notice  Internal function that will loop over the used voting strategies and
-                return the cumulative voting power of a user.
+                return the cumulative voting power of a user when voting. 
      * @dev     
      * @param   timestamp  Timestamp of the snapshot.
      * @param   userAddress  Address for which to compute the voting power.
      * @param   userVotingStrategies The desired voting strategies to check.
+     * @param   _votingStrategies The array of voting strategies that are used for this proposal.
+                We cannot use the `votingStrategies` state variable because it might have updated since the proposal was created.
      * @return  uint256  The total voting power of a user (over those specified voting strategies).
      */
     function _getCumulativeVotingPower(
