@@ -590,11 +590,6 @@ contract Space is ISpace, Ownable {
             }
         }
 
-        // Ensure the execution strategy is still valid.
-        if (executionStrategies[proposal.executionStrategy] == false) {
-            proposalOutcome = ProposalOutcome.Cancelled;
-        }
-
         IExecutionStrategy(proposal.executionStrategy).execute(proposalOutcome, executionParams);
 
         // TODO: should we set votePower[proposalId][choice] to 0 to get some nice ETH refund?
