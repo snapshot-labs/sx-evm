@@ -255,26 +255,6 @@ contract Space is ISpace, Ownable {
         return totalVotingPower;
     }
 
-    /**
-     * @notice  Returns some information regarding state of quorum and votes.
-     * @param   _quorum  The quorum to reach.
-     * @param   _proposalId  The proposal id.
-     * @return  bool  Whether or not the quorum has been reached.
-     * TODO: Is this function useful? Doesnt seem like a particularly useful abstraction.
-     */
-    function _quorumInfo(uint256 _quorum, uint256 _proposalId) internal view returns (bool, uint256, uint256, uint256) {
-        uint256 votesFor = votePower[_proposalId][Choice.For];
-        uint256 votesAgainst = votePower[_proposalId][Choice.Against];
-        uint256 votesAbstain = votePower[_proposalId][Choice.Abstain];
-
-        // With solc 0.8, this will revert if an overflow occurs.
-        uint256 total = votesFor + votesAgainst + votesAbstain;
-
-        bool quorumReached = total >= _quorum;
-
-        return (quorumReached, votesFor, votesAgainst, votesAbstain);
-    }
-
     // ------------------------------------
     // |                                  |
     // |             SETTERS              |
@@ -365,39 +345,16 @@ contract Space is ISpace, Ownable {
     function getProposalStatus(uint256 proposalId) external view override returns (ProposalStatus) {
         Proposal memory proposal = proposalRegistry[proposalId];
         _assertProposalExists(proposal);
-
-        (bool quorumReached, , , ) = _quorumInfo(proposal.quorum, proposalId);
-
-        if (proposal.finalizationStatus == FinalizationStatus.NotExecuted) {
-            // Proposal has not been executed yet. Let's look at the current timestamp.
-            uint256 current = block.timestamp;
-            if (current < proposal.startTimestamp) {
-                // Not started yet.
-                return ProposalStatus.WaitingForVotingPeriodToStart;
-            } else if (current > proposal.maxEndTimestamp) {
-                // Voting period is over, this proposal is waiting to be finalized.
-                return ProposalStatus.Finalizable;
-            } else {
-                // We are somewhere between `proposal.startTimestamp` and `proposal.maxEndTimestamp`.
-                if (current > proposal.minEndTimestamp) {
-                    // We've passed `proposal.minEndTimestamp`, check if quorum has been reached.
-                    if (quorumReached) {
-                        // Quorum has been reached, this proposal is finalizable.
-                        return ProposalStatus.VotingPeriodFinalizable;
-                    } else {
-                        // Quorum has not been reached so this proposal is NOT finalizable yet.
-                        return ProposalStatus.VotingPeriod;
-                    }
-                } else {
-                    // `proposal.minEndTimestamp` not reached, so we're just in the regular Voting Period.
-                    return ProposalStatus.VotingPeriod;
-                }
-            }
-        } else {
-            // Proposal has been executed. Since `FinalizationStatus` and `ProposalStatus` only differ by
-            // one, we can safely cast it by substracting 1.
-            return ProposalStatus(uint8(proposal.finalizationStatus) - 1);
-        }
+        uint256 votesFor = votePower[proposalId][Choice.For];
+        uint256 votesAgainst = votePower[proposalId][Choice.Against];
+        uint256 votesAbstain = votePower[proposalId][Choice.Abstain];
+        return
+            IExecutionStrategy(proposal.executionStrategy).getProposalStatus(
+                proposal,
+                votesFor,
+                votesAgainst,
+                votesAbstain
+            );
     }
 
     function hasVoted(uint256 proposalId, address voter) external view override returns (bool) {
@@ -476,6 +433,7 @@ contract Space is ISpace, Ownable {
         Proposal memory proposal = proposalRegistry[proposalId];
         _assertProposalExists(proposal);
 
+        // TODO: replace with call to getProposalStatus
         if (proposal.finalizationStatus != FinalizationStatus.NotExecuted) revert ProposalAlreadyExecuted();
 
         uint32 currentTimestamp = uint32(block.timestamp);
@@ -502,58 +460,19 @@ contract Space is ISpace, Ownable {
     }
 
     /**
-     * @notice  Finalize a proposal.
+     * @notice  Finalize a proposal, which calls the execution strategy.
      * @param   proposalId  The proposal to cancel
      * @param   executionParams  The execution parameters, as described in `propose()`.
      */
-    function finalizeProposal(uint256 proposalId, bytes calldata executionParams) external override {
-        // TODO: check if we should use `memory` here and only use `storage` in the end
-        // of this function when we actually modify the proposal
-        Proposal storage proposal = proposalRegistry[proposalId];
+    function finalizeProposal(uint256 proposalId, bytes calldata executionParams) external {
+        Proposal memory proposal = proposalRegistry[proposalId];
         _assertProposalExists(proposal);
-
         if (proposal.finalizationStatus != FinalizationStatus.NotExecuted) revert ProposalAlreadyExecuted();
-
-        uint32 currentTimestamp = uint32(block.timestamp);
-
-        if (proposal.minEndTimestamp > currentTimestamp) revert MinVotingDurationHasNotElapsed();
-
-        bytes32 recoveredHash = keccak256(executionParams);
-        if (proposal.executionHash != recoveredHash) revert ExecutionHashMismatch();
-
-        (bool quorumReached, uint256 votesFor, uint256 votesAgainst, ) = _quorumInfo(proposal.quorum, proposalId);
-
-        ProposalOutcome proposalOutcome;
-        if (quorumReached) {
-            // Quorum has been reached, determine if proposal should be accepted or rejected.
-            if (votesFor > votesAgainst) {
-                proposalOutcome = ProposalOutcome.Accepted;
-            } else {
-                proposalOutcome = ProposalOutcome.Rejected;
-            }
-        } else {
-            // Quorum not reached, check to see if the voting period is over.
-            if (currentTimestamp < proposal.maxEndTimestamp) {
-                // Voting period is not over yet; revert.
-                revert QuorumNotReachedYet();
-            } else {
-                // Voting period has ended but quorum wasn't reached: set outcome to `REJECTED`.
-                proposalOutcome = ProposalOutcome.Rejected;
-            }
-        }
-
-        // Ensure the execution strategy is still valid.
-        if (executionStrategies[proposal.executionStrategy] == false) {
-            proposalOutcome = ProposalOutcome.Cancelled;
-        }
-
-        IExecutionStrategy(proposal.executionStrategy).execute(proposalOutcome, executionParams);
-
-        // TODO: should we set votePower[proposalId][choice] to 0 to get some nice ETH refund?
-        // `ProposalOutcome` and `FinalizatonStatus` are almost the same enum except from their first
-        // variant, so by adding `1` we will get the corresponding `FinalizationStatus`.
-        proposal.finalizationStatus = FinalizationStatus(uint8(proposalOutcome) + 1);
-
+        ProposalOutcome proposalOutcome = IExecutionStrategy(proposal.executionStrategy).execute(
+            proposal,
+            executionParams
+        );
+        // TODO: Update proposal state to reflect that it has been executed (ensure it can't be executed again).
         emit ProposalFinalized(proposalId, proposalOutcome);
     }
 
@@ -565,17 +484,8 @@ contract Space is ISpace, Ownable {
     function cancelProposal(uint256 proposalId, bytes calldata executionParams) external override onlyOwner {
         Proposal storage proposal = proposalRegistry[proposalId];
         _assertProposalExists(proposal);
-
         if (proposal.finalizationStatus != FinalizationStatus.NotExecuted) revert ProposalAlreadyExecuted();
-
-        bytes32 recoveredHash = keccak256(executionParams);
-        if (proposal.executionHash != recoveredHash) revert ExecutionHashMismatch();
-
-        ProposalOutcome proposalOutcome = ProposalOutcome.Cancelled;
-
-        IExecutionStrategy(proposal.executionStrategy).execute(proposalOutcome, executionParams);
-
         proposal.finalizationStatus = FinalizationStatus.FinalizedAndCancelled;
-        emit ProposalFinalized(proposalId, proposalOutcome);
+        emit ProposalFinalized(proposalId, ProposalOutcome.Cancelled);
     }
 }
