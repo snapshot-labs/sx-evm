@@ -39,26 +39,33 @@ enum ProposalOutcome {
     Cancelled
 }
 
-// Similar to `ProposalOutcome` except is starts with `NotExecuted`.
-// notice: it is important it starts with `NotExecuted` because it correponds to
-// `0` which is the default value in Solidity.
+// There
 enum FinalizationStatus {
-    NotExecuted,
-    FinalizedAndAccepted,
-    FinalizedAndRejected,
-    FinalizedAndCancelled
+    Pending,
+    Executed,
+    Cancelled
 }
 
-// Status of a proposal. If executed, it will be its outcome; else it will be some
-// information regarding its current status.
+// // Status of a proposal. If executed, it will be its outcome; else it will be some
+// // information regarding its current status.
+// enum ProposalStatus {
+//     Accepted,
+//     Rejected,
+//     Cancelled,
+//     WaitingForVotingPeriodToStart,
+//     VotingPeriod,
+//     VotingPeriodFinalizable,
+//     Finalizable
+// }
+
 enum ProposalStatus {
-    Accepted,
-    Rejected,
-    Cancelled,
-    WaitingForVotingPeriodToStart,
+    VotingDelay,
     VotingPeriod,
-    VotingPeriodFinalizable,
-    Finalizable
+    VotingPeriodAccepted,
+    Accepted,
+    Executed,
+    Rejected,
+    Cancelled
 }
 
 enum Choice {
