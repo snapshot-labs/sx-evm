@@ -8,6 +8,8 @@ import "src/types.sol";
 import "src/interfaces/IVotingStrategy.sol";
 import "src/interfaces/IExecutionStrategy.sol";
 
+import "forge-std/console2.sol";
+
 /**
  * @author  SnapshotLabs
  * @title   Space Contract.
@@ -345,15 +347,12 @@ contract Space is ISpace, Ownable {
     function getProposalStatus(uint256 proposalId) external view override returns (ProposalStatus) {
         Proposal memory proposal = proposalRegistry[proposalId];
         _assertProposalExists(proposal);
-        uint256 votesFor = votePower[proposalId][Choice.For];
-        uint256 votesAgainst = votePower[proposalId][Choice.Against];
-        uint256 votesAbstain = votePower[proposalId][Choice.Abstain];
         return
             IExecutionStrategy(proposal.executionStrategy).getProposalStatus(
                 proposal,
-                votesFor,
-                votesAgainst,
-                votesAbstain
+                votePower[proposalId][Choice.For],
+                votePower[proposalId][Choice.Against],
+                votePower[proposalId][Choice.Abstain]
             );
     }
 
@@ -406,7 +405,7 @@ contract Space is ISpace, Ownable {
             maxEndTimestamp,
             executionHash,
             executionStrategy.addy,
-            FinalizationStatus.NotExecuted
+            FinalizationStatus.Pending
         );
 
         proposalRegistry[nextProposalId] = proposal;
@@ -434,7 +433,7 @@ contract Space is ISpace, Ownable {
         _assertProposalExists(proposal);
 
         // TODO: replace with call to getProposalStatus
-        if (proposal.finalizationStatus != FinalizationStatus.NotExecuted) revert ProposalAlreadyExecuted();
+        if (proposal.finalizationStatus != FinalizationStatus.Pending) revert ProposalAlreadyExecuted();
 
         uint32 currentTimestamp = uint32(block.timestamp);
 
@@ -465,13 +464,34 @@ contract Space is ISpace, Ownable {
      * @param   executionParams  The execution parameters, as described in `propose()`.
      */
     function finalizeProposal(uint256 proposalId, bytes calldata executionParams) external {
-        Proposal memory proposal = proposalRegistry[proposalId];
+        Proposal storage proposal = proposalRegistry[proposalId];
         _assertProposalExists(proposal);
-        if (proposal.finalizationStatus != FinalizationStatus.NotExecuted) revert ProposalAlreadyExecuted();
+        if (proposal.finalizationStatus != FinalizationStatus.Pending) revert ProposalAlreadyExecuted();
+
+        // Check proposal state, Update proposal state, THEN execute
+        // (to prevent reentrancy attacks).
+
+        ProposalStatus proposalStatus = IExecutionStrategy(proposal.executionStrategy).getProposalStatus(
+            proposal,
+            votePower[proposalId][Choice.For],
+            votePower[proposalId][Choice.Against],
+            votePower[proposalId][Choice.Abstain]
+        );
+        console2.log(uint8(proposalStatus));
+        // if (proposalStatus != ProposalStatus.Accepted || proposalStatus != ProposalStatus.VotingPeriodAccepted) {
+        //     revert InvalidProposalStatus();
+        // }
+
+        // TODO: should we set votePower[proposalId][choice] to 0 to get some nice ETH refund?
+        // `ProposalOutcome` and `FinalizatonStatus` are almost the same enum except from their first
+        // variant, so by adding `1` we will get the corresponding `FinalizationStatus`.
+        proposal.finalizationStatus = FinalizationStatus.Executed;
+
         ProposalOutcome proposalOutcome = IExecutionStrategy(proposal.executionStrategy).execute(
             proposal,
             executionParams
         );
+
         // TODO: Update proposal state to reflect that it has been executed (ensure it can't be executed again).
         emit ProposalFinalized(proposalId, proposalOutcome);
     }
@@ -484,8 +504,8 @@ contract Space is ISpace, Ownable {
     function cancelProposal(uint256 proposalId, bytes calldata executionParams) external override onlyOwner {
         Proposal storage proposal = proposalRegistry[proposalId];
         _assertProposalExists(proposal);
-        if (proposal.finalizationStatus != FinalizationStatus.NotExecuted) revert ProposalAlreadyExecuted();
-        proposal.finalizationStatus = FinalizationStatus.FinalizedAndCancelled;
+        if (proposal.finalizationStatus != FinalizationStatus.Pending) revert ProposalAlreadyExecuted();
+        proposal.finalizationStatus = FinalizationStatus.Cancelled;
         emit ProposalFinalized(proposalId, ProposalOutcome.Cancelled);
     }
 }
