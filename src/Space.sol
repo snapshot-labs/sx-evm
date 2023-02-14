@@ -459,11 +459,11 @@ contract Space is ISpace, Ownable {
     }
 
     /**
-     * @notice  Finalize a proposal, which calls the execution strategy.
-     * @param   proposalId  The proposal to cancel
+     * @notice  Executes a proposal if it is in the `Accepted` or `VotingPeriodAccepted` state.
+     * @param   proposalId  The proposal id.
      * @param   executionParams  The execution parameters, as described in `propose()`.
      */
-    function finalizeProposal(uint256 proposalId, bytes calldata executionParams) external {
+    function execute(uint256 proposalId, bytes calldata executionParams) external {
         Proposal storage proposal = proposalRegistry[proposalId];
         _assertProposalExists(proposal);
         if (proposal.finalizationStatus != FinalizationStatus.Pending) revert ProposalAlreadyExecuted();
@@ -496,11 +496,11 @@ contract Space is ISpace, Ownable {
     }
 
     /**
-     * @notice  Cancel a proposal. Only callable by the owner.
+     * @notice  Cancel a proposal. Only callable by the spacew controller.
      * @param   proposalId  The proposal to cancel
      * @param   executionParams  The execution parameters, as described in `propose()`.
      */
-    function cancelProposal(uint256 proposalId, bytes calldata executionParams) external override onlyOwner {
+    function cancel(uint256 proposalId, bytes calldata executionParams) external override onlyOwner {
         Proposal storage proposal = proposalRegistry[proposalId];
         _assertProposalExists(proposal);
         if (proposal.finalizationStatus != FinalizationStatus.Pending) revert ProposalAlreadyExecuted();
