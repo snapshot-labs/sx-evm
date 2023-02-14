@@ -431,13 +431,12 @@ contract Space is ISpace, Ownable {
         Proposal memory proposal = proposalRegistry[proposalId];
         _assertProposalExists(proposal);
 
-        // TODO: replace with call to getProposalStatus
-        if (proposal.finalizationStatus != FinalizationStatus.Pending) revert ProposalAlreadyExecuted();
-
-        uint32 currentTimestamp = uint32(block.timestamp);
-
-        if (currentTimestamp >= proposal.maxEndTimestamp) revert VotingPeriodHasEnded();
-        if (currentTimestamp < proposal.startTimestamp) revert VotingPeriodHasNotStarted();
+        ProposalStatus proposalStatus = getProposalStatus(proposalId);
+        if (
+            (proposalStatus != ProposalStatus.VotingPeriod) && (proposalStatus != ProposalStatus.VotingPeriodAccepted)
+        ) {
+            revert InvalidProposalStatus(proposalStatus);
+        }
 
         // Ensure voter has not already voted.
         if (voteRegistry[proposalId][voterAddress] == true) revert UserHasAlreadyVoted();
@@ -466,30 +465,33 @@ contract Space is ISpace, Ownable {
         ProposalStatus proposalStatus = getProposalStatus(proposalId);
         Proposal storage proposal = proposalRegistry[proposalId];
 
-        if (proposalStatus != ProposalStatus.Accepted || proposalStatus != ProposalStatus.VotingPeriodAccepted) {
+        if ((proposalStatus != ProposalStatus.Accepted) && (proposalStatus != ProposalStatus.VotingPeriodAccepted)) {
             revert InvalidProposalStatus(proposalStatus);
         }
+
+        // Checking execution parameters are valid.
+        bytes32 recoveredHash = keccak256(executionParams);
+        if (proposal.executionHash != recoveredHash) revert ExecutionHashMismatch();
 
         // Updating finalization status before execution to prevent reentrancy.
         proposal.finalizationStatus = FinalizationStatus.Executed;
 
-        ProposalOutcome proposalOutcome = IExecutionStrategy(proposal.executionStrategy).execute(
-            proposal,
-            executionParams
-        );
+        IExecutionStrategy(proposal.executionStrategy).execute(proposal, executionParams);
 
-        emit ProposalFinalized(proposalId, proposalOutcome);
+        emit ProposalExecuted(proposalId);
     }
 
     /**
-     * @notice  Cancel a proposal. Only callable by the spacew controller.
+     * @notice  Cancel a proposal. Only callable by the space controller.
      * @param   proposalId  The proposal to cancel
      */
     function cancel(uint256 proposalId) external override onlyOwner {
+        ProposalStatus proposalStatus = getProposalStatus(proposalId);
         Proposal storage proposal = proposalRegistry[proposalId];
-        _assertProposalExists(proposal);
-        if (proposal.finalizationStatus != FinalizationStatus.Pending) revert ProposalAlreadyExecuted();
+        if ((proposalStatus == ProposalStatus.Executed) || (proposalStatus == ProposalStatus.Cancelled)) {
+            revert InvalidProposalStatus(proposalStatus);
+        }
         proposal.finalizationStatus = FinalizationStatus.Cancelled;
-        emit ProposalFinalized(proposalId, ProposalOutcome.Cancelled);
+        emit ProposalCancelled(proposalId);
     }
 }
