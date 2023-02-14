@@ -17,6 +17,7 @@ struct Proposal {
     uint32 maxEndTimestamp;
     bytes32 executionHash;
     address executionStrategy;
+    // An enum that stores whether a proposal is pending, executed, or cancelled
     FinalizationStatus finalizationStatus;
 }
 
@@ -39,24 +40,11 @@ enum ProposalOutcome {
     Cancelled
 }
 
-// There
 enum FinalizationStatus {
     Pending,
     Executed,
     Cancelled
 }
-
-// // Status of a proposal. If executed, it will be its outcome; else it will be some
-// // information regarding its current status.
-// enum ProposalStatus {
-//     Accepted,
-//     Rejected,
-//     Cancelled,
-//     WaitingForVotingPeriodToStart,
-//     VotingPeriod,
-//     VotingPeriodFinalizable,
-//     Finalizable
-// }
 
 enum ProposalStatus {
     VotingDelay,
