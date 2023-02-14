@@ -478,9 +478,9 @@ contract Space is ISpace, Ownable {
             votePower[proposalId][Choice.Abstain]
         );
         console2.log(uint8(proposalStatus));
-        // if (proposalStatus != ProposalStatus.Accepted || proposalStatus != ProposalStatus.VotingPeriodAccepted) {
-        //     revert InvalidProposalStatus();
-        // }
+        if (proposalStatus != ProposalStatus.Accepted || proposalStatus != ProposalStatus.VotingPeriodAccepted) {
+            revert InvalidProposalStatus(proposalStatus);
+        }
 
         // TODO: should we set votePower[proposalId][choice] to 0 to get some nice ETH refund?
         // `ProposalOutcome` and `FinalizatonStatus` are almost the same enum except from their first
@@ -492,7 +492,6 @@ contract Space is ISpace, Ownable {
             executionParams
         );
 
-        // TODO: Update proposal state to reflect that it has been executed (ensure it can't be executed again).
         emit ProposalFinalized(proposalId, proposalOutcome);
     }
 
