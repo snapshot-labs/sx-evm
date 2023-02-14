@@ -13,24 +13,15 @@ interface ISpaceErrors {
     error InvalidVotingStrategyAddress();
     error InvalidVotingStrategyIndex(uint256 index);
     error InvalidProposal();
-
     error AuthenticatorNotWhitelisted(address auth);
     error ExecutionStrategyNotWhitelisted(address strategy);
-
     error ProposalThresholdNotReached(uint256 votingPower);
-
     error DuplicateFound(uint a, uint b);
-
-    error ProposalAlreadyExecuted();
+    error ProposalAlreadyFinalized();
     error MinVotingDurationHasNotElapsed();
     error ExecutionHashMismatch();
     error QuorumNotReachedYet();
-
-    error VotingPeriodHasEnded();
-    error VotingPeriodHasNotStarted();
     error UserHasAlreadyVoted();
-
     error UserHasNoVotingPower();
-
     error InvalidProposalStatus(ProposalStatus status);
 }
