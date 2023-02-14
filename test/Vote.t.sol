@@ -39,9 +39,9 @@ contract VoteTest is SpaceTest {
 
         _vote(author, proposalId, Choice.For, userVotingStrategies);
 
-        space.finalizeProposal(proposalId, executionStrategy.params);
+        space.execute(proposalId, executionStrategy.params);
 
-        vm.expectRevert(abi.encodeWithSelector(ProposalAlreadyExecuted.selector));
+        vm.expectRevert(abi.encodeWithSelector(InvalidProposalStatus.selector, ProposalStatus.Executed));
         _vote(author, proposalId, Choice.For, userVotingStrategies);
     }
 
@@ -49,7 +49,7 @@ contract VoteTest is SpaceTest {
         uint256 proposalId = _createProposal(author, proposalMetadataUri, executionStrategy, userVotingStrategies);
 
         vm.warp(block.timestamp + space.maxVotingDuration());
-        vm.expectRevert(abi.encodeWithSelector(VotingPeriodHasEnded.selector));
+        vm.expectRevert(abi.encodeWithSelector(InvalidProposalStatus.selector, ProposalStatus.Rejected));
         _vote(author, proposalId, Choice.For, userVotingStrategies);
     }
 
@@ -57,7 +57,7 @@ contract VoteTest is SpaceTest {
         space.setVotingDelay(100);
         uint256 proposalId = _createProposal(author, proposalMetadataUri, executionStrategy, userVotingStrategies);
 
-        vm.expectRevert(abi.encodeWithSelector(VotingPeriodHasNotStarted.selector));
+        vm.expectRevert(abi.encodeWithSelector(InvalidProposalStatus.selector, ProposalStatus.VotingDelay));
         _vote(author, proposalId, Choice.For, userVotingStrategies);
 
         vm.warp(block.timestamp + space.votingDelay());

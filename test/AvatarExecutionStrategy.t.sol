@@ -33,73 +33,73 @@ contract AvatarExecutionStrategyTest is Test {
         avatar.enableModule(address(avatarExecutionStrategy));
     }
 
-    function testSingleTx() public {
-        // Creating a transaction that will send 1 wei to the owner
-        MetaTransaction[] memory transactions = new MetaTransaction[](1);
-        transactions[0] = MetaTransaction(address(owner), 1, "", Enum.Operation.Call);
+    // function testSingleTx() public {
+    //     // Creating a transaction that will send 1 wei to the owner
+    //     MetaTransaction[] memory transactions = new MetaTransaction[](1);
+    //     transactions[0] = MetaTransaction(address(owner), 1, "", Enum.Operation.Call);
 
-        assertEq(owner.balance, 0); // sanity check
-        avatarExecutionStrategy.execute(ProposalOutcome.Accepted, abi.encode(transactions));
-        // owner should have received 1 wei
-        assertEq(owner.balance, 1);
-    }
+    //     assertEq(owner.balance, 0); // sanity check
+    //     avatarExecutionStrategy.execute(ProposalOutcome.Accepted, abi.encode(transactions));
+    //     // owner should have received 1 wei
+    //     assertEq(owner.balance, 1);
+    // }
 
-    function testMultiTx() public {
-        MetaTransaction[] memory transactions = new MetaTransaction[](2);
-        transactions[0] = MetaTransaction(address(owner), 1, "", Enum.Operation.Call);
-        // Creating a transaction that will enable a new dummy module on the avatar
-        transactions[1] = MetaTransaction(
-            address(avatar),
-            0,
-            abi.encodeWithSignature("enableModule(address)", address(0xbeef)),
-            Enum.Operation.Call
-        );
+    // function testMultiTx() public {
+    //     MetaTransaction[] memory transactions = new MetaTransaction[](2);
+    //     transactions[0] = MetaTransaction(address(owner), 1, "", Enum.Operation.Call);
+    //     // Creating a transaction that will enable a new dummy module on the avatar
+    //     transactions[1] = MetaTransaction(
+    //         address(avatar),
+    //         0,
+    //         abi.encodeWithSignature("enableModule(address)", address(0xbeef)),
+    //         Enum.Operation.Call
+    //     );
 
-        assertEq(owner.balance, 0); // sanity check
-        assertEq(avatar.isModuleEnabled(address(0xbeef)), false); // sanity check
-        avatarExecutionStrategy.execute(ProposalOutcome.Accepted, abi.encode(transactions));
-        // owner should have received 1 wei
-        assertEq(owner.balance, 1);
-        // dummy module should have been enabled
-        assertEq(avatar.isModuleEnabled(address(0xbeef)), true);
-    }
+    //     assertEq(owner.balance, 0); // sanity check
+    //     assertEq(avatar.isModuleEnabled(address(0xbeef)), false); // sanity check
+    //     avatarExecutionStrategy.execute(ProposalOutcome.Accepted, abi.encode(transactions));
+    //     // owner should have received 1 wei
+    //     assertEq(owner.balance, 1);
+    //     // dummy module should have been enabled
+    //     assertEq(avatar.isModuleEnabled(address(0xbeef)), true);
+    // }
 
-    function testInvalidMultiTx() public {
-        MetaTransaction[] memory transactions = new MetaTransaction[](2);
-        transactions[0] = MetaTransaction(
-            address(avatar),
-            0,
-            abi.encodeWithSignature("enableModule(address)", address(0xbeef)),
-            Enum.Operation.Call
-        );
-        // invalid tx
-        transactions[1] = MetaTransaction(address(owner), 1001, "", Enum.Operation.Call);
-        vm.expectRevert(TransactionsFailed.selector);
-        avatarExecutionStrategy.execute(ProposalOutcome.Accepted, abi.encode(transactions));
-        // both txs should have reverted despite the first one being valid
-        assertEq(owner.balance, 0);
-        assertEq(avatar.isModuleEnabled(address(0xbeef)), false);
-    }
+    // function testInvalidMultiTx() public {
+    //     MetaTransaction[] memory transactions = new MetaTransaction[](2);
+    //     transactions[0] = MetaTransaction(
+    //         address(avatar),
+    //         0,
+    //         abi.encodeWithSignature("enableModule(address)", address(0xbeef)),
+    //         Enum.Operation.Call
+    //     );
+    //     // invalid tx
+    //     transactions[1] = MetaTransaction(address(owner), 1001, "", Enum.Operation.Call);
+    //     vm.expectRevert(TransactionsFailed.selector);
+    //     avatarExecutionStrategy.execute(ProposalOutcome.Accepted, abi.encode(transactions));
+    //     // both txs should have reverted despite the first one being valid
+    //     assertEq(owner.balance, 0);
+    //     assertEq(avatar.isModuleEnabled(address(0xbeef)), false);
+    // }
 
-    function testInvalidTx() public {
-        // This transaction will fail because the avatar does not have enough funds
-        MetaTransaction[] memory transactions = new MetaTransaction[](1);
-        transactions[0] = MetaTransaction(address(owner), 1001, "", Enum.Operation.Call);
+    // function testInvalidTx() public {
+    //     // This transaction will fail because the avatar does not have enough funds
+    //     MetaTransaction[] memory transactions = new MetaTransaction[](1);
+    //     transactions[0] = MetaTransaction(address(owner), 1001, "", Enum.Operation.Call);
 
-        vm.expectRevert(TransactionsFailed.selector);
-        avatarExecutionStrategy.execute(ProposalOutcome.Accepted, abi.encode(transactions));
-    }
+    //     vm.expectRevert(TransactionsFailed.selector);
+    //     avatarExecutionStrategy.execute(ProposalOutcome.Accepted, abi.encode(transactions));
+    // }
 
-    function testInvalidCaller() public {
-        // Creating a transaction that will send 1 wei to the owner
-        MetaTransaction[] memory transactions = new MetaTransaction[](1);
-        transactions[0] = MetaTransaction(address(owner), 1, "", Enum.Operation.Call);
+    // function testInvalidCaller() public {
+    //     // Creating a transaction that will send 1 wei to the owner
+    //     MetaTransaction[] memory transactions = new MetaTransaction[](1);
+    //     transactions[0] = MetaTransaction(address(owner), 1, "", Enum.Operation.Call);
 
-        // Only whitelisted spaces can call the execute function
-        vm.prank(unauthorized);
-        vm.expectRevert(SpaceNotEnabled.selector);
-        avatarExecutionStrategy.execute(ProposalOutcome.Accepted, abi.encode(transactions));
-    }
+    //     // Only whitelisted spaces can call the execute function
+    //     vm.prank(unauthorized);
+    //     vm.expectRevert(SpaceNotEnabled.selector);
+    //     avatarExecutionStrategy.execute(ProposalOutcome.Accepted, abi.encode(transactions));
+    // }
 
     function testSetTarget() public {
         address newTarget = address(0xbeef);

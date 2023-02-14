@@ -28,7 +28,7 @@ abstract contract SpaceTest is Test, GasSnapshot, ISpaceEvents, ISpaceErrors {
 
     // Address of the meta transaction relayer
     address public relayer = address(this);
-    address public owner = address(1);
+    address public owner = address(this);
     address public author = vm.addr(authorKey);
     address public voter = vm.addr(voterKey);
     address public unauthorized = vm.addr(unauthorizedKey);
@@ -68,8 +68,6 @@ abstract contract SpaceTest is Test, GasSnapshot, ISpaceEvents, ISpaceErrors {
         executionStrategies.push(executionStrategy);
         userVotingStrategies.push(IndexedStrategy(0, new bytes(0)));
         executionStrategiesAddresses.push(executionStrategy.addy);
-
-        owner = address(this);
 
         space = new Space(
             owner,
