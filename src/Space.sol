@@ -340,11 +340,10 @@ contract Space is ISpace, Ownable {
     function getProposal(uint256 proposalId) external view override returns (Proposal memory) {
         Proposal memory proposal = proposalRegistry[proposalId];
         _assertProposalExists(proposal);
-
-        return (proposal);
+        return proposalRegistry[proposalId];
     }
 
-    function getProposalStatus(uint256 proposalId) external view override returns (ProposalStatus) {
+    function getProposalStatus(uint256 proposalId) public view override returns (ProposalStatus) {
         Proposal memory proposal = proposalRegistry[proposalId];
         _assertProposalExists(proposal);
         return
@@ -464,27 +463,14 @@ contract Space is ISpace, Ownable {
      * @param   executionParams  The execution parameters, as described in `propose()`.
      */
     function execute(uint256 proposalId, bytes calldata executionParams) external {
+        ProposalStatus proposalStatus = getProposalStatus(proposalId);
         Proposal storage proposal = proposalRegistry[proposalId];
-        _assertProposalExists(proposal);
-        if (proposal.finalizationStatus != FinalizationStatus.Pending) revert ProposalAlreadyExecuted();
 
-        // Check proposal state, Update proposal state, THEN execute
-        // (to prevent reentrancy attacks).
-
-        ProposalStatus proposalStatus = IExecutionStrategy(proposal.executionStrategy).getProposalStatus(
-            proposal,
-            votePower[proposalId][Choice.For],
-            votePower[proposalId][Choice.Against],
-            votePower[proposalId][Choice.Abstain]
-        );
-        console2.log(uint8(proposalStatus));
         if (proposalStatus != ProposalStatus.Accepted || proposalStatus != ProposalStatus.VotingPeriodAccepted) {
             revert InvalidProposalStatus(proposalStatus);
         }
 
-        // TODO: should we set votePower[proposalId][choice] to 0 to get some nice ETH refund?
-        // `ProposalOutcome` and `FinalizatonStatus` are almost the same enum except from their first
-        // variant, so by adding `1` we will get the corresponding `FinalizationStatus`.
+        // Updating finalization status before execution to prevent reentrancy.
         proposal.finalizationStatus = FinalizationStatus.Executed;
 
         ProposalOutcome proposalOutcome = IExecutionStrategy(proposal.executionStrategy).execute(
@@ -498,9 +484,8 @@ contract Space is ISpace, Ownable {
     /**
      * @notice  Cancel a proposal. Only callable by the spacew controller.
      * @param   proposalId  The proposal to cancel
-     * @param   executionParams  The execution parameters, as described in `propose()`.
      */
-    function cancel(uint256 proposalId, bytes calldata executionParams) external override onlyOwner {
+    function cancel(uint256 proposalId) external override onlyOwner {
         Proposal storage proposal = proposalRegistry[proposalId];
         _assertProposalExists(proposal);
         if (proposal.finalizationStatus != FinalizationStatus.Pending) revert ProposalAlreadyExecuted();
