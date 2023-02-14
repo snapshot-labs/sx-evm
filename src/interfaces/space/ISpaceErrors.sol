@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.15;
 
+import "../../types.sol";
+
 interface ISpaceErrors {
     // Min duration should be smaller than or equal to max duration
     error InvalidDuration(uint32 minVotingDuration, uint32 maxVotingDuration);
@@ -29,4 +31,6 @@ interface ISpaceErrors {
     error UserHasAlreadyVoted();
 
     error UserHasNoVotingPower();
+
+    error InvalidProposalStatus(ProposalStatus status);
 }
