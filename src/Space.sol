@@ -226,7 +226,7 @@ contract Space is ISpace, Ownable {
      * @param   userVotingStrategies The desired voting strategies to check.
      * @return  uint256  The total voting power of a user (over those specified voting strategies).
      */
-    function _getCumulativeVotingPower(
+    function _getCumulativeProposingPower(
         uint32 timestamp,
         address userAddress,
         IndexedStrategy[] calldata userVotingStrategies
@@ -474,7 +474,7 @@ contract Space is ISpace, Ownable {
         // Casting to `uint32` is fine because this gives us until year ~2106.
         uint32 snapshotTimestamp = uint32(block.timestamp);
 
-        uint256 votingPower = _getCumulativeVotingPower(snapshotTimestamp, proposerAddress, userVotingStrategies);
+        uint256 votingPower = _getCumulativeProposingPower(snapshotTimestamp, proposerAddress, userVotingStrategies);
         if (votingPower < proposalThreshold) revert ProposalThresholdNotReached(votingPower);
 
         uint32 startTimestamp = snapshotTimestamp + votingDelay;
