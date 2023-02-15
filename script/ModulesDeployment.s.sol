@@ -17,15 +17,15 @@ import "../src/voting-strategies/WhitelistStrategy.sol";
 import "../src/SpaceFactory.sol";
 
 contract ModulesDeployment is Script {
-    VanillaVotingStrategy public vanillaVotingStrategy;
-    CompVotingStrategy public compVotingStrategy;
-    WhitelistStrategy public whitelistStrategy;
+    // VanillaVotingStrategy public vanillaVotingStrategy;
+    // CompVotingStrategy public compVotingStrategy;
+    // WhitelistStrategy public whitelistStrategy;
 
-    VanillaAuthenticator public vanillaAuthenticator;
+    // VanillaAuthenticator public vanillaAuthenticator;
     EthSigAuthenticator public ethSigAuthenticator;
-    EthTxAuthenticator public ethTxAuthenticator;
+    // EthTxAuthenticator public ethTxAuthenticator;
 
-    VanillaExecutionStrategy public vanillaExecutionStrategy;
+    // VanillaExecutionStrategy public vanillaExecutionStrategy;
 
     SpaceFactory public spaceFactory;
 
@@ -33,15 +33,15 @@ contract ModulesDeployment is Script {
         uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
         vm.startBroadcast(deployerPrivateKey);
 
-        vanillaVotingStrategy = new VanillaVotingStrategy();
-        compVotingStrategy = new CompVotingStrategy();
-        whitelistStrategy = new WhitelistStrategy();
+        // vanillaVotingStrategy = new VanillaVotingStrategy();
+        // compVotingStrategy = new CompVotingStrategy();
+        // whitelistStrategy = new WhitelistStrategy();
 
-        vanillaAuthenticator = new VanillaAuthenticator();
+        // vanillaAuthenticator = new VanillaAuthenticator();
         ethSigAuthenticator = new EthSigAuthenticator("SOC", "0.1.0");
-        ethTxAuthenticator = new EthTxAuthenticator();
+        // ethTxAuthenticator = new EthTxAuthenticator();
 
-        vanillaExecutionStrategy = new VanillaExecutionStrategy();
+        // vanillaExecutionStrategy = new VanillaExecutionStrategy();
 
         spaceFactory = new SpaceFactory();
 
