@@ -4,16 +4,6 @@ pragma solidity ^0.8.15;
 
 import "../interfaces/IExecutionStrategy.sol";
 
-// enum ProposalStatus {
-//     VotingDelay,
-//     VotingPeriod,
-//     VotingPeriodFinalizable,
-//     Finalizable,
-//     Executed,
-//     Rejected,
-//     Cancelled
-// }
-
 abstract contract SimpleQuorumExecutionStrategy is IExecutionStrategy {
     // solhint-disable no-unused-vars
     function execute(

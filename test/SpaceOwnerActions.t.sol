@@ -300,12 +300,12 @@ contract SpaceOwnerActionsTest is SpaceTest {
     function testAddExecutionStrategyUnauthorized() public {
         vm.expectRevert("Ownable: caller is not the owner");
         vm.prank(unauthorized);
-        space.removeExecutionStrategies(executionStrategiesAddresses);
+        space.removeExecutionStrategies(executionStrategies);
     }
 
     function testRemoveExecutionStrategyUnauthorized() public {
         vm.expectRevert("Ownable: caller is not the owner");
         vm.prank(unauthorized);
-        space.removeExecutionStrategies(executionStrategiesAddresses);
+        space.removeExecutionStrategies(executionStrategies);
     }
 }
