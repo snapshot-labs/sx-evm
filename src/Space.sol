@@ -431,6 +431,8 @@ contract Space is ISpace, Ownable {
         Proposal memory proposal = proposalRegistry[proposalId];
         _assertProposalExists(proposal);
 
+        // TODO: We could optimize this with a lighter check on whether the vote is still in the voting period.
+        // (unnecessary work is done in `getProposalStatus`)
         ProposalStatus proposalStatus = getProposalStatus(proposalId);
         if (
             (proposalStatus != ProposalStatus.VotingPeriod) && (proposalStatus != ProposalStatus.VotingPeriodAccepted)
@@ -438,22 +440,17 @@ contract Space is ISpace, Ownable {
             revert InvalidProposalStatus(proposalStatus);
         }
 
-        // Ensure voter has not already voted.
         if (voteRegistry[proposalId][voterAddress] == true) revert UserHasAlreadyVoted();
 
         uint256 votingPower = _getCumulativeVotingPower(proposal.snapshotTimestamp, voterAddress, userVotingStrategies);
-
         if (votingPower == 0) revert UserHasNoVotingPower();
-
         uint256 previousVotingPower = votePower[proposalId][choice];
-        // With solc 0.8, this will revert if an overflow occurs.
         uint256 newVotingPower = previousVotingPower + votingPower;
-
         votePower[proposalId][choice] = newVotingPower;
+
         voteRegistry[proposalId][voterAddress] = true;
 
-        Vote memory userVote = Vote(choice, votingPower);
-        emit VoteCreated(proposalId, voterAddress, userVote);
+        emit VoteCreated(proposalId, voterAddress, Vote(choice, votingPower));
     }
 
     /**

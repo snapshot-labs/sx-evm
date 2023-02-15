@@ -17,17 +17,14 @@ struct Proposal {
     uint32 maxEndTimestamp;
     bytes32 executionHash;
     address executionStrategy;
-    // An enum that stores whether a proposal is pending, executed, or cancelled
     FinalizationStatus finalizationStatus;
 }
 
-// A struct that represents any kind of strategy (i.e a pair of `address` and `bytes`)
 struct Strategy {
     address addy;
     bytes params;
 }
 
-// Similar to `Strategy` except it's an `index` (uint8) and not an `address`
 struct IndexedStrategy {
     uint8 index;
     bytes params;
@@ -40,12 +37,15 @@ enum ProposalOutcome {
     Cancelled
 }
 
+// An enum that stores whether a proposal is pending, executed, or cancelled.
 enum FinalizationStatus {
     Pending,
     Executed,
     Cancelled
 }
 
+// The status of a proposal as defined by the `getProposalStatus` function of the
+// proposal's execution strategy.
 enum ProposalStatus {
     VotingDelay,
     VotingPeriod,
