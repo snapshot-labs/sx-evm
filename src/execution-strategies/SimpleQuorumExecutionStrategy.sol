@@ -6,10 +6,7 @@ import "../interfaces/IExecutionStrategy.sol";
 
 abstract contract SimpleQuorumExecutionStrategy is IExecutionStrategy {
     // solhint-disable no-unused-vars
-    function execute(
-        Proposal memory proposal,
-        bytes memory executionParams
-    ) external virtual override;
+    function execute(Proposal memory proposal, bytes memory executionParams) external virtual override;
 
     function getProposalStatus(
         Proposal memory proposal,

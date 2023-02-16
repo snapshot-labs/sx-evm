@@ -56,10 +56,7 @@ contract AvatarExecutionStrategy is SpaceManager, SimpleQuorumExecutionStrategy 
     ///         Must be called by a whitelisted space contract.
     /// @param proposal The proposal to execute.
     /// @param executionParams The encoded transactions to execute.
-    function execute(
-        Proposal memory proposal,
-        bytes memory executionParams
-    ) external override {
+    function execute(Proposal memory proposal, bytes memory executionParams) external override {
         if (spaces[msg.sender] == false) revert SpaceNotEnabled();
         _execute(executionParams);
     }

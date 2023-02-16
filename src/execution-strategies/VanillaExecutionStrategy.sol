@@ -8,10 +8,7 @@ contract VanillaExecutionStrategy is SimpleQuorumExecutionStrategy {
     uint256 numExecuted;
 
     // solhint-disable no-unused-vars
-    function execute(
-        Proposal memory proposal,
-        bytes memory executionParams
-    ) external override {
+    function execute(Proposal memory proposal, bytes memory executionParams) external override {
         numExecuted++;
     }
 }
