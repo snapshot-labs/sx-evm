@@ -6,7 +6,6 @@ import "src/types.sol";
 
 /// @title SX Types Hashing Library
 /// @notice This library contains functions for hashing SX types for use in eip712 signatures.
-/// TODO: rename once we have a better name for SX
 library SXHash {
     bytes32 private constant STRATEGY_TYPEHASH = keccak256("Strategy(address addy,bytes params)");
     bytes32 private constant INDEXED_STRATEGY_TYPEHASH = keccak256("IndexedStrategy(uint8 index,bytes params)");
