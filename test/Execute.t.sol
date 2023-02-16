@@ -114,6 +114,8 @@ contract ExecuteTest is SpaceTest {
         space.removeExecutionStrategies(newExecutionStrategiesAddresses);
 
         space.execute(proposalId, newExecutionStrategies[0].params);
+
+        assertEq(uint8(space.getProposalStatus(proposalId)), uint8(ProposalStatus.Executed));
     }
 
     function testExecuteExecutionMismatch() public {
