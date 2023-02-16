@@ -11,8 +11,7 @@ contract VanillaExecutionStrategy is SimpleQuorumExecutionStrategy {
     function execute(
         Proposal memory proposal,
         bytes memory executionParams
-    ) external override returns (ProposalOutcome) {
+    ) external override {
         numExecuted++;
-        return ProposalOutcome.Accepted;
     }
 }

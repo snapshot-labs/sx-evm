@@ -59,11 +59,9 @@ contract AvatarExecutionStrategy is SpaceManager, SimpleQuorumExecutionStrategy 
     function execute(
         Proposal memory proposal,
         bytes memory executionParams
-    ) external override returns (ProposalOutcome) {
+    ) external override {
         if (spaces[msg.sender] == false) revert SpaceNotEnabled();
         _execute(executionParams);
-
-        return ProposalOutcome.Accepted;
     }
 
     /// @notice Decodes and executes a batch of transactions from the avatar contract.

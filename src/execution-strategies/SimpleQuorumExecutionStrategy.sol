@@ -9,7 +9,7 @@ abstract contract SimpleQuorumExecutionStrategy is IExecutionStrategy {
     function execute(
         Proposal memory proposal,
         bytes memory executionParams
-    ) external virtual override returns (ProposalOutcome);
+    ) external virtual override;
 
     function getProposalStatus(
         Proposal memory proposal,

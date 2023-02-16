@@ -31,13 +31,6 @@ struct IndexedStrategy {
     bytes params;
 }
 
-// Outcome of a proposal after being voted on.
-enum ProposalOutcome {
-    Accepted,
-    Rejected,
-    Cancelled
-}
-
 // An enum that stores whether a proposal is pending, executed, or cancelled.
 enum FinalizationStatus {
     Pending,
