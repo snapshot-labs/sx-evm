@@ -18,6 +18,7 @@ struct Proposal {
     bytes32 executionHash;
     address executionStrategy;
     FinalizationStatus finalizationStatus;
+    Strategy[] votingStrategies;
 }
 
 struct Strategy {
