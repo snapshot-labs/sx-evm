@@ -474,15 +474,10 @@ contract Space is ISpace, Ownable {
         Proposal memory proposal = proposalRegistry[proposalId];
         _assertProposalExists(proposal);
 
-        // TODO: We could optimize this with a lighter check on whether the vote is still in the voting period.
-        // (unnecessary work is done in `getProposalStatus`)
-        ProposalStatus proposalStatus = getProposalStatus(proposalId);
-        if (
-            (proposalStatus != ProposalStatus.VotingPeriod) && (proposalStatus != ProposalStatus.VotingPeriodAccepted)
-        ) {
-            revert InvalidProposalStatus(proposalStatus);
-        }
-
+        uint32 currentTimestamp = uint32(block.timestamp);
+        if (currentTimestamp >= proposal.maxEndTimestamp) revert VotingPeriodHasEnded();
+        if (currentTimestamp < proposal.startTimestamp) revert VotingPeriodHasNotStarted();
+        if (proposal.finalizationStatus != FinalizationStatus.Pending) revert ProposalFinalized();
         if (voteRegistry[proposalId][voterAddress] == true) revert UserHasAlreadyVoted();
 
         uint256 votingPower = _getCumulativeVotingPower(

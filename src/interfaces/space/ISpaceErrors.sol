@@ -24,4 +24,7 @@ interface ISpaceErrors {
     error UserHasAlreadyVoted();
     error UserHasNoVotingPower();
     error InvalidProposalStatus(ProposalStatus status);
+    error VotingPeriodHasEnded();
+    error VotingPeriodHasNotStarted();
+    error ProposalFinalized();
 }
