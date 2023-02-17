@@ -16,8 +16,8 @@ interface ISpaceEvents {
     event ProposalCancelled(uint256 proposalId);
     event VotingStrategiesAdded(Strategy[] votingStrategies);
     event VotingStrategiesRemoved(uint8[] indices);
-    event ExecutionStrategiesAdded(address[] executionStrategies);
-    event ExecutionStrategiesRemoved(address[] executionStrategies);
+    event ExecutionStrategiesAdded(Strategy[] executionStrategies);
+    event ExecutionStrategiesRemoved(uint8[] executionStrategies);
     event AuthenticatorsAdded(address[] authenticators);
     event AuthenticatorsRemoved(address[] authenticators);
     event ControllerUpdated(address newController);

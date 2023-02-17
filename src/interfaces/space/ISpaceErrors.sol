@@ -9,12 +9,13 @@ interface ISpaceErrors {
     // Array is empty
     error EmptyArray();
 
-    // All voting strategies addresses must be != address(0).
-    error InvalidVotingStrategyAddress();
+    // All strategy addresses must be != address(0).
+    error InvalidStrategyAddress();
     error InvalidVotingStrategyIndex(uint256 index);
     error InvalidProposal();
     error AuthenticatorNotWhitelisted(address auth);
-    error ExecutionStrategyNotWhitelisted(address strategy);
+    error InvalidExecutionStrategyIndex(uint256 index);
+    error ExecutionStrategyNotWhitelisted();
     error ProposalThresholdNotReached(uint256 votingPower);
     error DuplicateFound(uint a, uint b);
     error ProposalAlreadyFinalized();

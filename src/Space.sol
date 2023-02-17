@@ -34,8 +34,9 @@ contract Space is ISpace, Ownable {
     ///      voting strategy contract.
     Strategy[] private votingStrategies;
 
-    // Mapping of allowed execution strategies.
-    mapping(address => bool) private executionStrategies;
+    // Array of available execution strategies that proposal authors can use to determine how to execute a proposal.
+    Strategy[] private executionStrategies;
+
     // Mapping of allowed authenticators.
     mapping(address => bool) private authenticators;
     // Mapping of all `Proposal`s of this space (past and present).
@@ -60,7 +61,7 @@ contract Space is ISpace, Ownable {
         uint256 _quorum,
         Strategy[] memory _votingStrategies,
         address[] memory _authenticators,
-        address[] memory _executionStrategies
+        Strategy[] memory _executionStrategies
     ) {
         transferOwnership(_controller);
         _setMaxVotingDuration(_maxVotingDuration);
@@ -113,11 +114,10 @@ contract Space is ISpace, Ownable {
      */
     function _addVotingStrategies(Strategy[] memory _votingStrategies) internal {
         if (_votingStrategies.length == 0) revert EmptyArray();
-
         for (uint256 i = 0; i < _votingStrategies.length; i++) {
             // A voting strategy set to 0 is used to indicate that the voting strategy is no longer active,
             // so we need to prevent the user from adding a null invalid strategy address.
-            if (_votingStrategies[i].addy == address(0)) revert InvalidVotingStrategyAddress();
+            if (_votingStrategies[i].addy == address(0)) revert InvalidStrategyAddress();
             votingStrategies.push(_votingStrategies[i]);
         }
     }
@@ -128,6 +128,7 @@ contract Space is ISpace, Ownable {
      * @param   _votingStrategyIndices  Indices of the strategies to remove.
      */
     function _removeVotingStrategies(uint8[] memory _votingStrategyIndices) internal {
+        if (_votingStrategyIndices.length == 0) revert EmptyArray();
         for (uint8 i = 0; i < _votingStrategyIndices.length; i++) {
             votingStrategies[_votingStrategyIndices[i]].addy = address(0);
             votingStrategies[_votingStrategyIndices[i]].params = new bytes(0);
@@ -141,6 +142,7 @@ contract Space is ISpace, Ownable {
      * @param   _authenticators  Array of authenticators to add.
      */
     function _addAuthenticators(address[] memory _authenticators) internal {
+        if (_authenticators.length == 0) revert EmptyArray();
         for (uint256 i = 0; i < _authenticators.length; i++) {
             authenticators[_authenticators[i]] = true;
         }
@@ -151,6 +153,7 @@ contract Space is ISpace, Ownable {
      * @param   _authenticators  Array of authenticators to remove.
      */
     function _removeAuthenticators(address[] memory _authenticators) internal {
+        if (_authenticators.length == 0) revert EmptyArray();
         for (uint256 i = 0; i < _authenticators.length; i++) {
             authenticators[_authenticators[i]] = false;
         }
@@ -161,19 +164,25 @@ contract Space is ISpace, Ownable {
      * @notice  Internal function to add execution strategies.
      * @param   _executionStrategies  Array of execution strategies to add.
      */
-    function _addExecutionStrategies(address[] memory _executionStrategies) internal {
+    function _addExecutionStrategies(Strategy[] memory _executionStrategies) internal {
+        if (_executionStrategies.length == 0) revert EmptyArray();
         for (uint256 i = 0; i < _executionStrategies.length; i++) {
-            executionStrategies[_executionStrategies[i]] = true;
+            // A strategy set to 0 is used to indicate that the strategy is no longer active,
+            // so we need to prevent the user from adding a null invalid strategy address.
+            if (_executionStrategies[i].addy == address(0)) revert InvalidStrategyAddress();
+            executionStrategies.push(_executionStrategies[i]);
         }
     }
 
     /**
      * @notice  Internal function to remove execution strategies.
-     * @param   _executionStrategies  Array of execution strategies to remove.
+     * @param   _executionStrategyIndicies  Indices of the strategies to remove
      */
-    function _removeExecutionStrategies(address[] memory _executionStrategies) internal {
-        for (uint256 i = 0; i < _executionStrategies.length; i++) {
-            executionStrategies[_executionStrategies[i]] = false;
+    function _removeExecutionStrategies(uint8[] memory _executionStrategyIndicies) internal {
+        if (_executionStrategyIndicies.length == 0) revert EmptyArray();
+        for (uint8 i = 0; i < _executionStrategyIndicies.length; i++) {
+            executionStrategies[_executionStrategyIndicies[i]].addy = address(0);
+            executionStrategies[_executionStrategyIndicies[i]].params = new bytes(0);
         }
     }
 
@@ -185,12 +194,13 @@ contract Space is ISpace, Ownable {
     }
 
     /**
-     * @notice  Internal function to ensure `executionStrategy` is in the list of allowed execution strategies.
-     * @param   executionStrategyAddress  The execution strategy to check.
+     * @notice  Internal function to ensure `executionStrategy` is in the array of whitelisted execution strategies.
+     * @param   executionStrategyIndex The execution strategy to check.
      */
-    function _assertValidExecutionStrategy(address executionStrategyAddress) internal view {
-        if (executionStrategies[executionStrategyAddress] != true)
-            revert ExecutionStrategyNotWhitelisted(executionStrategyAddress);
+    function _assertValidExecutionStrategy(uint8 executionStrategyIndex) internal view {
+        if (executionStrategyIndex >= executionStrategies.length)
+            revert InvalidExecutionStrategyIndex(executionStrategyIndex);
+        if (executionStrategies[executionStrategyIndex].addy == address(0)) revert ExecutionStrategyNotWhitelisted();
     }
 
     /**
@@ -359,12 +369,12 @@ contract Space is ISpace, Ownable {
         emit AuthenticatorsRemoved(_authenticators);
     }
 
-    function addExecutionStrategies(address[] calldata _executionStrategies) external override onlyOwner {
+    function addExecutionStrategies(Strategy[] calldata _executionStrategies) external override onlyOwner {
         _addExecutionStrategies(_executionStrategies);
         emit ExecutionStrategiesAdded(_executionStrategies);
     }
 
-    function removeExecutionStrategies(address[] calldata _executionStrategies) external override onlyOwner {
+    function removeExecutionStrategies(uint8[] calldata _executionStrategies) external override onlyOwner {
         _removeExecutionStrategies(_executionStrategies);
         emit ExecutionStrategiesRemoved(_executionStrategies);
     }
@@ -389,7 +399,7 @@ contract Space is ISpace, Ownable {
         Proposal memory proposal = proposalRegistry[proposalId];
         _assertProposalExists(proposal);
         return
-            IExecutionStrategy(proposal.executionStrategy).getProposalStatus(
+            IExecutionStrategy(proposal.executionStrategy.addy).getProposalStatus(
                 proposal,
                 votePower[proposalId][Choice.For],
                 votePower[proposalId][Choice.Against],
@@ -420,11 +430,11 @@ contract Space is ISpace, Ownable {
     function propose(
         address proposerAddress,
         string calldata metadataUri,
-        Strategy calldata executionStrategy,
+        IndexedStrategy calldata executionStrategy,
         IndexedStrategy[] calldata userVotingStrategies
     ) external override {
         _assertValidAuthenticator();
-        _assertValidExecutionStrategy(executionStrategy.addy);
+        _assertValidExecutionStrategy(executionStrategy.index);
 
         // Casting to `uint32` is fine because this gives us until year ~2106.
         uint32 snapshotTimestamp = uint32(block.timestamp);
@@ -445,7 +455,7 @@ contract Space is ISpace, Ownable {
             minEndTimestamp,
             maxEndTimestamp,
             executionHash,
-            executionStrategy.addy,
+            executionStrategies[executionStrategy.index],
             FinalizationStatus.Pending,
             votingStrategies
         );
@@ -517,7 +527,7 @@ contract Space is ISpace, Ownable {
         // Updating finalization status before execution to prevent reentrancy.
         proposal.finalizationStatus = FinalizationStatus.Executed;
 
-        IExecutionStrategy(proposal.executionStrategy).execute(proposal, executionParams);
+        IExecutionStrategy(proposal.executionStrategy.addy).execute(proposal, executionParams);
 
         emit ProposalExecuted(proposalId);
     }

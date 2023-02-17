@@ -15,6 +15,6 @@ interface ISpaceFactoryEvents {
         uint256 quorum,
         Strategy[] votingStrategies,
         address[] authenticators,
-        address[] executionStrategiesAddresses
+        Strategy[] executionStrategies
     );
 }

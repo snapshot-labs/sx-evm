@@ -17,7 +17,7 @@ interface ISpaceFactory is ISpaceFactoryErrors, ISpaceFactoryEvents {
         uint256 quorum,
         Strategy[] calldata votingStrategies,
         address[] calldata authenticators,
-        address[] calldata executionStrategiesAddresses,
+        Strategy[] calldata executionStrategies,
         bytes32 salt
     ) external;
 }
