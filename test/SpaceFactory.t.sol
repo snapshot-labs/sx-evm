@@ -18,7 +18,7 @@ contract SpaceFactoryTest is Test, ISpaceFactoryEvents, ISpaceFactoryErrors {
 
     Strategy[] votingStrategies;
     address[] authenticators;
-    address[] executionStrategies;
+    Strategy[] executionStrategies;
 
     address public controller;
     uint32 public votingDelay;
@@ -42,7 +42,7 @@ contract SpaceFactoryTest is Test, ISpaceFactoryEvents, ISpaceFactoryErrors {
         quorum = 1;
         votingStrategies.push(Strategy(address(vanillaVotingStrategy), new bytes(0)));
         authenticators.push(address(vanillaAuthenticator));
-        executionStrategies.push(address(vanillaExecutionStrategy));
+        executionStrategies.push(Strategy(address(vanillaExecutionStrategy), new bytes(0)));
     }
 
     function testCreateSpace() public {
@@ -131,7 +131,7 @@ contract SpaceFactoryTest is Test, ISpaceFactoryEvents, ISpaceFactoryErrors {
         uint256 _quorum,
         Strategy[] memory _votingStrategies,
         address[] memory _authenticators,
-        address[] memory _executionStrategies,
+        Strategy[] memory _executionStrategies,
         bytes32 salt
     ) internal view returns (address) {
         return

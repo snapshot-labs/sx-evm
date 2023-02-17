@@ -95,24 +95,24 @@ contract ExecuteTest is SpaceTest {
         Strategy[] memory newExecutionStrategies = new Strategy[](1);
         newExecutionStrategies[0] = Strategy(address(_vanilla), new bytes(0));
 
-        address[] memory newExecutionStrategiesAddresses = new address[](1);
-        newExecutionStrategiesAddresses[0] = newExecutionStrategies[0].addy;
-
-        // Add the strategy
-        space.addExecutionStrategies(newExecutionStrategiesAddresses);
+        // Add the strategy, which will be assigned the index `1`.
+        space.addExecutionStrategies(newExecutionStrategies);
 
         uint256 proposalId = _createProposal(
             author,
             proposalMetadataUri,
-            newExecutionStrategies[0],
+            IndexedStrategy(1, new bytes(0)),
             userVotingStrategies
         );
 
         _vote(author, proposalId, Choice.For, userVotingStrategies);
 
-        // Remove the strategy
-        space.removeExecutionStrategies(newExecutionStrategiesAddresses);
+        // New strategy index should be `1` (`0` is used for the first one).
+        uint8[] memory newIndices = new uint8[](1);
+        newIndices[0] = 1;
+        space.removeExecutionStrategies(newIndices);
 
+        // Execution still works with the removed strategy because its stored inside the proposal.
         space.execute(proposalId, newExecutionStrategies[0].params);
 
         assertEq(uint8(space.getProposalStatus(proposalId)), uint8(ProposalStatus.Executed));

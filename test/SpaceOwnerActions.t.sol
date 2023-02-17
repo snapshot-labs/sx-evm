@@ -266,17 +266,16 @@ contract SpaceOwnerActionsTest is SpaceTest {
         VanillaExecutionStrategy _vanilla = new VanillaExecutionStrategy();
         newExecutionStrategies[0] = Strategy(address(_vanilla), new bytes(0));
 
-        address[] memory newExecutionStrategiesAddresses = new address[](1);
-        newExecutionStrategiesAddresses[0] = newExecutionStrategies[0].addy;
-
         vm.expectEmit(true, true, true, true);
-        emit ExecutionStrategiesAdded(newExecutionStrategiesAddresses);
-        space.addExecutionStrategies(newExecutionStrategiesAddresses);
+        emit ExecutionStrategiesAdded(newExecutionStrategies);
+        // New strategy index should be `1` (`0` is used for the first one).
+        space.addExecutionStrategies(newExecutionStrategies);
 
+        // Creating a proposal with the new execution strategy
         uint256 proposalId = _createProposal(
             author,
             proposalMetadataUri,
-            newExecutionStrategies[0],
+            IndexedStrategy(1, new bytes(0)),
             userVotingStrategies
         );
 
@@ -285,27 +284,30 @@ contract SpaceOwnerActionsTest is SpaceTest {
         // Ensure we can finalize
         space.execute(proposalId, newExecutionStrategies[0].params);
 
+        uint8[] memory newIndices = new uint8[](1);
+        newIndices[0] = 1;
+
         // Remove this strategy
         vm.expectEmit(true, true, true, true);
-        emit ExecutionStrategiesRemoved(newExecutionStrategiesAddresses);
-        space.removeExecutionStrategies(newExecutionStrategiesAddresses);
+        emit ExecutionStrategiesRemoved(newIndices);
+        space.removeExecutionStrategies(newIndices);
 
         // Ensure we can't propose with this execution strategy anymore
-        vm.expectRevert(
-            abi.encodeWithSelector(ExecutionStrategyNotWhitelisted.selector, newExecutionStrategiesAddresses[0])
-        );
-        _createProposal(author, proposalMetadataUri, newExecutionStrategies[0], userVotingStrategies);
+        vm.expectRevert(abi.encodeWithSelector(ExecutionStrategyNotWhitelisted.selector));
+        _createProposal(author, proposalMetadataUri, IndexedStrategy(1, new bytes(0)), userVotingStrategies);
     }
 
     function testAddExecutionStrategyUnauthorized() public {
         vm.expectRevert("Ownable: caller is not the owner");
         vm.prank(unauthorized);
-        space.removeExecutionStrategies(executionStrategies);
+        space.addExecutionStrategies(executionStrategies);
     }
 
     function testRemoveExecutionStrategyUnauthorized() public {
+        uint8[] memory indices = new uint8[](1);
+        indices[0] = 0;
         vm.expectRevert("Ownable: caller is not the owner");
         vm.prank(unauthorized);
-        space.removeExecutionStrategies(executionStrategies);
+        space.removeExecutionStrategies(indices);
     }
 }

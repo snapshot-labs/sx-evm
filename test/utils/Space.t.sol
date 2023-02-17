@@ -14,7 +14,7 @@ import "../../src/interfaces/space/ISpaceErrors.sol";
 import "../../src/types.sol";
 
 abstract contract SpaceTest is Test, GasSnapshot, ISpaceEvents, ISpaceErrors {
-    bytes4 constant PROPOSE_SELECTOR = bytes4(keccak256("propose(address,string,(address,bytes),(uint8,bytes)[])"));
+    bytes4 constant PROPOSE_SELECTOR = bytes4(keccak256("propose(address,string,(uint8,bytes),(uint8,bytes)[])"));
     bytes4 constant VOTE_SELECTOR = bytes4(keccak256("vote(address,uint256,uint8,(uint8,bytes)[])"));
 
     Space space;
@@ -36,7 +36,7 @@ abstract contract SpaceTest is Test, GasSnapshot, ISpaceEvents, ISpaceErrors {
     // Initial whitelisted modules set in the space
     Strategy[] votingStrategies;
     address[] authenticators;
-    address[] executionStrategies;
+    Strategy[] executionStrategies;
 
     // Initial space parameters
     uint32 public votingDelay;
@@ -47,7 +47,7 @@ abstract contract SpaceTest is Test, GasSnapshot, ISpaceEvents, ISpaceErrors {
 
     // Default voting and execution strategy setups
     IndexedStrategy[] public userVotingStrategies;
-    Strategy public executionStrategy;
+    IndexedStrategy public executionStrategy;
 
     // TODO: emit in the space factory event - (once we have a factory)
     string public spaceMetadataUri = "SOC Test Space";
@@ -66,9 +66,9 @@ abstract contract SpaceTest is Test, GasSnapshot, ISpaceEvents, ISpaceErrors {
         quorum = 1;
         votingStrategies.push(Strategy(address(vanillaVotingStrategy), new bytes(0)));
         authenticators.push(address(vanillaAuthenticator));
-        executionStrategies.push(address(vanillaExecutionStrategy));
+        executionStrategies.push(Strategy(address(vanillaExecutionStrategy), new bytes(0)));
         userVotingStrategies.push(IndexedStrategy(0, new bytes(0)));
-        executionStrategy = Strategy(address(vanillaExecutionStrategy), new bytes(0));
+        executionStrategy = IndexedStrategy(0, new bytes(0));
 
         space = new Space(
             owner,
@@ -86,7 +86,7 @@ abstract contract SpaceTest is Test, GasSnapshot, ISpaceEvents, ISpaceErrors {
     function _createProposal(
         address _author,
         string memory _metadataUri,
-        Strategy memory _executionStrategy,
+        IndexedStrategy memory _executionStrategy,
         IndexedStrategy[] memory _userVotingStrategies
     ) internal returns (uint256) {
         vanillaAuthenticator.authenticate(
