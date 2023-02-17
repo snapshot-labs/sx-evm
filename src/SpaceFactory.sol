@@ -21,7 +21,7 @@ contract SpaceFactory is ISpaceFactory {
         uint256 quorum,
         Strategy[] calldata votingStrategies,
         address[] calldata authenticators,
-        address[] calldata executionStrategies,
+        Strategy[] calldata executionStrategies,
         bytes32 salt
     ) external override {
         try
