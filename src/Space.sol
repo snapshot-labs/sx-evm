@@ -206,16 +206,17 @@ contract Space is ISpace, Ownable {
 
     /**
      * @notice  Internal function to ensure there are no duplicates in an array of `UserVotingStrategy`.
-     * @dev     No way to declare a mapping in memory so we need to use an array and go for O(n^2)...
+     * @dev     We create a bitmap of those indeces by using a `u256`. We try to set the bit at index `i`, stopping it
+     * @dev     it has already been set. Time complexity is O(n).
      * @param   strats  Array to check for duplicates.
      */
-    function _assertNoDuplicateIndices(IndexedStrategy[] memory strats) internal pure {
-        if (strats.length > 0) {
-            for (uint256 i = 0; i < strats.length - 1; i++) {
-                for (uint256 j = i + 1; j < strats.length; j++) {
-                    if (strats[i].index == strats[j].index) revert DuplicateFound(strats[i].index, strats[j].index);
-                }
-            }
+    function _assertNoDuplicateIndices(IndexedStrategy[] memory strats) internal {
+        uint256 bitMap = 0;
+        for (uint8 i = 0; i < strats.length; i++) {
+            // Check that bit at index `strats[i].index` is not set
+            if (bitMap & (1 << strats[i].index) == 1) revert DuplicateFound(strats[i].index);
+            // Update aforementioned bit.
+            bitMap |= 1 << strats[i].index;
         }
     }
 
