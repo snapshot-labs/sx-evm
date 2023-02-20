@@ -25,8 +25,6 @@ contract Space is ISpace, Ownable, ReentrancyGuard {
     uint256 public nextProposalId;
     // Minimum voting power required by a user to create a new proposal (used to prevent proposal spamming).
     uint256 public proposalThreshold;
-    // Total voting power that needs to participate to a vote for a vote to be considered valid.
-    uint256 public quorum;
     // Delay between when the proposal is created and when the voting period starts for this proposal.
     uint32 public votingDelay;
 
@@ -59,7 +57,6 @@ contract Space is ISpace, Ownable, ReentrancyGuard {
         uint32 _minVotingDuration,
         uint32 _maxVotingDuration,
         uint256 _proposalThreshold,
-        uint256 _quorum,
         Strategy[] memory _votingStrategies,
         address[] memory _authenticators,
         Strategy[] memory _executionStrategies
@@ -68,7 +65,6 @@ contract Space is ISpace, Ownable, ReentrancyGuard {
         _setMaxVotingDuration(_maxVotingDuration);
         _setMinVotingDuration(_minVotingDuration);
         _setProposalThreshold(_proposalThreshold);
-        _setQuorum(_quorum);
         _setVotingDelay(_votingDelay);
         _addVotingStrategies(_votingStrategies);
         _addAuthenticators(_authenticators);
@@ -98,10 +94,6 @@ contract Space is ISpace, Ownable, ReentrancyGuard {
 
     function _setProposalThreshold(uint256 _proposalThreshold) internal {
         proposalThreshold = _proposalThreshold;
-    }
-
-    function _setQuorum(uint256 _quorum) internal {
-        quorum = _quorum;
     }
 
     function _setVotingDelay(uint32 _votingDelay) internal {
@@ -340,11 +332,6 @@ contract Space is ISpace, Ownable, ReentrancyGuard {
         emit ProposalThresholdUpdated(_proposalThreshold);
     }
 
-    function setQuorum(uint256 _quorum) external override onlyOwner {
-        _setQuorum(_quorum);
-        emit QuorumUpdated(_quorum);
-    }
-
     function setVotingDelay(uint32 _votingDelay) external override onlyOwner {
         _setVotingDelay(_votingDelay);
         emit VotingDelayUpdated(_votingDelay);
@@ -426,8 +413,8 @@ contract Space is ISpace, Ownable, ReentrancyGuard {
      * @notice  Create a proposal.
      * @param   proposerAddress  The address of the proposal creator.
      * @param   metadataUri  The metadata URI for the proposal.
-     * @param   executionStrategy  The execution contract and associated execution parameters to use for this proposal.
-     * @param   userVotingStrategies  Strategies to use to compute the proposer voting power.
+     * @param   executionStrategy  The execution strategy index and associated execution payload to use for this proposal.
+     * @param   userVotingStrategies  The voting strategies indexes to use and the associated parameters for each.
      */
     function propose(
         address proposerAddress,
@@ -448,15 +435,14 @@ contract Space is ISpace, Ownable, ReentrancyGuard {
         uint32 minEndTimestamp = startTimestamp + minVotingDuration;
         uint32 maxEndTimestamp = startTimestamp + maxVotingDuration;
 
-        bytes32 executionHash = keccak256(executionStrategy.params);
+        bytes32 executionPayloadHash = keccak256(executionStrategy.params);
 
         Proposal memory proposal = Proposal(
-            quorum,
             snapshotTimestamp,
             startTimestamp,
             minEndTimestamp,
             maxEndTimestamp,
-            executionHash,
+            executionPayloadHash,
             executionStrategies[executionStrategy.index],
             FinalizationStatus.Pending,
             votingStrategies
@@ -512,24 +498,22 @@ contract Space is ISpace, Ownable, ReentrancyGuard {
     /**
      * @notice  Executes a proposal if it is in the `Accepted` or `VotingPeriodAccepted` state.
      * @param   proposalId  The proposal id.
-     * @param   executionParams  The execution parameters, as described in `propose()`.
+     * @param   executionPayload  The execution payload, as described in `propose()`.
      */
-    function execute(uint256 proposalId, bytes calldata executionParams) external nonReentrant {
-        ProposalStatus proposalStatus = getProposalStatus(proposalId);
+    function execute(uint256 proposalId, bytes calldata executionPayload) external nonReentrant() {
         Proposal storage proposal = proposalRegistry[proposalId];
-
-        // Checking execution parameters are valid.
-        bytes32 recoveredHash = keccak256(executionParams);
-        if (proposal.executionHash != recoveredHash) revert ExecutionHashMismatch();
+        _assertProposalExists(proposal);
 
         // We add reentrancy protection here to prevent this function being re-entered by the execution strategy.
+        // We cannot use the Checks-Effects-Interactions pattern because the proposal status is checked inside
+        // the execution strategy (so essentially forced to do Checks-Interactions-Effects). 
         IExecutionStrategy(proposal.executionStrategy.addy).execute(
             proposal,
             votePower[proposalId][Choice.For],
             votePower[proposalId][Choice.Against],
             votePower[proposalId][Choice.Abstain],
             proposal.executionStrategy.params,
-            executionParams
+            executionPayload
         );
 
         proposal.finalizationStatus = FinalizationStatus.Executed;
@@ -542,11 +526,9 @@ contract Space is ISpace, Ownable, ReentrancyGuard {
      * @param   proposalId  The proposal to cancel
      */
     function cancel(uint256 proposalId) external override onlyOwner {
-        ProposalStatus proposalStatus = getProposalStatus(proposalId);
         Proposal storage proposal = proposalRegistry[proposalId];
-        if ((proposalStatus == ProposalStatus.Executed) || (proposalStatus == ProposalStatus.Cancelled)) {
-            revert InvalidProposalStatus(proposalStatus);
-        }
+        _assertProposalExists(proposal);
+        if (proposal.finalizationStatus != FinalizationStatus.Pending) revert ProposalFinalized();
         proposal.finalizationStatus = FinalizationStatus.Cancelled;
         emit ProposalCancelled(proposalId);
     }

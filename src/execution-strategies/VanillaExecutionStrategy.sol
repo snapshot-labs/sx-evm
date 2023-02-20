@@ -5,10 +5,8 @@ pragma solidity ^0.8.15;
 import "./SimpleQuorumExecutionStrategy.sol";
 
 contract VanillaExecutionStrategy is SimpleQuorumExecutionStrategy {
-    error InvalidProposalStatus(ProposalStatus status);
     uint256 numExecuted;
 
-    // solhint-disable no-unused-vars
     function execute(
         Proposal memory proposal,
         uint256 votesFor,
@@ -21,6 +19,8 @@ contract VanillaExecutionStrategy is SimpleQuorumExecutionStrategy {
         if ((proposalStatus != ProposalStatus.Accepted) && (proposalStatus != ProposalStatus.VotingPeriodAccepted)) {
             revert InvalidProposalStatus(proposalStatus);
         }
+        // Check that the execution payload matches the payload supplied when the proposal was created
+        if (proposal.executionPayloadHash != keccak256(payload)) revert InvalidPayload();
         numExecuted++;
     }
 }
