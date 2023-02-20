@@ -14,6 +14,7 @@ contract EthSigAuthenticatorTest is SpaceTest, SigUtils {
 
     string private constant name = "snapshot-x";
     string private constant version = "1";
+    string newMetadataUri = "Test456";
 
     EthSigAuthenticator public ethSigAuth;
 
@@ -312,6 +313,125 @@ contract EthSigAuthenticatorTest is SpaceTest, SigUtils {
             address(space),
             bytes4(0xdeadbeef),
             abi.encode(voter, proposalId, Choice.For, userVotingStrategies)
+        );
+    }
+
+    function testAuthenticateUpdateProposalMetadata() public {
+        space.setVotingDelay(10);
+        uint256 proposalId = _createProposal(author, proposalMetadataUri, executionStrategy, userVotingStrategies);
+
+        uint256 salt = 0;
+        bytes32 digest = _getUpdateProposalMetadataDigest(
+            address(ethSigAuth),
+            address(space),
+            author,
+            proposalId,
+            newMetadataUri,
+            salt
+        );
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(authorKey, digest);
+
+        vm.expectEmit(true, true, true, true);
+        emit ProposalMetadataUpdated(proposalId, newMetadataUri);
+        ethSigAuth.authenticate(
+            v,
+            r,
+            s,
+            salt,
+            address(space),
+            UPDATE_PROPOSAL_METADATA_SELECTOR,
+            abi.encode(author, proposalId, newMetadataUri)
+        );
+    }
+
+    function testAuthenticateUpdateProposalMetadataInvalidSignature() public {
+        space.setVotingDelay(10);
+        uint256 proposalId = _createProposal(author, proposalMetadataUri, executionStrategy, userVotingStrategies);
+
+        uint256 salt = 0;
+        bytes32 digest = _getUpdateProposalMetadataDigest(
+            address(ethSigAuth),
+            address(space),
+            author,
+            proposalId + 1, // proposalId + 1 will be invalid
+            newMetadataUri,
+            salt
+        );
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(authorKey, digest);
+
+        vm.expectRevert(InvalidSignature.selector);
+        ethSigAuth.authenticate(
+            v,
+            r,
+            s,
+            salt,
+            address(space),
+            UPDATE_PROPOSAL_METADATA_SELECTOR,
+            abi.encode(author, proposalId, newMetadataUri)
+        );
+    }
+
+    function testAuthenticateUpdateProposalMetadataReusedSignature() public {
+        space.setVotingDelay(10);
+        uint256 proposalId = _createProposal(author, proposalMetadataUri, executionStrategy, userVotingStrategies);
+
+        uint256 salt = 0;
+        bytes32 digest = _getUpdateProposalMetadataDigest(
+            address(ethSigAuth),
+            address(space),
+            author,
+            proposalId,
+            newMetadataUri,
+            salt
+        );
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(authorKey, digest);
+
+        ethSigAuth.authenticate(
+            v,
+            r,
+            s,
+            salt,
+            address(space),
+            UPDATE_PROPOSAL_METADATA_SELECTOR,
+            abi.encode(author, proposalId, newMetadataUri)
+        );
+
+        vm.expectRevert(SaltAlreadyUsed.selector);
+        ethSigAuth.authenticate(
+            v,
+            r,
+            s,
+            salt,
+            address(space),
+            UPDATE_PROPOSAL_METADATA_SELECTOR,
+            abi.encode(author, proposalId, newMetadataUri)
+        );
+    }
+
+    function testAuthenticateUpdateProposalMetadataInvalidSelector() public {
+        space.setVotingDelay(10);
+        uint256 proposalId = _createProposal(author, proposalMetadataUri, executionStrategy, userVotingStrategies);
+
+        uint256 salt = 0;
+        bytes32 digest = _getUpdateProposalMetadataDigest(
+            address(ethSigAuth),
+            address(space),
+            author,
+            proposalId,
+            newMetadataUri,
+            salt
+        );
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(authorKey, digest);
+
+        vm.expectRevert(InvalidFunctionSelector.selector);
+        ethSigAuth.authenticate(
+            v,
+            r,
+            s,
+            salt,
+            address(space),
+            bytes4(0xdeadbeef),
+            abi.encode(author, proposalId, newMetadataUri)
         );
     }
 }

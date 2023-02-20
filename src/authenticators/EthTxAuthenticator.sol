@@ -34,11 +34,18 @@ contract EthTxAuthenticator is Authenticator {
         if (voter != msg.sender) revert InvalidMessageSender();
     }
 
+    function _verifyUpdateProposalMetadata(bytes calldata data) internal view {
+        (address proposer, , ) = abi.decode(data, (address, uint256, string));
+        if (proposer != msg.sender) revert InvalidMessageSender();
+    }
+
     function authenticate(address target, bytes4 functionSelector, bytes calldata data) external {
         if (functionSelector == PROPOSE_SELECTOR) {
             _verifyPropose(data);
         } else if (functionSelector == VOTE_SELECTOR) {
             _verifyVote(data);
+        } else if (functionSelector == UPDATE_PROPOSAL_METADATA_SELECTOR) {
+            _verifyUpdateProposalMetadata(data);
         } else {
             revert InvalidFunctionSelector();
         }

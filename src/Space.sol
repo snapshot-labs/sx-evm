@@ -446,6 +446,7 @@ contract Space is ISpace, Ownable {
             maxEndTimestamp,
             executionHash,
             executionStrategy.addy,
+            proposerAddress,
             FinalizationStatus.Pending,
             votingStrategies
         );
@@ -534,5 +535,20 @@ contract Space is ISpace, Ownable {
         }
         proposal.finalizationStatus = FinalizationStatus.Cancelled;
         emit ProposalCancelled(proposalId);
+    }
+
+    /**
+     * @notice  Updates the proposal metadata. Will only work if voting has not started yet, i.e `voting_delay`
+                has not elapsed yet.
+     * @param   proposalId  The id of the proposal to edit
+     * @param   metadataUri The new metadata
+     */
+    function updateProposalMetadata(address proposerAddress, uint256 proposalId, string calldata metadataUri) external {
+        _assertValidAuthenticator();
+
+        Proposal memory proposal = proposalRegistry[proposalId];
+        if (proposerAddress != proposal.proposer) revert InvalidCaller();
+
+        emit ProposalMetadataUpdated(proposalId, metadataUri);
     }
 }

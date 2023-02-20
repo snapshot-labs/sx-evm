@@ -27,4 +27,5 @@ interface ISpaceEvents {
     event ProposalThresholdUpdated(uint256 newProposalThreshold);
     event QuorumUpdated(uint256 newQuorum);
     event VotingDelayUpdated(uint256 newVotingDelay);
+    event ProposalMetadataUpdated(uint256 proposalId, string newMetadataUri);
 }

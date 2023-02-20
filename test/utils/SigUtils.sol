@@ -27,6 +27,8 @@ abstract contract SigUtils {
             "IndexedStrategy[] userVotingStrategies,uint256 salt)"
             "IndexedStrategy(uint8 index,bytes params)"
         );
+    bytes32 private constant UPDATE_PROPOSAL_METADATA_TYPEHASH =
+        keccak256("UpdateProposalMetadata(address space,address proposer,uint256 proposalId,string metadataUri)");
 
     constructor(string memory _name, string memory _version) {
         name = _name;
@@ -95,6 +97,33 @@ abstract contract SigUtils {
                 keccak256(
                     abi.encode(VOTE_TYPEHASH, space, voter, proposalId, choice, usedVotingStrategies.hash(), salt)
                 )
+            )
+        );
+
+        return digest;
+    }
+
+    function _getUpdateProposalMetadataDigest(
+        address authenticator,
+        address space,
+        address proposer,
+        uint256 proposalId,
+        string memory metadataUri,
+        uint256 salt
+    ) internal view returns (bytes32) {
+        bytes32 digest = keccak256(
+            abi.encodePacked(
+                "\x19\x01",
+                keccak256(
+                    abi.encode(
+                        DOMAIN_TYPEHASH,
+                        keccak256(bytes(name)),
+                        keccak256(bytes(version)),
+                        block.chainid,
+                        authenticator
+                    )
+                ),
+                keccak256(abi.encode(UPDATE_PROPOSAL_METADATA_TYPEHASH, space, proposer, proposalId, metadataUri, salt))
             )
         );
 

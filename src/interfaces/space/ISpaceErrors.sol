@@ -9,6 +9,8 @@ interface ISpaceErrors {
     // Array is empty
     error EmptyArray();
 
+    error InvalidCaller();
+
     // All voting strategies addresses must be != address(0).
     error InvalidVotingStrategyAddress();
     error InvalidVotingStrategyIndex(uint256 index);

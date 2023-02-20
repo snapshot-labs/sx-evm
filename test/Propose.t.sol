@@ -22,6 +22,7 @@ contract ProposeTest is SpaceTest {
             maxEndTimestamp,
             executionHash,
             executionStrategy.addy,
+            author,
             FinalizationStatus.Pending,
             votingStrategies
         );

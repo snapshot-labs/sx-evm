@@ -17,6 +17,7 @@ struct Proposal {
     uint32 maxEndTimestamp;
     bytes32 executionHash;
     address executionStrategy;
+    address proposer;
     FinalizationStatus finalizationStatus;
     Strategy[] votingStrategies;
 }
