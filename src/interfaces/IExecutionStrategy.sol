@@ -5,10 +5,18 @@ pragma solidity ^0.8.15;
 import "../types.sol";
 
 interface IExecutionStrategy {
-    function execute(Proposal memory proposal, bytes memory executionParams) external;
+    function execute(
+        Proposal memory proposal,
+        uint256 votesFor,
+        uint256 votesAgainst,
+        uint256 votesAbstain,
+        bytes memory params,
+        bytes memory payload
+    ) external;
 
     function getProposalStatus(
         Proposal memory proposal,
+        bytes memory params,
         uint256 votesFor,
         uint256 votesAgainst,
         uint256 votesAbstain
