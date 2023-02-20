@@ -2,6 +2,7 @@
 pragma solidity ^0.8.15;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
 import "src/interfaces/ISpace.sol";
 import "src/types.sol";
@@ -15,7 +16,7 @@ import "forge-std/console2.sol";
  * @title   Space Contract.
  * @notice  Logic and bookkeeping contract.
  */
-contract Space is ISpace, Ownable {
+contract Space is ISpace, Ownable, ReentrancyGuard {
     // Maximum duration a proposal can last.
     uint32 public maxVotingDuration;
     // Minimum duration a proposal can last.
@@ -401,6 +402,7 @@ contract Space is ISpace, Ownable {
         return
             IExecutionStrategy(proposal.executionStrategy.addy).getProposalStatus(
                 proposal,
+                proposal.executionStrategy.params,
                 votePower[proposalId][Choice.For],
                 votePower[proposalId][Choice.Against],
                 votePower[proposalId][Choice.Abstain]
@@ -512,22 +514,25 @@ contract Space is ISpace, Ownable {
      * @param   proposalId  The proposal id.
      * @param   executionParams  The execution parameters, as described in `propose()`.
      */
-    function execute(uint256 proposalId, bytes calldata executionParams) external {
+    function execute(uint256 proposalId, bytes calldata executionParams) external nonReentrant {
         ProposalStatus proposalStatus = getProposalStatus(proposalId);
         Proposal storage proposal = proposalRegistry[proposalId];
-
-        if ((proposalStatus != ProposalStatus.Accepted) && (proposalStatus != ProposalStatus.VotingPeriodAccepted)) {
-            revert InvalidProposalStatus(proposalStatus);
-        }
 
         // Checking execution parameters are valid.
         bytes32 recoveredHash = keccak256(executionParams);
         if (proposal.executionHash != recoveredHash) revert ExecutionHashMismatch();
 
-        // Updating finalization status before execution to prevent reentrancy.
-        proposal.finalizationStatus = FinalizationStatus.Executed;
+        // We add reentrancy protection here to prevent this function being re-entered by the execution strategy.
+        IExecutionStrategy(proposal.executionStrategy.addy).execute(
+            proposal,
+            votePower[proposalId][Choice.For],
+            votePower[proposalId][Choice.Against],
+            votePower[proposalId][Choice.Abstain],
+            proposal.executionStrategy.params,
+            executionParams
+        );
 
-        IExecutionStrategy(proposal.executionStrategy.addy).execute(proposal, executionParams);
+        proposal.finalizationStatus = FinalizationStatus.Executed;
 
         emit ProposalExecuted(proposalId);
     }
