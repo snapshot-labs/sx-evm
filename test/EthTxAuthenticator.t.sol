@@ -70,7 +70,7 @@ contract EthTxAuthenticatorTest is SpaceTest {
     }
 
     function testAuthenticateTxVoteInvalidVoter() public {
-        uint256 proposalId = _createProposal(author, proposalMetadataUri, executionStrategy, userVotingStrategies);
+        uint256 proposalId = 1;
 
         vm.expectRevert(InvalidMessageSender.selector);
         vm.prank(address(123));
@@ -82,7 +82,7 @@ contract EthTxAuthenticatorTest is SpaceTest {
     }
 
     function testAuthenticateTxVoteInvalidSelector() public {
-        uint256 proposalId = _createProposal(author, proposalMetadataUri, executionStrategy, userVotingStrategies);
+        uint256 proposalId = 1;
 
         vm.expectRevert(InvalidFunctionSelector.selector);
         vm.prank(voter);

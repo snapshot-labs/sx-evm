@@ -198,7 +198,7 @@ contract EthSigAuthenticatorTest is SpaceTest, SigUtils {
     }
 
     function testAuthenticateVoteInvalidSigner() public {
-        uint256 proposalId = _createProposal(author, proposalMetadataUri, executionStrategy, userVotingStrategies);
+        uint256 proposalId = 1;
 
         uint256 salt = 0;
         bytes32 digest = _getVoteDigest(
@@ -225,7 +225,7 @@ contract EthSigAuthenticatorTest is SpaceTest, SigUtils {
     }
 
     function testAuthenticateVoteInvalidSignature() public {
-        uint256 proposalId = _createProposal(author, proposalMetadataUri, executionStrategy, userVotingStrategies);
+        uint256 proposalId = 1;
 
         uint256 salt = 0;
         // Signing with an incorrect vote choice
@@ -290,7 +290,7 @@ contract EthSigAuthenticatorTest is SpaceTest, SigUtils {
     }
 
     function testAuthenticateVoteInvalidSelector() public {
-        uint256 proposalId = _createProposal(author, proposalMetadataUri, executionStrategy, userVotingStrategies);
+        uint256 proposalId = 1;
 
         uint256 salt = 0;
         bytes32 digest = _getVoteDigest(
@@ -372,7 +372,6 @@ contract EthSigAuthenticatorTest is SpaceTest, SigUtils {
     }
 
     function testAuthenticateUpdateProposalMetadataReusedSignature() public {
-        space.setVotingDelay(10);
         uint256 proposalId = _createProposal(author, proposalMetadataUri, executionStrategy, userVotingStrategies);
 
         uint256 salt = 0;
@@ -409,8 +408,7 @@ contract EthSigAuthenticatorTest is SpaceTest, SigUtils {
     }
 
     function testAuthenticateUpdateProposalMetadataInvalidSelector() public {
-        space.setVotingDelay(10);
-        uint256 proposalId = _createProposal(author, proposalMetadataUri, executionStrategy, userVotingStrategies);
+        uint256 proposalId = 1;
 
         uint256 salt = 0;
         bytes32 digest = _getUpdateProposalMetadataDigest(
