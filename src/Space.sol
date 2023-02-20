@@ -548,6 +548,7 @@ contract Space is ISpace, Ownable {
 
         Proposal memory proposal = proposalRegistry[proposalId];
         if (proposerAddress != proposal.proposer) revert InvalidCaller();
+        if (block.timestamp >= proposal.startTimestamp) revert VotingDelayHasPassed();
 
         emit ProposalMetadataUpdated(proposalId, metadataUri);
     }

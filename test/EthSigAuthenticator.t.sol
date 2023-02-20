@@ -372,6 +372,7 @@ contract EthSigAuthenticatorTest is SpaceTest, SigUtils {
     }
 
     function testAuthenticateUpdateProposalMetadataReusedSignature() public {
+        space.setVotingDelay(10);
         uint256 proposalId = _createProposal(author, proposalMetadataUri, executionStrategy, userVotingStrategies);
 
         uint256 salt = 0;

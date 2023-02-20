@@ -29,4 +29,5 @@ interface ISpaceErrors {
     error VotingPeriodHasEnded();
     error VotingPeriodHasNotStarted();
     error ProposalFinalized();
+    error VotingDelayHasPassed();
 }
