@@ -15,7 +15,6 @@ contract ProposeTest is SpaceTest {
 
         // Expected content of the proposal struct
         Proposal memory proposal = Proposal(
-            quorum,
             snapshotTimestamp,
             startTimestamp,
             minEndTimestamp,

@@ -11,9 +11,10 @@ import "../../src/voting-strategies/VanillaVotingStrategy.sol";
 import "../../src/execution-strategies/VanillaExecutionStrategy.sol";
 import "../../src/interfaces/space/ISpaceEvents.sol";
 import "../../src/interfaces/space/ISpaceErrors.sol";
+import "../../src/interfaces/execution-strategies/IExecutionStrategyErrors.sol";
 import "../../src/types.sol";
 
-abstract contract SpaceTest is Test, GasSnapshot, ISpaceEvents, ISpaceErrors {
+abstract contract SpaceTest is Test, GasSnapshot, ISpaceEvents, ISpaceErrors, IExecutionStrategyErrors {
     bytes4 constant PROPOSE_SELECTOR = bytes4(keccak256("propose(address,string,(uint8,bytes),(uint8,bytes)[])"));
     bytes4 constant VOTE_SELECTOR = bytes4(keccak256("vote(address,uint256,uint8,(uint8,bytes)[])"));
 
@@ -66,17 +67,15 @@ abstract contract SpaceTest is Test, GasSnapshot, ISpaceEvents, ISpaceErrors {
         quorum = 1;
         votingStrategies.push(Strategy(address(vanillaVotingStrategy), new bytes(0)));
         authenticators.push(address(vanillaAuthenticator));
-        executionStrategies.push(Strategy(address(vanillaExecutionStrategy), new bytes(0)));
+        executionStrategies.push(Strategy(address(vanillaExecutionStrategy), abi.encode(uint256(quorum))));
         userVotingStrategies.push(IndexedStrategy(0, new bytes(0)));
         executionStrategy = IndexedStrategy(0, new bytes(0));
-
         space = new Space(
             owner,
             votingDelay,
             minVotingDuration,
             maxVotingDuration,
             proposalThreshold,
-            quorum,
             votingStrategies,
             authenticators,
             executionStrategies

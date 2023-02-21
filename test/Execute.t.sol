@@ -93,7 +93,7 @@ contract ExecuteTest is SpaceTest {
         VanillaExecutionStrategy _vanilla = new VanillaExecutionStrategy();
 
         Strategy[] memory newExecutionStrategies = new Strategy[](1);
-        newExecutionStrategies[0] = Strategy(address(_vanilla), new bytes(0));
+        newExecutionStrategies[0] = Strategy(address(_vanilla), abi.encode(uint256(quorum)));
 
         // Add the strategy, which will be assigned the index `1`.
         space.addExecutionStrategies(newExecutionStrategies);
@@ -113,16 +113,16 @@ contract ExecuteTest is SpaceTest {
         space.removeExecutionStrategies(newIndices);
 
         // Execution still works with the removed strategy because its stored inside the proposal.
-        space.execute(proposalId, newExecutionStrategies[0].params);
+        space.execute(proposalId, new bytes(0));
 
         assertEq(uint8(space.getProposalStatus(proposalId)), uint8(ProposalStatus.Executed));
     }
 
-    function testExecuteExecutionMismatch() public {
+    function testExecuteInvalidPayload() public {
         uint256 proposalId = _createProposal(author, proposalMetadataUri, executionStrategy, userVotingStrategies);
         _vote(author, proposalId, Choice.For, userVotingStrategies);
 
-        vm.expectRevert(abi.encodeWithSelector(ExecutionHashMismatch.selector));
+        vm.expectRevert(abi.encodeWithSelector(InvalidPayload.selector));
         space.execute(proposalId, new bytes(4242));
     }
 }

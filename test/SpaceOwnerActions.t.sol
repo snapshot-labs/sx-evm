@@ -39,7 +39,7 @@ contract SpaceOwnerActionsTest is SpaceTest {
         _vote(author, proposalId, Choice.For, userVotingStrategies);
         space.execute(proposalId, executionStrategy.params);
 
-        vm.expectRevert(abi.encodeWithSelector(InvalidProposalStatus.selector, ProposalStatus.Executed));
+        vm.expectRevert(abi.encodeWithSelector(ProposalFinalized.selector));
         space.cancel(proposalId);
     }
 
@@ -48,7 +48,7 @@ contract SpaceOwnerActionsTest is SpaceTest {
         _vote(author, proposalId, Choice.For, userVotingStrategies);
         space.cancel(proposalId);
 
-        vm.expectRevert(abi.encodeWithSelector(InvalidProposalStatus.selector, ProposalStatus.Cancelled));
+        vm.expectRevert(abi.encodeWithSelector(ProposalFinalized.selector));
         space.cancel(proposalId);
     }
 
@@ -136,24 +136,6 @@ contract SpaceOwnerActionsTest is SpaceTest {
         vm.expectRevert("Ownable: caller is not the owner");
         vm.prank(unauthorized);
         space.setProposalThreshold(2);
-    }
-
-    // ------- Quorum ----
-
-    function testSetQuorum() public {
-        uint256 newQuorum = 2;
-        vm.expectEmit(true, true, true, true);
-        emit QuorumUpdated(newQuorum);
-        vm.prank(owner);
-        space.setQuorum(newQuorum);
-
-        assertEq(space.quorum(), newQuorum, "Quorum did not get updated");
-    }
-
-    function testSetQuorumUnauthorized() public {
-        vm.expectRevert("Ownable: caller is not the owner");
-        vm.prank(unauthorized);
-        space.setQuorum(2);
     }
 
     // ------- VotingDelay ----
@@ -264,7 +246,7 @@ contract SpaceOwnerActionsTest is SpaceTest {
     function testAddAndRemoveExecutionStrategies() public {
         Strategy[] memory newExecutionStrategies = new Strategy[](1);
         VanillaExecutionStrategy _vanilla = new VanillaExecutionStrategy();
-        newExecutionStrategies[0] = Strategy(address(_vanilla), new bytes(0));
+        newExecutionStrategies[0] = Strategy(address(_vanilla), abi.encode(uint256(quorum)));
 
         vm.expectEmit(true, true, true, true);
         emit ExecutionStrategiesAdded(newExecutionStrategies);
@@ -282,7 +264,7 @@ contract SpaceOwnerActionsTest is SpaceTest {
         _vote(author, proposalId, Choice.For, userVotingStrategies);
 
         // Ensure we can finalize
-        space.execute(proposalId, newExecutionStrategies[0].params);
+        space.execute(proposalId, new bytes(0));
 
         uint8[] memory newIndices = new uint8[](1);
         newIndices[0] = 1;

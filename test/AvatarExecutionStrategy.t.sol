@@ -9,7 +9,6 @@ import "../src/types.sol";
 
 contract AvatarExecutionStrategyTest is SpaceTest {
     error SpaceNotEnabled();
-    error TransactionsFailed();
     error InvalidSpace();
 
     event AvatarExecutionStrategySetUp(address _owner, address _target, address[] _spaces);
@@ -36,7 +35,7 @@ contract AvatarExecutionStrategyTest is SpaceTest {
 
         // Activate the execution strategy on the space
         Strategy[] memory executionStrategies = new Strategy[](1);
-        executionStrategies[0] = Strategy(address(avatarExecutionStrategy), new bytes(0));
+        executionStrategies[0] = Strategy(address(avatarExecutionStrategy), abi.encode(uint256(quorum)));
         // This strategy will reside at index 1 in the space's execution strategies array
         space.addExecutionStrategies(executionStrategies);
     }
@@ -75,7 +74,7 @@ contract AvatarExecutionStrategyTest is SpaceTest {
         _vote(author, proposalId, Choice.For, userVotingStrategies);
         vm.warp(block.timestamp + space.maxVotingDuration());
 
-        vm.expectRevert(TransactionsFailed.selector);
+        vm.expectRevert(ExecutionFailed.selector);
         space.execute(proposalId, abi.encode(transactions));
     }
 
@@ -124,7 +123,7 @@ contract AvatarExecutionStrategyTest is SpaceTest {
         _vote(author, proposalId, Choice.For, userVotingStrategies);
         vm.warp(block.timestamp + space.maxVotingDuration());
 
-        vm.expectRevert(TransactionsFailed.selector);
+        vm.expectRevert(ExecutionFailed.selector);
         space.execute(proposalId, abi.encode(transactions));
         // both txs should have reverted despite the first one being valid
         assertEq(recipient.balance, 0);
