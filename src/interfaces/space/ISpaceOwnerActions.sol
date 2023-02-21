@@ -9,8 +9,6 @@ interface ISpaceOwnerActions {
 
     function setController(address controller) external;
 
-    function setQuorum(uint256 quorum) external;
-
     function setVotingDelay(uint32 delay) external;
 
     function setMinVotingDuration(uint32 duration) external;
