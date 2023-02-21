@@ -14,8 +14,11 @@ struct Proposal {
     uint32 maxEndTimestamp;
     // The hash of the execution payload. We do not store the payload itself to save gas.
     bytes32 executionPayloadHash;
+    // Struct containing the execution strategy address and parameters required for the strategy.
     Strategy executionStrategy;
+    // An enum that stores whether a proposal is pending, executed, or cancelled.
     FinalizationStatus finalizationStatus;
+    // Array of structs containing the voting strategy addresses and parameters required for each.
     Strategy[] votingStrategies;
 }
 
@@ -29,7 +32,6 @@ struct IndexedStrategy {
     bytes params;
 }
 
-// An enum that stores whether a proposal is pending, executed, or cancelled.
 enum FinalizationStatus {
     Pending,
     Executed,
