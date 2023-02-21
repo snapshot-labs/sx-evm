@@ -76,9 +76,9 @@ contract AvatarExecutionStrategy is SpaceManager, SimpleQuorumExecutionStrategy 
     }
 
     /// @notice Decodes and executes a batch of transactions from the avatar contract.
-    /// @param executionParams The encoded transactions to execute.
-    function _execute(bytes memory executionParams) internal {
-        MetaTransaction[] memory transactions = abi.decode(executionParams, (MetaTransaction[]));
+    /// @param payload The encoded transactions to execute.
+    function _execute(bytes memory payload) internal {
+        MetaTransaction[] memory transactions = abi.decode(payload, (MetaTransaction[]));
         for (uint256 i = 0; i < transactions.length; i++) {
             bool success = IAvatar(target).execTransactionFromModule(
                 transactions[i].to,

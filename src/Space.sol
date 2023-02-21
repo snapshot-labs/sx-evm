@@ -435,6 +435,7 @@ contract Space is ISpace, Ownable, ReentrancyGuard {
         uint32 minEndTimestamp = startTimestamp + minVotingDuration;
         uint32 maxEndTimestamp = startTimestamp + maxVotingDuration;
 
+        // The execution payload is the params of the supplied execution strategy struct. 
         bytes32 executionPayloadHash = keccak256(executionStrategy.params);
 
         Proposal memory proposal = Proposal(

@@ -9,7 +9,7 @@ interface ISpaceEvents {
         address proposerAddress,
         Proposal proposal,
         string metadataUri,
-        bytes executionParams
+        bytes payload
     );
     event VoteCreated(uint256 proposalId, address voterAddress, Vote vote);
     event ProposalExecuted(uint256 proposalId);
