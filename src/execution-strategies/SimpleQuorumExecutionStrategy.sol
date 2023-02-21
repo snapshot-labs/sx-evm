@@ -3,6 +3,7 @@
 pragma solidity ^0.8.15;
 
 import "../interfaces/IExecutionStrategy.sol";
+import "forge-std/console2.sol";
 
 abstract contract SimpleQuorumExecutionStrategy is IExecutionStrategy {
     function execute(
@@ -21,7 +22,8 @@ abstract contract SimpleQuorumExecutionStrategy is IExecutionStrategy {
         uint256 votesAgainst,
         uint256 votesAbstain
     ) public view override returns (ProposalStatus) {
-        // Decode the quorum parameter from the execution strategy's params
+        // Decode the quorum parameter from the execution strategy's params\
+        console2.logBytes(params);
         uint256 quorum = abi.decode(params, (uint256));
         bool accepted = _quorumReached(quorum, votesFor, votesAgainst, votesAbstain) &&
             _supported(votesFor, votesAgainst);

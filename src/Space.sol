@@ -413,7 +413,7 @@ contract Space is ISpace, Ownable, ReentrancyGuard {
      * @notice  Create a proposal.
      * @param   proposerAddress  The address of the proposal creator.
      * @param   metadataUri  The metadata URI for the proposal.
-     * @param   executionStrategy  The execution strategy index and associated execution payload to use for this proposal.
+     * @param   executionStrategy  The execution strategy index and associated execution payload to use in the proposal.
      * @param   userVotingStrategies  The voting strategies indexes to use and the associated parameters for each.
      */
     function propose(
@@ -500,13 +500,13 @@ contract Space is ISpace, Ownable, ReentrancyGuard {
      * @param   proposalId  The proposal id.
      * @param   executionPayload  The execution payload, as described in `propose()`.
      */
-    function execute(uint256 proposalId, bytes calldata executionPayload) external nonReentrant() {
+    function execute(uint256 proposalId, bytes calldata executionPayload) external nonReentrant {
         Proposal storage proposal = proposalRegistry[proposalId];
         _assertProposalExists(proposal);
 
         // We add reentrancy protection here to prevent this function being re-entered by the execution strategy.
         // We cannot use the Checks-Effects-Interactions pattern because the proposal status is checked inside
-        // the execution strategy (so essentially forced to do Checks-Interactions-Effects). 
+        // the execution strategy (so essentially forced to do Checks-Interactions-Effects).
         IExecutionStrategy(proposal.executionStrategy.addy).execute(
             proposal,
             votePower[proposalId][Choice.For],

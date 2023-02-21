@@ -3,8 +3,9 @@
 pragma solidity ^0.8.15;
 
 import "../types.sol";
+import "./execution-strategies/IExecutionStrategyErrors.sol";
 
-interface IExecutionStrategy {
+interface IExecutionStrategy is IExecutionStrategyErrors {
     function execute(
         Proposal memory proposal,
         uint256 votesFor,
