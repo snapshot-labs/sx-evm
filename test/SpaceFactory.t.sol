@@ -27,6 +27,8 @@ contract SpaceFactoryTest is Test, ISpaceFactoryEvents, ISpaceFactoryErrors {
     uint256 public proposalThreshold;
     uint32 public quorum;
 
+    string metadataUri = "SX-EVM";
+
     function setUp() public {
         factory = new SpaceFactory();
 
@@ -68,6 +70,7 @@ contract SpaceFactoryTest is Test, ISpaceFactoryEvents, ISpaceFactoryErrors {
             minVotingDuration,
             maxVotingDuration,
             proposalThreshold,
+            metadataUri,
             votingStrategies,
             authenticators,
             executionStrategies
@@ -79,6 +82,7 @@ contract SpaceFactoryTest is Test, ISpaceFactoryEvents, ISpaceFactoryErrors {
             minVotingDuration,
             maxVotingDuration,
             proposalThreshold,
+            metadataUri,
             votingStrategies,
             authenticators,
             executionStrategies,
@@ -95,6 +99,7 @@ contract SpaceFactoryTest is Test, ISpaceFactoryEvents, ISpaceFactoryErrors {
             minVotingDuration,
             maxVotingDuration,
             proposalThreshold,
+            metadataUri,
             votingStrategies,
             authenticators,
             executionStrategies,
@@ -110,6 +115,7 @@ contract SpaceFactoryTest is Test, ISpaceFactoryEvents, ISpaceFactoryErrors {
             minVotingDuration,
             maxVotingDuration,
             proposalThreshold,
+            metadataUri,
             votingStrategies,
             authenticators,
             executionStrategies,
