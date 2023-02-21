@@ -91,9 +91,7 @@ abstract contract SigUtils {
                         authenticator
                     )
                 ),
-                keccak256(
-                    abi.encode(VOTE_TYPEHASH, space, voter, proposalId, choice, usedVotingStrategies.hash())
-                )
+                keccak256(abi.encode(VOTE_TYPEHASH, space, voter, proposalId, choice, usedVotingStrategies.hash()))
             )
         );
 
