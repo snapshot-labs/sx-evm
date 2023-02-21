@@ -54,6 +54,8 @@ abstract contract SpaceTest is Test, GasSnapshot, ISpaceEvents, ISpaceErrors {
 
     string public proposalMetadataUri = "SOC Test Proposal";
 
+    bytes[] public data;
+
     function setUp() public virtual {
         vanillaVotingStrategy = new VanillaVotingStrategy();
         vanillaAuthenticator = new VanillaAuthenticator();
@@ -78,6 +80,7 @@ abstract contract SpaceTest is Test, GasSnapshot, ISpaceEvents, ISpaceErrors {
             proposalThreshold,
             quorum,
             votingStrategies,
+            data,
             authenticators,
             executionStrategies
         );

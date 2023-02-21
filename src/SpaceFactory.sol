@@ -21,6 +21,7 @@ contract SpaceFactory is ISpaceFactory {
         uint256 quorum,
         string calldata metadataUri,
         Strategy[] calldata votingStrategies,
+        bytes[] calldata data,
         address[] calldata authenticators,
         address[] calldata executionStrategies,
         bytes32 salt
@@ -34,6 +35,7 @@ contract SpaceFactory is ISpaceFactory {
                 proposalThreshold,
                 quorum,
                 votingStrategies,
+                data,
                 authenticators,
                 executionStrategies
             )
@@ -48,6 +50,7 @@ contract SpaceFactory is ISpaceFactory {
                 quorum,
                 metadataUri,
                 votingStrategies,
+                data,
                 authenticators,
                 executionStrategies
             );

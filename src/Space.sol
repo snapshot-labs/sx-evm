@@ -59,6 +59,7 @@ contract Space is ISpace, Ownable {
         uint256 _proposalThreshold,
         uint256 _quorum,
         Strategy[] memory _votingStrategies,
+        bytes[] memory, // data
         address[] memory _authenticators,
         address[] memory _executionStrategies
     ) {
@@ -339,9 +340,12 @@ contract Space is ISpace, Ownable {
         emit VotingDelayUpdated(_votingDelay);
     }
 
-    function addVotingStrategies(Strategy[] calldata _votingStrategies) external override onlyOwner {
+    function addVotingStrategies(
+        Strategy[] calldata _votingStrategies,
+        bytes[] calldata data
+    ) external override onlyOwner {
         _addVotingStrategies(_votingStrategies);
-        emit VotingStrategiesAdded(_votingStrategies);
+        emit VotingStrategiesAdded(_votingStrategies, data);
     }
 
     function removeVotingStrategies(uint8[] calldata _votingStrategyIndices) external override onlyOwner {

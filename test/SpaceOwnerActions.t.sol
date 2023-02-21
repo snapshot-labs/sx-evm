@@ -189,13 +189,15 @@ contract SpaceOwnerActionsTest is SpaceTest {
         uint8[] memory newIndices = new uint8[](1);
         newIndices[0] = 1;
 
+        bytes[] memory data = new bytes[](0);
+
         IndexedStrategy[] memory newUserVotingStrategies = new IndexedStrategy[](1);
         newUserVotingStrategies[0] = IndexedStrategy(newIndices[0], new bytes(0));
 
         vm.expectEmit(true, true, true, true);
-        emit VotingStrategiesAdded(newVotingStrategies);
+        emit VotingStrategiesAdded(newVotingStrategies, data);
         vm.prank(owner);
-        space.addVotingStrategies(newVotingStrategies);
+        space.addVotingStrategies(newVotingStrategies, data);
 
         // Try creating a proposal using these new strategies.
         _createProposal(author, proposalMetadataUri, executionStrategy, newUserVotingStrategies);
@@ -216,7 +218,9 @@ contract SpaceOwnerActionsTest is SpaceTest {
     function testAddVotingStrategiesUnauthorized() public {
         vm.expectRevert("Ownable: caller is not the owner");
         vm.prank(unauthorized);
-        space.addVotingStrategies(votingStrategies);
+        bytes[] memory newData = new bytes[](0);
+
+        space.addVotingStrategies(votingStrategies, newData);
     }
 
     function testRemoveVotingStrategiesUnauthorized() public {

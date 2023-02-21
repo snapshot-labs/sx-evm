@@ -27,6 +27,8 @@ contract SpaceFactoryTest is Test, ISpaceFactoryEvents, ISpaceFactoryErrors {
     uint256 public proposalThreshold;
     uint32 public quorum;
 
+    bytes[] data;
+
     string metadataUri = "SX-EVM";
 
     function setUp() public {
@@ -58,6 +60,7 @@ contract SpaceFactoryTest is Test, ISpaceFactoryEvents, ISpaceFactoryErrors {
             proposalThreshold,
             quorum,
             votingStrategies,
+            data,
             authenticators,
             executionStrategies,
             salt
@@ -74,6 +77,7 @@ contract SpaceFactoryTest is Test, ISpaceFactoryEvents, ISpaceFactoryErrors {
             quorum,
             metadataUri,
             votingStrategies,
+            data,
             authenticators,
             executionStrategies
         );
@@ -87,6 +91,7 @@ contract SpaceFactoryTest is Test, ISpaceFactoryEvents, ISpaceFactoryErrors {
             quorum,
             metadataUri,
             votingStrategies,
+            data,
             authenticators,
             executionStrategies,
             salt
@@ -105,6 +110,7 @@ contract SpaceFactoryTest is Test, ISpaceFactoryEvents, ISpaceFactoryErrors {
             quorum,
             metadataUri,
             votingStrategies,
+            data,
             authenticators,
             executionStrategies,
             salt
@@ -122,6 +128,7 @@ contract SpaceFactoryTest is Test, ISpaceFactoryEvents, ISpaceFactoryErrors {
             quorum,
             metadataUri,
             votingStrategies,
+            data,
             authenticators,
             executionStrategies,
             salt
@@ -136,6 +143,7 @@ contract SpaceFactoryTest is Test, ISpaceFactoryEvents, ISpaceFactoryErrors {
         uint256 _proposalThreshold,
         uint256 _quorum,
         Strategy[] memory _votingStrategies,
+        bytes[] memory _data,
         address[] memory _authenticators,
         address[] memory _executionStrategies,
         bytes32 salt
@@ -160,6 +168,7 @@ contract SpaceFactoryTest is Test, ISpaceFactoryEvents, ISpaceFactoryErrors {
                                             _proposalThreshold,
                                             _quorum,
                                             _votingStrategies,
+                                            _data,
                                             _authenticators,
                                             _executionStrategies
                                         )

@@ -15,6 +15,7 @@ interface ISpaceFactoryEvents {
         uint256 quorum,
         string metadataUri,
         Strategy[] votingStrategies,
+        bytes[] data,
         address[] authenticators,
         address[] executionStrategiesAddresses
     );
