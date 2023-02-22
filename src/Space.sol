@@ -540,16 +540,26 @@ contract Space is ISpace, Ownable {
     /**
      * @notice  Updates the proposal metadata. Will only work if voting has not started yet, i.e `voting_delay`
                 has not elapsed yet.
-     * @param   proposalId  The id of the proposal to edit
-     * @param   metadataUri The new metadata
+     * @param   proposalId          The id of the proposal to edit
+     * @param   executionStrategy   The new strategy to use
+     * @param   metadataUri         The new metadata
      */
-    function updateProposalMetadata(address proposerAddress, uint256 proposalId, string calldata metadataUri) external {
+    function updateProposal(
+        address proposerAddress,
+        uint256 proposalId,
+        Strategy calldata executionStrategy,
+        string calldata metadataUri
+    ) external {
         _assertValidAuthenticator();
+        _assertValidExecutionStrategy(executionStrategy.addy);
 
-        Proposal memory proposal = proposalRegistry[proposalId];
+        Proposal storage proposal = proposalRegistry[proposalId];
         if (proposerAddress != proposal.proposer) revert InvalidCaller();
         if (block.timestamp >= proposal.startTimestamp) revert VotingDelayHasPassed();
 
-        emit ProposalMetadataUpdated(proposalId, metadataUri);
+        proposal.executionHash = keccak256(executionStrategy.params);
+        proposal.executionStrategy = executionStrategy.addy;
+
+        emit ProposalUpdated(proposalId, executionStrategy, metadataUri);
     }
 }

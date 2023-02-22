@@ -21,5 +21,10 @@ interface ISpaceActions {
 
     function execute(uint256 proposalId, bytes calldata executionParams) external;
 
-    function updateProposalMetadata(address proposerAddress, uint256 proposalId, string calldata metadataUri) external;
+    function updateProposal(
+        address proposerAddress,
+        uint256 proposalId,
+        Strategy calldata executionStrategy,
+        string calldata metadataUri
+    ) external;
 }

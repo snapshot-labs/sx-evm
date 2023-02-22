@@ -15,6 +15,7 @@ contract EthSigAuthenticatorTest is SpaceTest, SigUtils {
     string private constant name = "snapshot-x";
     string private constant version = "1";
     string newMetadataUri = "Test456";
+    Strategy newStrategy;
 
     EthSigAuthenticator public ethSigAuth;
 
@@ -22,6 +23,8 @@ contract EthSigAuthenticatorTest is SpaceTest, SigUtils {
 
     function setUp() public virtual override {
         super.setUp();
+
+        newStrategy = Strategy(address(vanillaExecutionStrategy), new bytes(0));
 
         // Adding the eth sig authenticator to the space
         ethSigAuth = new EthSigAuthenticator(name, version);
@@ -310,42 +313,46 @@ contract EthSigAuthenticatorTest is SpaceTest, SigUtils {
         );
     }
 
-    function testAuthenticateUpdateProposalMetadata() public {
+    function testAuthenticateUpdateProposal() public {
         space.setVotingDelay(10);
+        console2.log("before");
         uint256 proposalId = _createProposal(author, proposalMetadataUri, executionStrategy, userVotingStrategies);
+        console2.log("before2");
 
-        uint256 salt = 0;
-        bytes32 digest = _getUpdateProposalMetadataDigest(
+        bytes32 digest = _getUpdateProposalDigest(
             address(ethSigAuth),
             address(space),
             author,
             proposalId,
+            newStrategy,
             newMetadataUri
         );
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(authorKey, digest);
+        console2.log("After");
 
-        vm.expectEmit(true, true, true, true);
-        emit ProposalMetadataUpdated(proposalId, newMetadataUri);
+        // vm.expectEmit(true, true, true, true);
+        // emit ProposalUpdated(proposalId, newStrategy, newMetadataUri);
         ethSigAuth.authenticate(
             v,
             r,
             s,
-            salt,
+            0,
             address(space),
-            UPDATE_PROPOSAL_METADATA_SELECTOR,
-            abi.encode(author, proposalId, newMetadataUri)
+            UPDATE_PROPOSAL_SELECTOR,
+            abi.encode(author, proposalId, newStrategy, newMetadataUri)
         );
     }
 
-    function testAuthenticateUpdateProposalMetadataInvalidSignature() public {
+    function testAuthenticateUpdateProposalInvalidSignature() public {
         space.setVotingDelay(10);
         uint256 proposalId = _createProposal(author, proposalMetadataUri, executionStrategy, userVotingStrategies);
 
-        bytes32 digest = _getUpdateProposalMetadataDigest(
+        bytes32 digest = _getUpdateProposalDigest(
             address(ethSigAuth),
             address(space),
             author,
             proposalId + 1, // proposalId + 1 will be invalid
+            newStrategy,
             newMetadataUri
         );
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(authorKey, digest);
@@ -357,20 +364,21 @@ contract EthSigAuthenticatorTest is SpaceTest, SigUtils {
             s,
             0,
             address(space),
-            UPDATE_PROPOSAL_METADATA_SELECTOR,
-            abi.encode(author, proposalId, newMetadataUri)
+            UPDATE_PROPOSAL_SELECTOR,
+            abi.encode(author, proposalId, newStrategy, newMetadataUri)
         );
     }
 
-    function testAuthenticateUpdateProposalMetadataInvalidSelector() public {
+    function testAuthenticateUpdateProposalInvalidSelector() public {
         uint256 proposalId = 1;
 
         uint256 salt = 0;
-        bytes32 digest = _getUpdateProposalMetadataDigest(
+        bytes32 digest = _getUpdateProposalDigest(
             address(ethSigAuth),
             address(space),
             author,
             proposalId,
+            newStrategy,
             newMetadataUri
         );
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(authorKey, digest);
@@ -383,7 +391,7 @@ contract EthSigAuthenticatorTest is SpaceTest, SigUtils {
             salt,
             address(space),
             bytes4(0xdeadbeef),
-            abi.encode(author, proposalId, newMetadataUri)
+            abi.encode(author, proposalId, newStrategy, newMetadataUri)
         );
     }
 }

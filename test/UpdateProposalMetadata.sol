@@ -5,33 +5,41 @@ pragma solidity ^0.8.15;
 import "./utils/Space.t.sol";
 import "../src/types.sol";
 
-contract UpdateProposalMetadataTest is SpaceTest {
+contract updateProposalTest is SpaceTest {
     string newMetadataUri = "Testing123";
+    Strategy newStrategy;
 
     function setUp() public virtual override {
         super.setUp();
+
+        newStrategy = Strategy(address(vanillaExecutionStrategy), new bytes(0));
 
         // Set the votingDelay to 10.
         votingDelay = 10;
         space.setVotingDelay(votingDelay);
     }
 
-    function _updateProposalMetadata(address _author, uint256 _proposalId, string memory _metadataUri) public {
+    function _updateProposal(
+        address _author,
+        uint256 _proposalId,
+        Strategy memory _executionStrategy,
+        string memory _metadataUri
+    ) public {
         vanillaAuthenticator.authenticate(
             address(space),
-            UPDATE_PROPOSAL_METADATA_SELECTOR,
-            abi.encode(_author, _proposalId, _metadataUri)
+            UPDATE_PROPOSAL_SELECTOR,
+            abi.encode(_author, _proposalId, _executionStrategy, _metadataUri)
         );
     }
 
-    function testUpdateProposalMetadata() public {
+    function testUpdateProposal() public {
         uint256 proposalId = _createProposal(author, proposalMetadataUri, executionStrategy, userVotingStrategies);
 
         vm.expectEmit(true, true, true, true);
-        emit ProposalMetadataUpdated(proposalId, newMetadataUri);
+        emit ProposalUpdated(proposalId, newStrategy, newMetadataUri);
 
         // Update metadata.
-        _updateProposalMetadata(author, proposalId, newMetadataUri);
+        _updateProposal(author, proposalId, newStrategy, newMetadataUri);
 
         // Fast forward and finish the proposal to ensure everything is still working properly.
         vm.warp(block.timestamp + votingDelay);
@@ -39,26 +47,26 @@ contract UpdateProposalMetadataTest is SpaceTest {
         space.execute(proposalId, executionStrategy.params);
     }
 
-    function testUpdateProposalMetadataAfterDelay() public {
+    function testUpdateProposalAfterDelay() public {
         uint256 proposalId = _createProposal(author, proposalMetadataUri, executionStrategy, userVotingStrategies);
         vm.warp(block.timestamp + votingDelay);
 
         vm.expectRevert(VotingDelayHasPassed.selector);
         // Try to update metadata. Should fail.
-        _updateProposalMetadata(author, proposalId, newMetadataUri);
+        _updateProposal(author, proposalId, newStrategy, newMetadataUri);
     }
 
-    function testUpdateProposalMetadataInvalidCaller() public {
+    function testUpdateProposalInvalidCaller() public {
         uint256 proposalId = _createProposal(author, proposalMetadataUri, executionStrategy, userVotingStrategies);
 
         vm.expectRevert(InvalidCaller.selector);
-        _updateProposalMetadata(address(42), proposalId, newMetadataUri);
+        _updateProposal(address(42), proposalId, newStrategy, newMetadataUri);
     }
 
-    function testUpdateProposalMetadataUnauthenticated() public {
+    function testUpdateProposalUnauthenticated() public {
         uint256 proposalId = _createProposal(author, proposalMetadataUri, executionStrategy, userVotingStrategies);
 
         vm.expectRevert(abi.encodeWithSelector(AuthenticatorNotWhitelisted.selector, address(this)));
-        space.updateProposalMetadata(author, proposalId, newMetadataUri);
+        space.updateProposal(author, proposalId, newStrategy, newMetadataUri);
     }
 }

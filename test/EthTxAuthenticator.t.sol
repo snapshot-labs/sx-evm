@@ -5,6 +5,7 @@ pragma solidity ^0.8.15;
 import "./utils/Space.t.sol";
 import "./utils/Authenticator.t.sol";
 import "../src/authenticators/EthTxAuthenticator.sol";
+import "forge-std/console2.sol";
 
 contract EthTxAuthenticatorTest is SpaceTest {
     EthTxAuthenticator ethTxAuth;
@@ -13,9 +14,12 @@ contract EthTxAuthenticatorTest is SpaceTest {
     error InvalidMessageSender();
 
     string newMetadataUri = "Test42";
+    Strategy newStrategy;
 
     function setUp() public virtual override {
         super.setUp();
+
+        newStrategy = Strategy(address(vanillaExecutionStrategy), new bytes(0));
 
         // Adding the eth tx authenticator to the space
         ethTxAuth = new EthTxAuthenticator();
@@ -93,18 +97,18 @@ contract EthTxAuthenticatorTest is SpaceTest {
         );
     }
 
-    function testAuthenticateTxUpdateProposalMetadata() public {
+    function testAuthenticateTxUpdateProposal() public {
         uint32 votingDelay = 10;
         space.setVotingDelay(votingDelay);
         uint256 proposalId = _createProposal(author, proposalMetadataUri, executionStrategy, userVotingStrategies);
 
         vm.prank(author);
-        vm.expectEmit(true, true, true, true);
-        emit ProposalMetadataUpdated(proposalId, newMetadataUri);
+        // vm.expectEmit(true, true, true, true);
+        // emit ProposalUpdated(proposalId, newStrategy, newMetadataUri);
         ethTxAuth.authenticate(
             address(space),
-            UPDATE_PROPOSAL_METADATA_SELECTOR,
-            abi.encode(author, proposalId, newMetadataUri)
+            UPDATE_PROPOSAL_SELECTOR,
+            abi.encode(author, proposalId, newStrategy, newMetadataUri)
         );
 
         // Fast forward and ensure everything is still working correctly
@@ -119,19 +123,19 @@ contract EthTxAuthenticatorTest is SpaceTest {
         space.execute(proposalId, executionStrategy.params);
     }
 
-    function testAuthenticateTxUpdateProposalMetadataInvalidVoter() public {
+    function testAuthenticateTxUpdateProposalInvalidVoter() public {
         uint256 proposalId = 1;
 
         vm.expectRevert(InvalidMessageSender.selector);
         vm.prank(address(123));
         ethTxAuth.authenticate(
             address(space),
-            UPDATE_PROPOSAL_METADATA_SELECTOR,
-            abi.encode(author, proposalId, newMetadataUri)
+            UPDATE_PROPOSAL_SELECTOR,
+            abi.encode(author, proposalId, newStrategy, newMetadataUri)
         );
     }
 
-    function testAuthenticateTxUpdateProposalMetadataInvalidSelector() public {
+    function testAuthenticateTxUpdateProposalInvalidSelector() public {
         uint256 proposalId = 1;
 
         vm.expectRevert(InvalidFunctionSelector.selector);

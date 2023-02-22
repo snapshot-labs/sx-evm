@@ -34,8 +34,8 @@ contract EthTxAuthenticator is Authenticator {
         if (voter != msg.sender) revert InvalidMessageSender();
     }
 
-    function _verifyUpdateProposalMetadata(bytes calldata data) internal view {
-        (address proposer, , ) = abi.decode(data, (address, uint256, string));
+    function _verifyUpdateProposal(bytes calldata data) internal view {
+        (address proposer, , , ) = abi.decode(data, (address, uint256, Strategy, string));
         if (proposer != msg.sender) revert InvalidMessageSender();
     }
 
@@ -44,8 +44,8 @@ contract EthTxAuthenticator is Authenticator {
             _verifyPropose(data);
         } else if (functionSelector == VOTE_SELECTOR) {
             _verifyVote(data);
-        } else if (functionSelector == UPDATE_PROPOSAL_METADATA_SELECTOR) {
-            _verifyUpdateProposalMetadata(data);
+        } else if (functionSelector == UPDATE_PROPOSAL_SELECTOR) {
+            _verifyUpdateProposal(data);
         } else {
             revert InvalidFunctionSelector();
         }
