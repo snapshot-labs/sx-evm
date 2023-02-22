@@ -28,7 +28,7 @@ contract EthTxAuthenticatorTest is SpaceTest {
         ethTxAuth.authenticate(
             address(space),
             PROPOSE_SELECTOR,
-            abi.encode(author, proposalMetadataUri, executionStrategy, userVotingStrategies)
+            abi.encode(author, proposalMetadataUri, executionStrategy, userVotingStrategies, reason)
         );
         snapEnd();
     }
@@ -39,7 +39,7 @@ contract EthTxAuthenticatorTest is SpaceTest {
         ethTxAuth.authenticate(
             address(space),
             PROPOSE_SELECTOR,
-            abi.encode(author, proposalMetadataUri, executionStrategy, userVotingStrategies)
+            abi.encode(author, proposalMetadataUri, executionStrategy, userVotingStrategies, reason)
         );
     }
 
@@ -49,7 +49,7 @@ contract EthTxAuthenticatorTest is SpaceTest {
         ethTxAuth.authenticate(
             address(space),
             bytes4(0xdeadbeef),
-            abi.encode(author, proposalMetadataUri, executionStrategy, userVotingStrategies)
+            abi.encode(author, proposalMetadataUri, executionStrategy, userVotingStrategies, reason)
         );
     }
 
@@ -62,7 +62,7 @@ contract EthTxAuthenticatorTest is SpaceTest {
         ethTxAuth.authenticate(
             address(space),
             VOTE_SELECTOR,
-            abi.encode(voter, proposalId, Choice.For, userVotingStrategies)
+            abi.encode(voter, proposalId, Choice.For, userVotingStrategies, reason)
         );
         snapEnd();
     }
@@ -75,7 +75,7 @@ contract EthTxAuthenticatorTest is SpaceTest {
         ethTxAuth.authenticate(
             address(space),
             VOTE_SELECTOR,
-            abi.encode(voter, proposalId, Choice.For, userVotingStrategies)
+            abi.encode(voter, proposalId, Choice.For, userVotingStrategies, reason)
         );
     }
 
@@ -87,7 +87,7 @@ contract EthTxAuthenticatorTest is SpaceTest {
         ethTxAuth.authenticate(
             address(space),
             bytes4(0xdeadbeef),
-            abi.encode(voter, proposalId, Choice.For, userVotingStrategies)
+            abi.encode(voter, proposalId, Choice.For, userVotingStrategies, reason)
         );
     }
 }

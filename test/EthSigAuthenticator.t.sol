@@ -167,7 +167,7 @@ contract EthSigAuthenticatorTest is SpaceTest, SigUtils {
         );
     }
 
-    function testAuthenticateVote() public {
+    function testAuthenticateVoteWorks() public {
         // Creating demo proposal using vanilla authenticator (both vanilla and eth sig authenticators are whitelisted)
         uint256 proposalId = _createProposal(author, proposalMetadataUri, executionStrategy, userVotingStrategies);
 
@@ -177,7 +177,8 @@ contract EthSigAuthenticatorTest is SpaceTest, SigUtils {
             voter,
             proposalId,
             Choice.For,
-            userVotingStrategies
+            userVotingStrategies,
+            reason
         );
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(voterKey, digest);
 
@@ -204,7 +205,8 @@ contract EthSigAuthenticatorTest is SpaceTest, SigUtils {
             voter,
             proposalId,
             Choice.For,
-            userVotingStrategies
+            userVotingStrategies,
+            reason
         );
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(unauthorizedKey, digest);
 
@@ -216,7 +218,7 @@ contract EthSigAuthenticatorTest is SpaceTest, SigUtils {
             salt,
             address(space),
             VOTE_SELECTOR,
-            abi.encode(voter, proposalId, Choice.For, userVotingStrategies)
+            abi.encode(voter, proposalId, Choice.For, userVotingStrategies, reason)
         );
     }
 
@@ -231,7 +233,8 @@ contract EthSigAuthenticatorTest is SpaceTest, SigUtils {
             voter,
             proposalId,
             Choice.Against,
-            userVotingStrategies
+            userVotingStrategies,
+            reason
         );
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(voterKey, digest);
 
@@ -243,7 +246,7 @@ contract EthSigAuthenticatorTest is SpaceTest, SigUtils {
             salt,
             address(space),
             VOTE_SELECTOR,
-            abi.encode(voter, proposalId, Choice.For, userVotingStrategies)
+            abi.encode(voter, proposalId, Choice.For, userVotingStrategies, reason)
         );
     }
 
@@ -257,7 +260,8 @@ contract EthSigAuthenticatorTest is SpaceTest, SigUtils {
             voter,
             proposalId,
             Choice.For,
-            userVotingStrategies
+            userVotingStrategies,
+            reason
         );
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(voterKey, digest);
 
@@ -268,7 +272,7 @@ contract EthSigAuthenticatorTest is SpaceTest, SigUtils {
             salt,
             address(space),
             VOTE_SELECTOR,
-            abi.encode(voter, proposalId, Choice.For, userVotingStrategies)
+            abi.encode(voter, proposalId, Choice.For, userVotingStrategies, reason)
         );
 
         vm.expectRevert(UserHasAlreadyVoted.selector);
@@ -279,7 +283,7 @@ contract EthSigAuthenticatorTest is SpaceTest, SigUtils {
             salt,
             address(space),
             VOTE_SELECTOR,
-            abi.encode(voter, proposalId, Choice.For, userVotingStrategies)
+            abi.encode(voter, proposalId, Choice.For, userVotingStrategies, reason)
         );
     }
 
@@ -293,7 +297,8 @@ contract EthSigAuthenticatorTest is SpaceTest, SigUtils {
             voter,
             proposalId,
             Choice.For,
-            userVotingStrategies
+            userVotingStrategies,
+            reason
         );
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(voterKey, digest);
 
@@ -305,7 +310,7 @@ contract EthSigAuthenticatorTest is SpaceTest, SigUtils {
             salt,
             address(space),
             bytes4(0xdeadbeef),
-            abi.encode(voter, proposalId, Choice.For, userVotingStrategies)
+            abi.encode(voter, proposalId, Choice.For, userVotingStrategies, reason)
         );
     }
 }

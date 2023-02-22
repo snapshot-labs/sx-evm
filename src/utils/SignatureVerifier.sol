@@ -6,6 +6,7 @@ import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import "@openzeppelin/contracts/utils/cryptography/EIP712.sol";
 import "src/types.sol";
 import { SXHash } from "src/utils/SXHash.sol";
+import "forge-std/console2.sol";
 
 abstract contract SignatureVerifier is EIP712 {
     using SXHash for Strategy;
@@ -68,14 +69,19 @@ abstract contract SignatureVerifier is EIP712 {
     }
 
     function _verifyVoteSig(uint8 v, bytes32 r, bytes32 s, address space, bytes memory data) internal view {
-        (address voter, uint256 proposeId, Choice choice, IndexedStrategy[] memory userVotingStrategies) = abi.decode(
-            data,
-            (address, uint256, Choice, IndexedStrategy[])
-        );
+        (
+            address voter,
+            uint256 proposeId,
+            Choice choice,
+            IndexedStrategy[] memory userVotingStrategies,
+            string memory reason
+        ) = abi.decode(data, (address, uint256, Choice, IndexedStrategy[], string));
 
         address recoveredAddress = ECDSA.recover(
             _hashTypedDataV4(
-                keccak256(abi.encode(VOTE_TYPEHASH, space, voter, proposeId, choice, userVotingStrategies.hash()))
+                keccak256(
+                    abi.encode(VOTE_TYPEHASH, space, voter, proposeId, choice, userVotingStrategies.hash(), reason)
+                )
             ),
             v,
             r,

@@ -15,7 +15,7 @@ import "../../src/types.sol";
 
 abstract contract SpaceTest is Test, GasSnapshot, ISpaceEvents, ISpaceErrors {
     bytes4 constant PROPOSE_SELECTOR = bytes4(keccak256("propose(address,string,(address,bytes),(uint8,bytes)[])"));
-    bytes4 constant VOTE_SELECTOR = bytes4(keccak256("vote(address,uint256,uint8,(uint8,bytes)[])"));
+    bytes4 constant VOTE_SELECTOR = bytes4(keccak256("vote(address,uint256,uint8,(uint8,bytes)[],string)"));
 
     Space space;
     VanillaVotingStrategy vanillaVotingStrategy;
@@ -25,6 +25,8 @@ abstract contract SpaceTest is Test, GasSnapshot, ISpaceEvents, ISpaceErrors {
     uint256 public constant authorKey = 1234;
     uint256 public constant voterKey = 5678;
     uint256 public constant unauthorizedKey = 4321;
+
+    string reason = "Hi";
 
     // Address of the meta transaction relayer (mana)
     address public relayer = address(this);
@@ -102,12 +104,13 @@ abstract contract SpaceTest is Test, GasSnapshot, ISpaceEvents, ISpaceErrors {
         address _author,
         uint256 _proposalId,
         Choice _choice,
-        IndexedStrategy[] memory _userVotingStrategies
+        IndexedStrategy[] memory _userVotingStrategies,
+        string memory _reason
     ) internal {
         vanillaAuthenticator.authenticate(
             address(space),
             VOTE_SELECTOR,
-            abi.encode(_author, _proposalId, _choice, _userVotingStrategies)
+            abi.encode(_author, _proposalId, _choice, _userVotingStrategies, _reason)
         );
     }
 }
