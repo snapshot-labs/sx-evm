@@ -211,6 +211,10 @@ contract Space is ISpace, Ownable {
      * @param   strats  Array to check for duplicates.
      */
     function _assertNoDuplicateIndices(IndexedStrategy[] memory strats) internal {
+        if (strats.length < 2) {
+            return;
+        }
+
         uint256 bitMap;
         for (uint256 i = 0; i < strats.length; ++i) {
             // Check that bit at index `strats[i].index` is not set
