@@ -22,9 +22,9 @@ contract EthSigAuthenticator is Authenticator, SignatureVerifier {
         if (functionSelector == PROPOSE_SELECTOR) {
             _verifyProposeSig(v, r, s, salt, target, data);
         } else if (functionSelector == VOTE_SELECTOR) {
-            _verifyVoteSig(v, r, s, salt, target, data);
+            _verifyVoteSig(v, r, s, target, data);
         } else if (functionSelector == UPDATE_PROPOSAL_METADATA_SELECTOR) {
-            _verifyUpdateProposalMetadataSig(v, r, s, salt, target, data);
+            _verifyUpdateProposalMetadataSig(v, r, s, target, data);
         } else {
             revert InvalidFunctionSelector();
         }
