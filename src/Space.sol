@@ -169,12 +169,12 @@ contract Space is ISpace, Ownable, ReentrancyGuard {
 
     /**
      * @notice  Internal function to remove execution strategies.
-     * @param   _executionStrategyIndicies  Indices of the strategies to remove
+     * @param   _executionStrategyIndices  Indices of the strategies to remove
      */
-    function _removeExecutionStrategies(uint8[] memory _executionStrategyIndicies) internal {
-        if (_executionStrategyIndicies.length == 0) revert EmptyArray();
-        for (uint8 i = 0; i < _executionStrategyIndicies.length; i++) {
-            executionStrategies[_executionStrategyIndicies[i]] = Strategy(address(0), new bytes(0));
+    function _removeExecutionStrategies(uint8[] memory _executionStrategyIndices) internal {
+        if (_executionStrategyIndices.length == 0) revert EmptyArray();
+        for (uint8 i = 0; i < _executionStrategyIndices.length; i++) {
+            executionStrategies[_executionStrategyIndices[i]] = Strategy(address(0), new bytes(0));
         }
     }
 
