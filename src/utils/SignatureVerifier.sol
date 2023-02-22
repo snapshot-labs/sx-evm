@@ -29,7 +29,8 @@ abstract contract SignatureVerifier is EIP712 {
         );
     bytes32 private constant UPDATE_PROPOSAL_TYPEHASH =
         keccak256(
-            "updateProposal(address space,address proposer,uint256 proposalId,Strategy executionStrategy,string metadataUri)"
+            "updateProposal(address space,address proposer,uint256 proposalId,"
+            "Strategy executionStrategy,string metadataUri)"
         );
 
     mapping(address => mapping(uint256 => bool)) private usedSalts;

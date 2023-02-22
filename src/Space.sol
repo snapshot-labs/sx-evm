@@ -544,8 +544,8 @@ contract Space is ISpace, Ownable {
     }
 
     /**
-     * @notice  Updates the proposal executionStrategy and metadata. Will only work if voting has not started yet, i.e `voting_delay`
-                has not elapsed yet.
+     * @notice  Updates the proposal executionStrategy and metadata. Will only work if voting has 
+                not started yet, i.e `voting_delay` has not elapsed yet.
      * @param   proposalId          The id of the proposal to edit
      * @param   executionStrategy   The new strategy to use
      * @param   metadataUri         The new metadata

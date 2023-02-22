@@ -29,7 +29,8 @@ abstract contract SigUtils {
         );
     bytes32 private constant UPDATE_PROPOSAL_TYPEHASH =
         keccak256(
-            "updateProposal(address space,address proposer,uint256 proposalId,Strategy executionStrategy,string metadataUri)"
+            "updateProposal(address space,address proposer,uint256 proposalId,"
+            "Strategy executionStrategy,string metadataUri)"
         );
 
     constructor(string memory _name, string memory _version) {
