@@ -175,7 +175,6 @@ contract Space is ISpace, Ownable, ReentrancyGuard {
         if (_executionStrategyIndicies.length == 0) revert EmptyArray();
         for (uint8 i = 0; i < _executionStrategyIndicies.length; i++) {
             executionStrategies[_executionStrategyIndicies[i]] = Strategy(address(0), new bytes(0));
-
         }
     }
 
@@ -395,7 +394,6 @@ contract Space is ISpace, Ownable, ReentrancyGuard {
         return
             IExecutionStrategy(proposal.executionStrategy.addy).getProposalStatus(
                 proposal,
-                proposal.executionStrategy.params,
                 votePower[proposalId][Choice.For],
                 votePower[proposalId][Choice.Against],
                 votePower[proposalId][Choice.Abstain]
@@ -519,7 +517,6 @@ contract Space is ISpace, Ownable, ReentrancyGuard {
             votePower[proposalId][Choice.For],
             votePower[proposalId][Choice.Against],
             votePower[proposalId][Choice.Abstain],
-            proposal.executionStrategy.params,
             executionPayload
         );
 

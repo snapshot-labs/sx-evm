@@ -11,13 +11,11 @@ interface IExecutionStrategy is IExecutionStrategyErrors {
         uint256 votesFor,
         uint256 votesAgainst,
         uint256 votesAbstain,
-        bytes memory params,
         bytes memory payload
     ) external;
 
     function getProposalStatus(
         Proposal memory proposal,
-        bytes memory params,
         uint256 votesFor,
         uint256 votesAgainst,
         uint256 votesAbstain

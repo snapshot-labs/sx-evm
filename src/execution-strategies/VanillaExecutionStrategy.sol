@@ -12,10 +12,9 @@ contract VanillaExecutionStrategy is SimpleQuorumExecutionStrategy {
         uint256 votesFor,
         uint256 votesAgainst,
         uint256 votesAbstain,
-        bytes memory params,
         bytes memory payload
     ) external override {
-        ProposalStatus proposalStatus = getProposalStatus(proposal, params, votesFor, votesAgainst, votesAbstain);
+        ProposalStatus proposalStatus = getProposalStatus(proposal, votesFor, votesAgainst, votesAbstain);
         if ((proposalStatus != ProposalStatus.Accepted) && (proposalStatus != ProposalStatus.VotingPeriodAccepted)) {
             revert InvalidProposalStatus(proposalStatus);
         }

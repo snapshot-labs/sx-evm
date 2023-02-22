@@ -57,18 +57,16 @@ contract AvatarExecutionStrategy is SpaceManager, SimpleQuorumExecutionStrategy 
     /// @param votesFor The number of votes in favor of the proposal.
     /// @param votesAgainst The number of votes against the proposal.
     /// @param votesAbstain The number of abstaining votes.
-    /// @param params The execution strategy parameters.
     /// @param payload The encoded transactions to execute.
     function execute(
         Proposal memory proposal,
         uint256 votesFor,
         uint256 votesAgainst,
         uint256 votesAbstain,
-        bytes memory params,
         bytes memory payload
     ) external override {
         if (spaces[msg.sender] == false) revert SpaceNotEnabled();
-        ProposalStatus proposalStatus = getProposalStatus(proposal, params, votesFor, votesAgainst, votesAbstain);
+        ProposalStatus proposalStatus = getProposalStatus(proposal, votesFor, votesAgainst, votesAbstain);
         if ((proposalStatus != ProposalStatus.Accepted) && (proposalStatus != ProposalStatus.VotingPeriodAccepted)) {
             revert InvalidProposalStatus(proposalStatus);
         }

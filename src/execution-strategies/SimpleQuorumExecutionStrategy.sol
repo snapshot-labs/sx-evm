@@ -11,19 +11,17 @@ abstract contract SimpleQuorumExecutionStrategy is IExecutionStrategy {
         uint256 votesFor,
         uint256 votesAgainst,
         uint256 votesAbstain,
-        bytes memory params,
         bytes memory payload
     ) external virtual override;
 
     function getProposalStatus(
         Proposal memory proposal,
-        bytes memory params,
         uint256 votesFor,
         uint256 votesAgainst,
         uint256 votesAbstain
     ) public view override returns (ProposalStatus) {
         // Decode the quorum parameter from the execution strategy's params
-        uint256 quorum = abi.decode(params, (uint256));
+        uint256 quorum = abi.decode(proposal.executionStrategy.params, (uint256));
         bool accepted = _quorumReached(quorum, votesFor, votesAgainst, votesAbstain) &&
             _supported(votesFor, votesAgainst);
         if (proposal.finalizationStatus == FinalizationStatus.Cancelled) {
