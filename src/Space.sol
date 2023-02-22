@@ -206,7 +206,7 @@ contract Space is ISpace, Ownable {
 
     /**
      * @notice  Internal function to ensure there are no duplicates in an array of `UserVotingStrategy`.
-     * @dev     We create a bitmap of those indeces by using a `u256`. We try to set the bit at index `i`, stopping it
+     * @dev     We create a bitmap of those indices by using a `u256`. We try to set the bit at index `i`, stopping it
      * @dev     it has already been set. Time complexity is O(n).
      * @param   strats  Array to check for duplicates.
      */
