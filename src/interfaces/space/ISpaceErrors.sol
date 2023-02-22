@@ -15,7 +15,7 @@ interface ISpaceErrors {
     error InvalidExecutionStrategyIndex(uint256 index);
     error ExecutionStrategyNotWhitelisted();
     error ProposalThresholdNotReached(uint256 votingPower);
-    error DuplicateFound(uint a, uint b);
+    error DuplicateFound(uint8 index);
     error ProposalAlreadyFinalized();
     error MinVotingDurationHasNotElapsed();
     error QuorumNotReachedYet();
