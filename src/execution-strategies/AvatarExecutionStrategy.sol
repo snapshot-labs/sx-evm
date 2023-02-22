@@ -54,6 +54,10 @@ contract AvatarExecutionStrategy is SpaceManager, SimpleQuorumExecutionStrategy 
     /// @notice Executes a proposal from the avatar contract if the proposal outcome is accepted.
     ///         Must be called by a whitelisted space contract.
     /// @param proposal The proposal to execute.
+    /// @param votesFor The number of votes in favor of the proposal.
+    /// @param votesAgainst The number of votes against the proposal.
+    /// @param votesAbstain The number of abstaining votes.
+    /// @param params The execution strategy parameters.
     /// @param payload The encoded transactions to execute.
     function execute(
         Proposal memory proposal,

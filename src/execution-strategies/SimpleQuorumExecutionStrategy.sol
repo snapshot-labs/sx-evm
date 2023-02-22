@@ -23,7 +23,6 @@ abstract contract SimpleQuorumExecutionStrategy is IExecutionStrategy {
         uint256 votesAbstain
     ) public view override returns (ProposalStatus) {
         // Decode the quorum parameter from the execution strategy's params
-        console2.logBytes(params);
         uint256 quorum = abi.decode(params, (uint256));
         bool accepted = _quorumReached(quorum, votesFor, votesAgainst, votesAbstain) &&
             _supported(votesFor, votesAgainst);
