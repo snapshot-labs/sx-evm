@@ -7,6 +7,8 @@ import "src/types.sol";
 interface ISpaceState {
     function getController() external view returns (address);
 
+    function quorum(uint256 proposalId) external view returns (uint256);
+
     function maxVotingDuration() external view returns (uint32);
 
     function minVotingDuration() external view returns (uint32);

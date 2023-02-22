@@ -22,7 +22,7 @@ abstract contract SimpleQuorumExecutionStrategy is IExecutionStrategy {
         uint256 votesAgainst,
         uint256 votesAbstain
     ) public view override returns (ProposalStatus) {
-        // Decode the quorum parameter from the execution strategy's params\
+        // Decode the quorum parameter from the execution strategy's params
         console2.logBytes(params);
         uint256 quorum = abi.decode(params, (uint256));
         bool accepted = _quorumReached(quorum, votesFor, votesAgainst, votesAbstain) &&
@@ -46,6 +46,10 @@ abstract contract SimpleQuorumExecutionStrategy is IExecutionStrategy {
         } else {
             return ProposalStatus.Rejected;
         }
+    }
+
+    function getQuorum(Proposal memory proposal) external pure override returns (uint256) {
+        return abi.decode(proposal.executionStrategy.params, (uint256));
     }
 
     function _quorumReached(
