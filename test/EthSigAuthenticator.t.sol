@@ -315,9 +315,7 @@ contract EthSigAuthenticatorTest is SpaceTest, SigUtils {
 
     function testAuthenticateUpdateProposal() public {
         space.setVotingDelay(10);
-        console2.log("before");
         uint256 proposalId = _createProposal(author, proposalMetadataUri, executionStrategy, userVotingStrategies);
-        console2.log("before2");
 
         bytes32 digest = _getUpdateProposalDigest(
             address(ethSigAuth),
@@ -328,7 +326,6 @@ contract EthSigAuthenticatorTest is SpaceTest, SigUtils {
             newMetadataUri
         );
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(authorKey, digest);
-        console2.log("After");
 
         // vm.expectEmit(true, true, true, true);
         // emit ProposalUpdated(proposalId, newStrategy, newMetadataUri);
