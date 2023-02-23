@@ -7,12 +7,10 @@ import "../src/types.sol";
 
 contract updateProposalTest is SpaceTest {
     string newMetadataUri = "Testing123";
-    Strategy newStrategy;
+    IndexedStrategy newStrategy = IndexedStrategy(0, new bytes(0));
 
     function setUp() public virtual override {
         super.setUp();
-
-        newStrategy = Strategy(address(vanillaExecutionStrategy), new bytes(0));
 
         // Set the votingDelay to 10.
         votingDelay = 10;
@@ -22,7 +20,7 @@ contract updateProposalTest is SpaceTest {
     function _updateProposal(
         address _author,
         uint256 _proposalId,
-        Strategy memory _executionStrategy,
+        IndexedStrategy memory _executionStrategy,
         string memory _metadataUri
     ) public {
         vanillaAuthenticator.authenticate(
@@ -68,5 +66,14 @@ contract updateProposalTest is SpaceTest {
 
         vm.expectRevert(abi.encodeWithSelector(AuthenticatorNotWhitelisted.selector, address(this)));
         space.updateProposal(author, proposalId, newStrategy, newMetadataUri);
+    }
+
+    function testUpdateProposalInvalidStrategy() public {
+        IndexedStrategy memory invalidStrategy = IndexedStrategy(42, new bytes(0));
+
+        uint256 proposalId = _createProposal(author, proposalMetadataUri, executionStrategy, userVotingStrategies);
+
+        vm.expectRevert(abi.encodeWithSelector(AuthenticatorNotWhitelisted.selector, address(this)));
+        space.updateProposal(author, proposalId, invalidStrategy, newMetadataUri);
     }
 }

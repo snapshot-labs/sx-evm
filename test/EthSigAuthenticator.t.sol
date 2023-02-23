@@ -15,7 +15,7 @@ contract EthSigAuthenticatorTest is SpaceTest, SigUtils {
     string private constant name = "snapshot-x";
     string private constant version = "1";
     string newMetadataUri = "Test456";
-    Strategy newStrategy;
+    IndexedStrategy newStrategy = IndexedStrategy(0, new bytes(0));
 
     EthSigAuthenticator public ethSigAuth;
 
@@ -23,8 +23,6 @@ contract EthSigAuthenticatorTest is SpaceTest, SigUtils {
 
     function setUp() public virtual override {
         super.setUp();
-
-        newStrategy = Strategy(address(vanillaExecutionStrategy), new bytes(0));
 
         // Adding the eth sig authenticator to the space
         ethSigAuth = new EthSigAuthenticator(name, version);

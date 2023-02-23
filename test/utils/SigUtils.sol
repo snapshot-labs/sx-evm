@@ -8,6 +8,7 @@ import { SXHash } from "../../src/utils/SXHash.sol";
 abstract contract SigUtils {
     using SXHash for Strategy;
     using SXHash for IndexedStrategy[];
+    using SXHash for IndexedStrategy;
 
     string private name;
     string private version;
@@ -30,8 +31,8 @@ abstract contract SigUtils {
     bytes32 private constant UPDATE_PROPOSAL_TYPEHASH =
         keccak256(
             "updateProposal(address space,address proposer,uint256 proposalId,"
-            "Strategy executionStrategy,string metadataUri)"
-            "Strategy(address addy,bytes params)"
+            "IndexedStrategy executionStrategy,string metadataUri)"
+            "IndexedStrategy(uint8 index,bytes params)"
         );
 
     constructor(string memory _name, string memory _version) {
@@ -44,7 +45,7 @@ abstract contract SigUtils {
         address space,
         address author,
         string memory metadataUri,
-        Strategy memory executionStrategy,
+        IndexedStrategy memory executionStrategy,
         IndexedStrategy[] memory usedVotingStrategies,
         uint256 salt
     ) internal view returns (bytes32) {
@@ -109,7 +110,7 @@ abstract contract SigUtils {
         address space,
         address proposer,
         uint256 proposalId,
-        Strategy memory executionStrategy,
+        IndexedStrategy memory executionStrategy,
         string memory metadataUri
     ) internal view returns (bytes32) {
         bytes32 digest = keccak256(

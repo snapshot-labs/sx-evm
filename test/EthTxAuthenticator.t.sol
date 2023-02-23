@@ -14,12 +14,10 @@ contract EthTxAuthenticatorTest is SpaceTest {
     error InvalidMessageSender();
 
     string newMetadataUri = "Test42";
-    Strategy newStrategy;
+    IndexedStrategy newStrategy = IndexedStrategy(0, new bytes(0));
 
     function setUp() public virtual override {
         super.setUp();
-
-        newStrategy = Strategy(address(vanillaExecutionStrategy), new bytes(0));
 
         // Adding the eth tx authenticator to the space
         ethTxAuth = new EthTxAuthenticator();

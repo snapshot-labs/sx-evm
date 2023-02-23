@@ -8,8 +8,8 @@ import "src/types.sol";
 import { SXHash } from "src/utils/SXHash.sol";
 
 abstract contract SignatureVerifier is EIP712 {
-    using SXHash for Strategy;
     using SXHash for IndexedStrategy[];
+    using SXHash for IndexedStrategy;
 
     error InvalidSignature();
     error SaltAlreadyUsed();
@@ -30,8 +30,8 @@ abstract contract SignatureVerifier is EIP712 {
     bytes32 private constant UPDATE_PROPOSAL_TYPEHASH =
         keccak256(
             "updateProposal(address space,address proposer,uint256 proposalId,"
-            "Strategy executionStrategy,string metadataUri)"
-            "Strategy(address addy,bytes params)"
+            "IndexedStrategy executionStrategy,string metadataUri)"
+            "IndexedStrategy(uint8 index,bytes params)"
         );
 
     mapping(address => mapping(uint256 => bool)) private usedSalts;
@@ -42,9 +42,9 @@ abstract contract SignatureVerifier is EIP712 {
         (
             address author,
             string memory metadataUri,
-            Strategy memory executionStrategy,
+            IndexedStrategy memory executionStrategy,
             IndexedStrategy[] memory userVotingStrategies
-        ) = abi.decode(data, (address, string, Strategy, IndexedStrategy[]));
+        ) = abi.decode(data, (address, string, IndexedStrategy, IndexedStrategy[]));
 
         if (usedSalts[author][salt]) revert SaltAlreadyUsed();
 
