@@ -11,7 +11,7 @@ interface ISpaceEvents {
         string metadataUri,
         bytes executionParams
     );
-    event VoteCreated(uint256 proposalId, address voterAddress, Vote vote, string reason);
+    event VoteCreated(uint256 proposalId, address voterAddress, Vote vote, string voteMetadata);
     event ProposalExecuted(uint256 proposalId);
     event ProposalCancelled(uint256 proposalId);
     event VotingStrategiesAdded(Strategy[] votingStrategies);

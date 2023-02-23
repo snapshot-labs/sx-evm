@@ -26,7 +26,7 @@ abstract contract SpaceTest is Test, GasSnapshot, ISpaceEvents, ISpaceErrors {
     uint256 public constant voterKey = 5678;
     uint256 public constant unauthorizedKey = 4321;
 
-    string reason = "Hi";
+    string voteMetadata = "Hi";
 
     // Address of the meta transaction relayer (mana)
     address public relayer = address(this);
@@ -105,12 +105,12 @@ abstract contract SpaceTest is Test, GasSnapshot, ISpaceEvents, ISpaceErrors {
         uint256 _proposalId,
         Choice _choice,
         IndexedStrategy[] memory _userVotingStrategies,
-        string memory _reason
+        string memory _voteMetadata
     ) internal {
         vanillaAuthenticator.authenticate(
             address(space),
             VOTE_SELECTOR,
-            abi.encode(_author, _proposalId, _choice, _userVotingStrategies, _reason)
+            abi.encode(_author, _proposalId, _choice, _userVotingStrategies, _voteMetadata)
         );
     }
 }

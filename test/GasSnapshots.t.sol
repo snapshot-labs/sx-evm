@@ -95,7 +95,7 @@ contract GasSnapshotsTest is SpaceTest, SigUtils {
                 proposalId,
                 Choice.For,
                 userVotingStrategies,
-                reason
+                voteMetadata
             );
             (uint8 v, bytes32 r, bytes32 s) = vm.sign(voterKey, digest);
 

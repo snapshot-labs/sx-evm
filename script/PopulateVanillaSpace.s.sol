@@ -22,7 +22,7 @@ contract PopulateVanillaSpace is Script {
     Strategy public executionStrategy;
     IndexedStrategy[] public userVotingStrategies;
 
-    string reason = "";
+    string voteMetadata = "";
 
     function run() public {
         space = Space(0x95DC6f73301356c9909921e21b735601C42fc1a8);
@@ -39,7 +39,7 @@ contract PopulateVanillaSpace is Script {
             userVotingStrategies
         );
 
-        _vote(address(this), proposalId, Choice.For, userVotingStrategies, reason);
+        _vote(address(this), proposalId, Choice.For, userVotingStrategies, voteMetadata);
     }
 
     function _createProposal(
@@ -62,12 +62,12 @@ contract PopulateVanillaSpace is Script {
         uint256 _proposalId,
         Choice _choice,
         IndexedStrategy[] memory _userVotingStrategies,
-        string memory _reason
+        string memory _voteMetadata
     ) internal {
         vanillaAuthenticator.authenticate(
             address(space),
             VOTE_SELECTOR,
-            abi.encode(_author, _proposalId, _choice, _userVotingStrategies, _reason)
+            abi.encode(_author, _proposalId, _choice, _userVotingStrategies, _voteMetadata)
         );
     }
 }

@@ -74,13 +74,21 @@ abstract contract SignatureVerifier is EIP712 {
             uint256 proposeId,
             Choice choice,
             IndexedStrategy[] memory userVotingStrategies,
-            string memory reason
+            string memory voteMetadata
         ) = abi.decode(data, (address, uint256, Choice, IndexedStrategy[], string));
 
         address recoveredAddress = ECDSA.recover(
             _hashTypedDataV4(
                 keccak256(
-                    abi.encode(VOTE_TYPEHASH, space, voter, proposeId, choice, userVotingStrategies.hash(), reason)
+                    abi.encode(
+                        VOTE_TYPEHASH,
+                        space,
+                        voter,
+                        proposeId,
+                        choice,
+                        userVotingStrategies.hash(),
+                        voteMetadata
+                    )
                 )
             ),
             v,

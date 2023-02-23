@@ -8,7 +8,7 @@ contract SpaceOwnerActionsTest is SpaceTest {
 
     function testCancel() public {
         uint256 proposalId = _createProposal(author, proposalMetadataUri, executionStrategy, userVotingStrategies);
-        _vote(author, proposalId, Choice.For, userVotingStrategies, reason);
+        _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadata);
 
         vm.expectEmit(true, true, true, true);
         emit ProposalCancelled(proposalId);
@@ -19,7 +19,7 @@ contract SpaceOwnerActionsTest is SpaceTest {
 
     function testCancelInvalidProposal() public {
         uint256 proposalId = _createProposal(author, proposalMetadataUri, executionStrategy, userVotingStrategies);
-        _vote(author, proposalId, Choice.For, userVotingStrategies, reason);
+        _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadata);
 
         // proposal does not exist
         uint256 invalidProposalId = proposalId + 1;
@@ -29,7 +29,7 @@ contract SpaceOwnerActionsTest is SpaceTest {
 
     function testCancelUnauthorized() public {
         uint256 proposalId = _createProposal(author, proposalMetadataUri, executionStrategy, userVotingStrategies);
-        _vote(author, proposalId, Choice.For, userVotingStrategies, reason);
+        _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadata);
 
         vm.expectRevert("Ownable: caller is not the owner");
         vm.prank(unauthorized);
@@ -38,7 +38,7 @@ contract SpaceOwnerActionsTest is SpaceTest {
 
     function testCancelAlreadyExecuted() public {
         uint256 proposalId = _createProposal(author, proposalMetadataUri, executionStrategy, userVotingStrategies);
-        _vote(author, proposalId, Choice.For, userVotingStrategies, reason);
+        _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadata);
         space.execute(proposalId, executionStrategy.params);
 
         vm.expectRevert(abi.encodeWithSelector(InvalidProposalStatus.selector, ProposalStatus.Executed));
@@ -47,7 +47,7 @@ contract SpaceOwnerActionsTest is SpaceTest {
 
     function testCancelAlreadyCancelled() public {
         uint256 proposalId = _createProposal(author, proposalMetadataUri, executionStrategy, userVotingStrategies);
-        _vote(author, proposalId, Choice.For, userVotingStrategies, reason);
+        _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadata);
         space.cancel(proposalId);
 
         vm.expectRevert(abi.encodeWithSelector(InvalidProposalStatus.selector, ProposalStatus.Cancelled));
@@ -282,7 +282,7 @@ contract SpaceOwnerActionsTest is SpaceTest {
             userVotingStrategies
         );
 
-        _vote(author, proposalId, Choice.For, userVotingStrategies, reason);
+        _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadata);
 
         // Ensure we can finalize
         space.execute(proposalId, newExecutionStrategies[0].params);

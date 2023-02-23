@@ -50,7 +50,7 @@ contract AvatarExecutionStrategyTest is SpaceTest {
             Strategy(address(avatarExecutionStrategy), abi.encode(transactions)),
             userVotingStrategies
         );
-        _vote(author, proposalId, Choice.For, userVotingStrategies, reason);
+        _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadata);
         vm.warp(block.timestamp + space.maxVotingDuration());
 
         vm.expectEmit(true, true, true, true);
@@ -72,7 +72,7 @@ contract AvatarExecutionStrategyTest is SpaceTest {
             Strategy(address(avatarExecutionStrategy), abi.encode(transactions)),
             userVotingStrategies
         );
-        _vote(author, proposalId, Choice.For, userVotingStrategies, reason);
+        _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadata);
         vm.warp(block.timestamp + space.maxVotingDuration());
 
         vm.expectRevert(TransactionsFailed.selector);
@@ -95,7 +95,7 @@ contract AvatarExecutionStrategyTest is SpaceTest {
             Strategy(address(avatarExecutionStrategy), abi.encode(transactions)),
             userVotingStrategies
         );
-        _vote(author, proposalId, Choice.For, userVotingStrategies, reason);
+        _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadata);
         vm.warp(block.timestamp + space.maxVotingDuration());
 
         assertEq(recipient.balance, 0); // sanity check
@@ -121,7 +121,7 @@ contract AvatarExecutionStrategyTest is SpaceTest {
             Strategy(address(avatarExecutionStrategy), abi.encode(transactions)),
             userVotingStrategies
         );
-        _vote(author, proposalId, Choice.For, userVotingStrategies, reason);
+        _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadata);
         vm.warp(block.timestamp + space.maxVotingDuration());
 
         vm.expectRevert(TransactionsFailed.selector);
@@ -214,7 +214,7 @@ contract AvatarExecutionStrategyTest is SpaceTest {
             Strategy(address(avatarExecutionStrategy), abi.encode(transactions)),
             userVotingStrategies
         );
-        _vote(author, proposalId, Choice.For, userVotingStrategies, reason);
+        _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadata);
         vm.warp(block.timestamp + space.maxVotingDuration());
 
         vm.expectRevert(SpaceNotEnabled.selector);

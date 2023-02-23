@@ -462,14 +462,14 @@ contract Space is ISpace, Ownable {
      * @param   proposalId  Proposal id.
      * @param   choice  Choice can be `For`, `Against` or `Abstain`.
      * @param   userVotingStrategies  Strategies to use to compute the voter's voting power.
-     * @param   reason  An optional reason to give information about the vote.
+     * @param   voteMetadata  An optional metadata to give information about the vote.
      */
     function vote(
         address voterAddress,
         uint256 proposalId,
         Choice choice,
         IndexedStrategy[] calldata userVotingStrategies,
-        string calldata reason
+        string calldata voteMetadata
     ) external override {
         _assertValidAuthenticator();
 
@@ -496,7 +496,7 @@ contract Space is ISpace, Ownable {
 
         voteRegistry[proposalId][voterAddress] = true;
 
-        emit VoteCreated(proposalId, voterAddress, Vote(choice, votingPower), reason);
+        emit VoteCreated(proposalId, voterAddress, Vote(choice, votingPower), voteMetadata);
     }
 
     /**
