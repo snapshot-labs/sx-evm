@@ -9,7 +9,7 @@ import "../utils/SpaceManager.sol";
 /// @title Avatar Execution Strategy - An Execution strategy that executes transactions on an Avatar contract
 /// @dev An Avatar contract is any contract that implements the IAvatar interface, eg a Gnosis Safe.
 contract AvatarExecutionStrategy is SpaceManager, SimpleQuorumExecutionStrategy {
-    error SpaceNotEnabled();
+    error TransactionsFailed();
 
     /// @dev Emitted each time a new Avatar Execution Strategy is deployed.
     event AvatarExecutionStrategySetUp(address _owner, address _target, address[] _spaces);
@@ -64,8 +64,7 @@ contract AvatarExecutionStrategy is SpaceManager, SimpleQuorumExecutionStrategy 
         uint256 votesAgainst,
         uint256 votesAbstain,
         bytes memory payload
-    ) external override {
-        if (spaces[msg.sender] == false) revert SpaceNotEnabled();
+    ) external override onlySpace(msg.sender) {
         ProposalStatus proposalStatus = getProposalStatus(proposal, votesFor, votesAgainst, votesAbstain);
         if ((proposalStatus != ProposalStatus.Accepted) && (proposalStatus != ProposalStatus.VotingPeriodAccepted)) {
             revert InvalidProposalStatus(proposalStatus);
