@@ -31,6 +31,7 @@ abstract contract SignatureVerifier is EIP712 {
         keccak256(
             "updateProposal(address space,address proposer,uint256 proposalId,"
             "Strategy executionStrategy,string metadataUri)"
+            "Strategy(address addy,bytes params)"
         );
 
     mapping(address => mapping(uint256 => bool)) private usedSalts;

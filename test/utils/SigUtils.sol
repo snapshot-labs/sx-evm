@@ -31,6 +31,7 @@ abstract contract SigUtils {
         keccak256(
             "updateProposal(address space,address proposer,uint256 proposalId,"
             "Strategy executionStrategy,string metadataUri)"
+            "Strategy(address addy,bytes params)"
         );
 
     constructor(string memory _name, string memory _version) {
