@@ -348,10 +348,10 @@ contract Space is ISpace, Ownable {
 
     function addVotingStrategies(
         Strategy[] calldata _votingStrategies,
-        bytes[] calldata data
+        bytes[] calldata votingStrategyMetadata
     ) external override onlyOwner {
         _addVotingStrategies(_votingStrategies);
-        emit VotingStrategiesAdded(_votingStrategies, data);
+        emit VotingStrategiesAdded(_votingStrategies, votingStrategyMetadata);
     }
 
     function removeVotingStrategies(uint8[] calldata _votingStrategyIndices) external override onlyOwner {
