@@ -8,7 +8,7 @@ interface ISpaceActions {
     function propose(
         address proposerAddress,
         string calldata metadataUri,
-        Strategy calldata executionStrategy,
+        IndexedStrategy calldata executionStrategy,
         IndexedStrategy[] calldata userVotingStrategies
     ) external;
 
@@ -20,5 +20,5 @@ interface ISpaceActions {
         string calldata voteMetadata
     ) external;
 
-    function execute(uint256 proposalId, bytes calldata executionParams) external;
+    function execute(uint256 proposalId, bytes calldata payload) external;
 }

@@ -15,13 +15,12 @@ contract ProposeTest is SpaceTest {
 
         // Expected content of the proposal struct
         Proposal memory proposal = Proposal(
-            quorum,
             snapshotTimestamp,
             startTimestamp,
             minEndTimestamp,
             maxEndTimestamp,
             executionHash,
-            executionStrategy.addy,
+            executionStrategies[0],
             FinalizationStatus.Pending,
             votingStrategies
         );
@@ -47,10 +46,10 @@ contract ProposeTest is SpaceTest {
     }
 
     function testProposeInvalidExecutionStrategy() public {
-        Strategy[] memory invalidExecutionStrategies = new Strategy[](1);
-        invalidExecutionStrategies[0] = Strategy(address(42), new bytes(0));
+        IndexedStrategy[] memory invalidExecutionStrategies = new IndexedStrategy[](1);
+        invalidExecutionStrategies[0] = IndexedStrategy(42, new bytes(0));
         vm.expectRevert(
-            abi.encodeWithSelector(ExecutionStrategyNotWhitelisted.selector, invalidExecutionStrategies[0].addy)
+            abi.encodeWithSelector(InvalidExecutionStrategyIndex.selector, invalidExecutionStrategies[0].index)
         );
 
         _createProposal(author, proposalMetadataUri, invalidExecutionStrategies[0], userVotingStrategies);
@@ -72,7 +71,7 @@ contract ProposeTest is SpaceTest {
         invalidUsedStrategies[2] = IndexedStrategy(2, new bytes(0));
         invalidUsedStrategies[3] = IndexedStrategy(0, new bytes(0)); // Duplicate index
 
-        vm.expectRevert(abi.encodeWithSelector(DuplicateFound.selector, 0, 0));
+        vm.expectRevert(abi.encodeWithSelector(DuplicateFound.selector, 0));
         _createProposal(author, proposalMetadataUri, executionStrategy, invalidUsedStrategies);
     }
 
