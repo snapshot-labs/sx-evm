@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.15;
 
-import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 
 import "src/interfaces/ISpace.sol";
 import "src/types.sol";
@@ -15,7 +17,7 @@ import "forge-std/console2.sol";
  * @title   Space Contract.
  * @notice  Logic and bookkeeping contract.
  */
-contract Space is ISpace, Ownable {
+contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable {
     // Maximum duration a proposal can last.
     uint32 public maxVotingDuration;
     // Minimum duration a proposal can last.
@@ -51,7 +53,34 @@ contract Space is ISpace, Ownable {
     // |                                  |
     // ------------------------------------
 
-    constructor(
+    // constructor(
+    //     address _controller,
+    //     uint32 _votingDelay,
+    //     uint32 _minVotingDuration,
+    //     uint32 _maxVotingDuration,
+    //     uint256 _proposalThreshold,
+    //     uint256 _quorum,
+    //     Strategy[] memory _votingStrategies,
+    //     address[] memory _authenticators,
+    //     address[] memory _executionStrategies
+    // ) {
+    //     transferOwnership(_controller);
+    //     _setMaxVotingDuration(_maxVotingDuration);
+    //     _setMinVotingDuration(_minVotingDuration);
+    //     _setProposalThreshold(_proposalThreshold);
+    //     _setQuorum(_quorum);
+    //     _setVotingDelay(_votingDelay);
+    //     _addVotingStrategies(_votingStrategies);
+    //     _addAuthenticators(_authenticators);
+    //     _addExecutionStrategies(_executionStrategies);
+
+    //     nextProposalId = 1;
+
+    //     // No event events emitted here because the constructor is called by the factory,
+    //     // which emits a space creation event.
+    // }
+
+    function initialize(
         address _controller,
         uint32 _votingDelay,
         uint32 _minVotingDuration,
@@ -61,7 +90,8 @@ contract Space is ISpace, Ownable {
         Strategy[] memory _votingStrategies,
         address[] memory _authenticators,
         address[] memory _executionStrategies
-    ) {
+    ) public initializer {
+        __Ownable_init();
         transferOwnership(_controller);
         _setMaxVotingDuration(_maxVotingDuration);
         _setMinVotingDuration(_minVotingDuration);
@@ -77,6 +107,9 @@ contract Space is ISpace, Ownable {
         // No event events emitted here because the constructor is called by the factory,
         // which emits a space creation event.
     }
+
+    // override from UUPSUpgradeable, added onlyOwner modifier for access control
+    function _authorizeUpgrade(address) internal override onlyOwner {}
 
     // ------------------------------------
     // |                                  |
