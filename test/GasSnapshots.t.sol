@@ -87,7 +87,6 @@ contract GasSnapshotsTest is SpaceTest, SigUtils {
         // Vote
         {
             uint256 proposalId = 1;
-            uint256 salt = 1;
             bytes32 digest = _getVoteDigest(
                 address(ethSigAuth),
                 address(space),
@@ -104,10 +103,10 @@ contract GasSnapshotsTest is SpaceTest, SigUtils {
                 v,
                 r,
                 s,
-                salt,
+                0,
                 address(space),
                 VOTE_SELECTOR,
-                abi.encode(voter, proposalId, Choice.For, userVotingStrategies)
+                abi.encode(voter, proposalId, Choice.For, userVotingStrategies, voteMetadata)
             );
             snapEnd();
         }

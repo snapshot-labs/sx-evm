@@ -190,7 +190,7 @@ contract EthSigAuthenticatorTest is SpaceTest, SigUtils {
             0,
             address(space),
             VOTE_SELECTOR,
-            abi.encode(voter, proposalId, Choice.For, userVotingStrategies)
+            abi.encode(voter, proposalId, Choice.For, userVotingStrategies, voteMetadata)
         );
         snapEnd();
     }
