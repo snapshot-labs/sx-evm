@@ -25,7 +25,12 @@ contract ERC20VotingStrategyTest is Test {
         erc20VotesToken.delegate(user);
         vm.roll(block.number + 1);
         assertEq(
-            erc20VotingStrategy.getVotingPower(uint32(block.timestamp), user, abi.encodePacked(address(erc20VotesToken)), ""),
+            erc20VotingStrategy.getVotingPower(
+                uint32(block.timestamp),
+                user,
+                abi.encodePacked(address(erc20VotesToken)),
+                ""
+            ),
             1
         );
     }
@@ -35,7 +40,12 @@ contract ERC20VotingStrategyTest is Test {
         // No delegation, so voting power is zero
         vm.roll(block.number + 1);
         assertEq(
-            erc20VotingStrategy.getVotingPower(uint32(block.timestamp), user, abi.encodePacked(address(erc20VotesToken)), ""),
+            erc20VotingStrategy.getVotingPower(
+                uint32(block.timestamp),
+                user,
+                abi.encodePacked(address(erc20VotesToken)),
+                ""
+            ),
             0
         );
     }
