@@ -6,12 +6,20 @@ import "./Space.sol";
 import "./interfaces/ISpaceFactory.sol";
 import "./types.sol";
 
+import "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
+
 /**
  * @title   Space Factory
  * @notice  A contract to deploy and track spaces
  * @author  Snapshot Labs
  */
 contract SpaceFactory is ISpaceFactory {
+    address public immutable masterSpace;
+
+    constructor(address _masterSpace) {
+        masterSpace = _masterSpace;
+    }
+
     function createSpace(
         address controller,
         uint32 votingDelay,
@@ -26,18 +34,26 @@ contract SpaceFactory is ISpaceFactory {
         bytes32 salt
     ) external override {
         try
-            new Space{ salt: salt }(
-                controller,
-                votingDelay,
-                minVotingDuration,
-                maxVotingDuration,
-                proposalThreshold,
-                quorum,
-                votingStrategies,
-                authenticators,
-                executionStrategies
+            new ERC1967Proxy{ salt: salt }(
+                masterSpace,
+                ""
             )
-        returns (Space space) {
+        returns (ERC1967Proxy space) {
+            address(space).call(
+                abi.encodeWithSignature(
+                    "initialize(address,uint32,uint32,uint32,uint256,uint256,(address,bytes)[],address[],address[])",
+                    controller,
+                    votingDelay,
+                    minVotingDuration,
+                    maxVotingDuration,
+                    proposalThreshold,
+                    quorum,
+                    metadataUri,
+                    votingStrategies,
+                    authenticators,
+                    executionStrategies
+                )
+            );
             emit SpaceCreated(
                 address(space),
                 controller,
