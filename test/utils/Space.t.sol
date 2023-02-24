@@ -70,7 +70,9 @@ abstract contract SpaceTest is Test, GasSnapshot, ISpaceEvents, ISpaceErrors {
         userVotingStrategies.push(IndexedStrategy(0, new bytes(0)));
         executionStrategy = Strategy(address(vanillaExecutionStrategy), new bytes(0));
 
-        space = new Space(
+        space = new Space();
+
+        space.initialize(
             owner,
             votingDelay,
             minVotingDuration,
