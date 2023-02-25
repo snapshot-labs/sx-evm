@@ -30,6 +30,6 @@
       "solhint",
       "prettier --check"
     ],
-    "*.{json,md,sol,yml}": "prettier --check"
+    "*.{json,md,yml}": "prettier --check"
   }
 }
