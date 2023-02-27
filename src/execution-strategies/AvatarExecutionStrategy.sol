@@ -9,7 +9,6 @@ import "../utils/SpaceManager.sol";
 /// @title Avatar Execution Strategy - An Execution strategy that executes transactions on an Avatar contract
 /// @dev An Avatar contract is any contract that implements the IAvatar interface, eg a Gnosis Safe.
 contract AvatarExecutionStrategy is SpaceManager, SimpleQuorumExecutionStrategy {
-    error SpaceNotEnabled();
     error TransactionsFailed();
 
     /// @dev Emitted each time a new Avatar Execution Strategy is deployed.
@@ -55,16 +54,32 @@ contract AvatarExecutionStrategy is SpaceManager, SimpleQuorumExecutionStrategy 
     /// @notice Executes a proposal from the avatar contract if the proposal outcome is accepted.
     ///         Must be called by a whitelisted space contract.
     /// @param proposal The proposal to execute.
-    /// @param executionParams The encoded transactions to execute.
-    function execute(Proposal memory proposal, bytes memory executionParams) external override {
-        if (spaces[msg.sender] == false) revert SpaceNotEnabled();
-        _execute(executionParams);
+    /// @param votesFor The number of votes in favor of the proposal.
+    /// @param votesAgainst The number of votes against the proposal.
+    /// @param votesAbstain The number of abstaining votes.
+    /// @param payload The encoded transactions to execute.
+    function execute(
+        Proposal memory proposal,
+        uint256 votesFor,
+        uint256 votesAgainst,
+        uint256 votesAbstain,
+        bytes memory payload
+    ) external override onlySpace(msg.sender) {
+        ProposalStatus proposalStatus = getProposalStatus(proposal, votesFor, votesAgainst, votesAbstain);
+        if ((proposalStatus != ProposalStatus.Accepted) && (proposalStatus != ProposalStatus.VotingPeriodAccepted)) {
+            revert InvalidProposalStatus(proposalStatus);
+        }
+
+        // Check that the execution payload matches the payload supplied when the proposal was created
+        if (proposal.executionPayloadHash != keccak256(payload)) revert InvalidPayload();
+
+        _execute(payload);
     }
 
     /// @notice Decodes and executes a batch of transactions from the avatar contract.
-    /// @param executionParams The encoded transactions to execute.
-    function _execute(bytes memory executionParams) internal {
-        MetaTransaction[] memory transactions = abi.decode(executionParams, (MetaTransaction[]));
+    /// @param payload The encoded transactions to execute.
+    function _execute(bytes memory payload) internal {
+        MetaTransaction[] memory transactions = abi.decode(payload, (MetaTransaction[]));
         for (uint256 i = 0; i < transactions.length; i++) {
             bool success = IAvatar(target).execTransactionFromModule(
                 transactions[i].to,
@@ -73,7 +88,7 @@ contract AvatarExecutionStrategy is SpaceManager, SimpleQuorumExecutionStrategy 
                 transactions[i].operation
             );
             // If any transaction fails, the entire execution will revert
-            if (!success) revert TransactionsFailed();
+            if (!success) revert ExecutionFailed();
         }
     }
 }
