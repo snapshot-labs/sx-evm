@@ -48,11 +48,11 @@ contract SpaceFactoryTest is Test, ISpaceFactoryEvents, ISpaceFactoryErrors {
     function testCreateSpace() public {
         bytes32 salt = bytes32(keccak256(abi.encodePacked("random salt")));
         // Pre-computed address of the space (possible because of CREATE2 deployment)
-        address space = _getProxyAddress(salt);
+        address spaceProxy = _getProxyAddress(salt);
 
         vm.expectEmit(true, true, true, true);
         emit SpaceCreated(
-            space,
+            spaceProxy,
             controller,
             votingDelay,
             minVotingDuration,
