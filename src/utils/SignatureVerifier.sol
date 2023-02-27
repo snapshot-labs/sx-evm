@@ -6,7 +6,6 @@ import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import "@openzeppelin/contracts/utils/cryptography/EIP712.sol";
 import "src/types.sol";
 import { SXHash } from "src/utils/SXHash.sol";
-import "forge-std/console2.sol";
 
 abstract contract SignatureVerifier is EIP712 {
     using SXHash for IndexedStrategy[];

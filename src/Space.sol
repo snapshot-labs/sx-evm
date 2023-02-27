@@ -9,8 +9,6 @@ import "src/types.sol";
 import "src/interfaces/IVotingStrategy.sol";
 import "src/interfaces/IExecutionStrategy.sol";
 
-import "forge-std/console2.sol";
-
 /**
  * @author  SnapshotLabs
  * @title   Space Contract.

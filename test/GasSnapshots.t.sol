@@ -7,7 +7,6 @@ import "./mocks/CompToken.sol";
 import "./utils/Space.t.sol";
 import "./utils/SigUtils.sol";
 import "../src/authenticators/EthSigAuthenticator.sol";
-import "forge-std/console2.sol";
 
 contract GasSnapshotsTest is SpaceTest, SigUtils {
     CompVotingStrategy public compVotingStrategy;
