@@ -1,0 +1,109 @@
+// SPDX-License-Identifier: UNLICENSED
+
+pragma solidity ^0.8.15;
+
+import "./utils/Space.t.sol";
+import "../src/execution-strategies/OptimisticQuorumExecutionStrategy.sol";
+import "../src/types.sol";
+
+contract OptimisticTest is SpaceTest {
+    function setUp() public virtual override {
+        super.setUp();
+
+        OptimisticQuorumExecutionStrategy optimisticQuorumStrategy = new OptimisticQuorumExecutionStrategy();
+        // Update Quorum. Will need 2 `NO` votes in order to be rejected.
+        quorum = 2;
+        Strategy[] memory newStrategies = new Strategy[](1);
+        newStrategies[0] = Strategy(address(optimisticQuorumStrategy), abi.encode(quorum));
+
+        executionStrategy = IndexedStrategy(1, new bytes(0));
+        // Add the optimistic quorum execution strategy
+        space.addExecutionStrategies(newStrategies);
+
+        uint8[] memory toRemove = new uint8[](1);
+        toRemove[0] = 0;
+        // Remove the old execution strategy
+        space.removeExecutionStrategies(toRemove);
+    }
+
+    function testOptimisticQuorumNoVotes() public {
+        uint256 proposalId = _createProposal(author, proposalMetadataUri, executionStrategy, userVotingStrategies);
+        vm.warp(block.timestamp + space.maxVotingDuration());
+
+        vm.expectEmit(true, true, true, true);
+        emit ProposalExecuted(proposalId);
+        space.execute(proposalId, executionStrategy.params);
+
+        assertEq(uint8(space.getProposalStatus(proposalId)), uint8(ProposalStatus.Executed));
+    }
+
+    function testOptimisticQuorumOneVote() public {
+        uint256 proposalId = _createProposal(author, proposalMetadataUri, executionStrategy, userVotingStrategies);
+        _vote(author, proposalId, Choice.Against, userVotingStrategies);
+        vm.warp(block.timestamp + space.maxVotingDuration());
+
+        vm.expectEmit(true, true, true, true);
+        emit ProposalExecuted(proposalId);
+        space.execute(proposalId, executionStrategy.params);
+
+        assertEq(uint8(space.getProposalStatus(proposalId)), uint8(ProposalStatus.Executed));
+    }
+
+    function testOptimisticQuorumReached() public {
+        uint256 proposalId = _createProposal(author, proposalMetadataUri, executionStrategy, userVotingStrategies);
+        _vote(author, proposalId, Choice.Against, userVotingStrategies);
+        _vote(address(42), proposalId, Choice.Against, userVotingStrategies);
+        vm.warp(block.timestamp + space.maxVotingDuration());
+
+        vm.expectRevert(abi.encodeWithSelector(InvalidProposalStatus.selector, ProposalStatus.Rejected));
+        space.execute(proposalId, executionStrategy.params);
+
+        assertEq(uint8(space.getProposalStatus(proposalId)), uint8(ProposalStatus.Rejected));
+    }
+
+    function testOptimisticQuorumEquality() public {
+        uint256 proposalId = _createProposal(author, proposalMetadataUri, executionStrategy, userVotingStrategies);
+        // 2 votes for
+        _vote(address(1), proposalId, Choice.For, userVotingStrategies);
+        _vote(address(2), proposalId, Choice.For, userVotingStrategies);
+        // 2 votes against
+        _vote(address(11), proposalId, Choice.Against, userVotingStrategies);
+        _vote(address(12), proposalId, Choice.Against, userVotingStrategies);
+
+        vm.warp(block.timestamp + space.maxVotingDuration());
+
+        vm.expectRevert(abi.encodeWithSelector(InvalidProposalStatus.selector, ProposalStatus.Rejected));
+        space.execute(proposalId, executionStrategy.params);
+
+        assertEq(uint8(space.getProposalStatus(proposalId)), uint8(ProposalStatus.Rejected));
+    }
+
+    function testOptimisticQuorumMinVotingPeriodReached() public {
+        uint256 proposalId = _createProposal(author, proposalMetadataUri, executionStrategy, userVotingStrategies);
+        _vote(address(11), proposalId, Choice.Against, userVotingStrategies);
+        _vote(address(12), proposalId, Choice.Against, userVotingStrategies);
+
+        vm.warp(block.timestamp + space.minVotingDuration());
+
+        vm.expectRevert(abi.encodeWithSelector(InvalidProposalStatus.selector, ProposalStatus.Rejected));
+        space.execute(proposalId, executionStrategy.params);
+
+        assertEq(uint8(space.getProposalStatus(proposalId)), uint8(ProposalStatus.Rejected));
+    }
+
+    function testOptimisticQuorumMinVotingPeriodNotReached() public {
+        uint256 proposalId = _createProposal(author, proposalMetadataUri, executionStrategy, userVotingStrategies);
+
+        vm.warp(block.timestamp + space.minVotingDuration());
+
+        vm.expectRevert(abi.encodeWithSelector(InvalidProposalStatus.selector, ProposalStatus.VotingPeriod));
+        space.execute(proposalId, executionStrategy.params);
+
+        // Go to max voting period
+        vm.warp(block.timestamp + space.maxVotingDuration() - space.minVotingDuration());
+        // Execution should work fine
+        space.execute(proposalId, executionStrategy.params);
+
+        assertEq(uint8(space.getProposalStatus(proposalId)), uint8(ProposalStatus.Executed));
+    }
+}
