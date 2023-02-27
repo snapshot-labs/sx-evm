@@ -108,6 +108,36 @@ contract SpaceFactoryTest is Test, ISpaceFactoryEvents, ISpaceFactoryErrors {
         );
     }
 
+    function testCreateSpaceReInitialize() public {
+        bytes32 salt = bytes32(keccak256(abi.encodePacked("random salt")));
+        factory.createSpace(
+            controller,
+            votingDelay,
+            minVotingDuration,
+            maxVotingDuration,
+            proposalThreshold,
+            metadataUri,
+            votingStrategies,
+            authenticators,
+            executionStrategies,
+            salt
+        );
+        address spaceProxy = _getProxyAddress(salt);
+
+        // Initializing the space should revert as the space is already initialized
+        vm.expectRevert("Initializable: contract is already initialized");
+        Space(spaceProxy).initialize(
+            controller,
+            votingDelay,
+            minVotingDuration,
+            maxVotingDuration,
+            proposalThreshold,
+            votingStrategies,
+            authenticators,
+            executionStrategies
+        );
+    }
+
     function _getProxyAddress(bytes32 salt) internal view returns (address) {
         return
             address(
