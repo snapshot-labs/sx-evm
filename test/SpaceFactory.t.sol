@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.15;
 
+import "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import "forge-std/Test.sol";
 import "../src/authenticators/VanillaAuthenticator.sol";
 import "../src/voting-strategies/VanillaVotingStrategy.sol";
@@ -8,8 +9,6 @@ import "../src/execution-strategies/VanillaExecutionStrategy.sol";
 import "../src/SpaceFactory.sol";
 import "../src/interfaces/space-factory/ISpaceFactoryEvents.sol";
 import "../src/interfaces/space-factory/ISpaceFactoryErrors.sol";
-
-import "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
 contract SpaceFactoryTest is Test, ISpaceFactoryEvents, ISpaceFactoryErrors {
     Space public masterSpace;
@@ -19,7 +18,8 @@ contract SpaceFactoryTest is Test, ISpaceFactoryEvents, ISpaceFactoryErrors {
     VanillaExecutionStrategy vanillaExecutionStrategy;
     Strategy[] votingStrategies;
     address[] authenticators;
-    address[] executionStrategies;
+    Strategy[] executionStrategies;
+
     address public controller;
     uint32 public votingDelay;
     uint32 public minVotingDuration;
@@ -42,7 +42,7 @@ contract SpaceFactoryTest is Test, ISpaceFactoryEvents, ISpaceFactoryErrors {
         quorum = 1;
         votingStrategies.push(Strategy(address(vanillaVotingStrategy), new bytes(0)));
         authenticators.push(address(vanillaAuthenticator));
-        executionStrategies.push(address(vanillaExecutionStrategy));
+        executionStrategies.push(Strategy(address(vanillaExecutionStrategy), new bytes(0)));
     }
 
     function testCreateSpace() public {
@@ -58,7 +58,6 @@ contract SpaceFactoryTest is Test, ISpaceFactoryEvents, ISpaceFactoryErrors {
             minVotingDuration,
             maxVotingDuration,
             proposalThreshold,
-            quorum,
             metadataUri,
             votingStrategies,
             authenticators,
@@ -70,7 +69,6 @@ contract SpaceFactoryTest is Test, ISpaceFactoryEvents, ISpaceFactoryErrors {
             minVotingDuration,
             maxVotingDuration,
             proposalThreshold,
-            quorum,
             metadataUri,
             votingStrategies,
             authenticators,
@@ -87,7 +85,6 @@ contract SpaceFactoryTest is Test, ISpaceFactoryEvents, ISpaceFactoryErrors {
             minVotingDuration,
             maxVotingDuration,
             proposalThreshold,
-            quorum,
             metadataUri,
             votingStrategies,
             authenticators,
@@ -103,7 +100,6 @@ contract SpaceFactoryTest is Test, ISpaceFactoryEvents, ISpaceFactoryErrors {
             minVotingDuration,
             maxVotingDuration,
             proposalThreshold,
-            quorum,
             metadataUri,
             votingStrategies,
             authenticators,
@@ -128,13 +124,12 @@ contract SpaceFactoryTest is Test, ISpaceFactoryEvents, ISpaceFactoryErrors {
                                         abi.encode(
                                             address(masterSpace),
                                             abi.encodeWithSignature(
-                                                "initialize(address,uint32,uint32,uint32,uint256,uint256,(address,bytes)[],address[],address[])",
+                                                "initialize(address,uint32,uint32,uint32,uint256,(address,bytes)[],address[],(address,bytes)[])",
                                                 controller,
                                                 votingDelay,
                                                 minVotingDuration,
                                                 maxVotingDuration,
                                                 proposalThreshold,
-                                                quorum,
                                                 votingStrategies,
                                                 authenticators,
                                                 executionStrategies

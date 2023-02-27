@@ -16,7 +16,7 @@ import "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 contract SpaceFactory is ISpaceFactory {
     bytes4 private constant INITIALIZE_SELECTOR =
         bytes4(
-            keccak256("initialize(address,uint32,uint32,uint32,uint256,uint256,(address,bytes)[],address[],address[])")
+            keccak256("initialize(address,uint32,uint32,uint32,uint256,(address,bytes)[],address[],(address,bytes)[])")
         );
 
     address public immutable masterSpace;
@@ -31,11 +31,10 @@ contract SpaceFactory is ISpaceFactory {
         uint32 minVotingDuration,
         uint32 maxVotingDuration,
         uint256 proposalThreshold,
-        uint256 quorum,
         string calldata metadataUri,
         Strategy[] calldata votingStrategies,
         address[] calldata authenticators,
-        address[] calldata executionStrategies,
+        Strategy[] calldata executionStrategies,
         bytes32 salt
     ) external override {
         try
@@ -48,7 +47,6 @@ contract SpaceFactory is ISpaceFactory {
                     minVotingDuration,
                     maxVotingDuration,
                     proposalThreshold,
-                    quorum,
                     votingStrategies,
                     authenticators,
                     executionStrategies
@@ -62,7 +60,6 @@ contract SpaceFactory is ISpaceFactory {
                 minVotingDuration,
                 maxVotingDuration,
                 proposalThreshold,
-                quorum,
                 metadataUri,
                 votingStrategies,
                 authenticators,
