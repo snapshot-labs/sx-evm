@@ -9,33 +9,31 @@ import "../src/SpaceFactory.sol";
 import "../src/interfaces/space-factory/ISpaceFactoryEvents.sol";
 import "../src/interfaces/space-factory/ISpaceFactoryErrors.sol";
 
-contract SpaceFactoryTest is Test, ISpaceFactoryEvents, ISpaceFactoryErrors {
-    SpaceFactory public factory;
+import "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
+contract SpaceFactoryTest is Test, ISpaceFactoryEvents, ISpaceFactoryErrors {
+    Space public masterSpace;
+    SpaceFactory public factory;
     VanillaVotingStrategy vanillaVotingStrategy;
     VanillaAuthenticator vanillaAuthenticator;
     VanillaExecutionStrategy vanillaExecutionStrategy;
-
     Strategy[] votingStrategies;
     address[] authenticators;
     address[] executionStrategies;
-
     address public controller;
     uint32 public votingDelay;
     uint32 public minVotingDuration;
     uint32 public maxVotingDuration;
     uint256 public proposalThreshold;
     uint32 public quorum;
-
     string metadataUri = "SX-EVM";
 
     function setUp() public {
-        factory = new SpaceFactory();
-
+        masterSpace = new Space();
+        factory = new SpaceFactory(address(masterSpace));
         vanillaVotingStrategy = new VanillaVotingStrategy();
         vanillaAuthenticator = new VanillaAuthenticator();
         vanillaExecutionStrategy = new VanillaExecutionStrategy();
-
         controller = address(1);
         votingDelay = 0;
         minVotingDuration = 0;
@@ -50,18 +48,7 @@ contract SpaceFactoryTest is Test, ISpaceFactoryEvents, ISpaceFactoryErrors {
     function testCreateSpace() public {
         bytes32 salt = bytes32(keccak256(abi.encodePacked("random salt")));
         // Pre-computed address of the space (possible because of CREATE2 deployment)
-        address space = _getSpaceAddress(
-            controller,
-            votingDelay,
-            minVotingDuration,
-            maxVotingDuration,
-            proposalThreshold,
-            quorum,
-            votingStrategies,
-            authenticators,
-            executionStrategies,
-            salt
-        );
+        address space = _getProxyAddress(salt);
 
         vm.expectEmit(true, true, true, true);
         emit SpaceCreated(
@@ -77,7 +64,6 @@ contract SpaceFactoryTest is Test, ISpaceFactoryEvents, ISpaceFactoryErrors {
             authenticators,
             executionStrategies
         );
-
         factory.createSpace(
             controller,
             votingDelay,
@@ -95,7 +81,6 @@ contract SpaceFactoryTest is Test, ISpaceFactoryEvents, ISpaceFactoryErrors {
 
     function testCreateSpaceReusedSalt() public {
         bytes32 salt = bytes32(keccak256(abi.encodePacked("random salt")));
-
         factory.createSpace(
             controller,
             votingDelay,
@@ -109,7 +94,6 @@ contract SpaceFactoryTest is Test, ISpaceFactoryEvents, ISpaceFactoryErrors {
             executionStrategies,
             salt
         );
-
         // Reusing the same salt should revert as the computed space address will be
         // the same as the first deployment.
         vm.expectRevert(abi.encodePacked(SpaceCreationFailed.selector)); // EVM revert
@@ -128,18 +112,7 @@ contract SpaceFactoryTest is Test, ISpaceFactoryEvents, ISpaceFactoryErrors {
         );
     }
 
-    function _getSpaceAddress(
-        address _controller,
-        uint32 _votingDelay,
-        uint32 _minVotingDuration,
-        uint32 _maxVotingDuration,
-        uint256 _proposalThreshold,
-        uint256 _quorum,
-        Strategy[] memory _votingStrategies,
-        address[] memory _authenticators,
-        address[] memory _executionStrategies,
-        bytes32 salt
-    ) internal view returns (address) {
+    function _getProxyAddress(bytes32 salt) internal view returns (address) {
         return
             address(
                 uint160(
@@ -151,17 +124,21 @@ contract SpaceFactoryTest is Test, ISpaceFactoryEvents, ISpaceFactoryErrors {
                                 salt,
                                 keccak256(
                                     abi.encodePacked(
-                                        type(Space).creationCode,
+                                        type(ERC1967Proxy).creationCode,
                                         abi.encode(
-                                            _controller,
-                                            _votingDelay,
-                                            _minVotingDuration,
-                                            _maxVotingDuration,
-                                            _proposalThreshold,
-                                            _quorum,
-                                            _votingStrategies,
-                                            _authenticators,
-                                            _executionStrategies
+                                            address(masterSpace),
+                                            abi.encodeWithSignature(
+                                                "initialize(address,uint32,uint32,uint32,uint256,uint256,(address,bytes)[],address[],address[])",
+                                                controller,
+                                                votingDelay,
+                                                minVotingDuration,
+                                                maxVotingDuration,
+                                                proposalThreshold,
+                                                quorum,
+                                                votingStrategies,
+                                                authenticators,
+                                                executionStrategies
+                                            )
                                         )
                                     )
                                 )

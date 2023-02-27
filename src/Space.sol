@@ -53,33 +53,6 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable {
     // |                                  |
     // ------------------------------------
 
-    // constructor(
-    //     address _controller,
-    //     uint32 _votingDelay,
-    //     uint32 _minVotingDuration,
-    //     uint32 _maxVotingDuration,
-    //     uint256 _proposalThreshold,
-    //     uint256 _quorum,
-    //     Strategy[] memory _votingStrategies,
-    //     address[] memory _authenticators,
-    //     address[] memory _executionStrategies
-    // ) {
-    //     transferOwnership(_controller);
-    //     _setMaxVotingDuration(_maxVotingDuration);
-    //     _setMinVotingDuration(_minVotingDuration);
-    //     _setProposalThreshold(_proposalThreshold);
-    //     _setQuorum(_quorum);
-    //     _setVotingDelay(_votingDelay);
-    //     _addVotingStrategies(_votingStrategies);
-    //     _addAuthenticators(_authenticators);
-    //     _addExecutionStrategies(_executionStrategies);
-
-    //     nextProposalId = 1;
-
-    //     // No event events emitted here because the constructor is called by the factory,
-    //     // which emits a space creation event.
-    // }
-
     function initialize(
         address _controller,
         uint32 _votingDelay,

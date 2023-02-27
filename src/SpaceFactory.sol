@@ -9,11 +9,16 @@ import "./types.sol";
 import "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
 /**
- * @title   Space Factory
- * @notice  A contract to deploy and track spaces
+ * @title   Immutable Space Proxy Factory
+ * @notice  A contract to deploy and track proxies of a master Space contract
  * @author  Snapshot Labs
  */
 contract SpaceFactory is ISpaceFactory {
+    bytes4 private constant INITIALIZE_SELECTOR =
+        bytes4(
+            keccak256("initialize(address,uint32,uint32,uint32,uint256,uint256,(address,bytes)[],address[],address[])")
+        );
+
     address public immutable masterSpace;
 
     constructor(address _masterSpace) {
@@ -36,24 +41,20 @@ contract SpaceFactory is ISpaceFactory {
         try
             new ERC1967Proxy{ salt: salt }(
                 masterSpace,
-                ""
-            )
-        returns (ERC1967Proxy space) {
-            address(space).call(
-                abi.encodeWithSignature(
-                    "initialize(address,uint32,uint32,uint32,uint256,uint256,(address,bytes)[],address[],address[])",
+                abi.encodeWithSelector(
+                    INITIALIZE_SELECTOR,
                     controller,
                     votingDelay,
                     minVotingDuration,
                     maxVotingDuration,
                     proposalThreshold,
                     quorum,
-                    metadataUri,
                     votingStrategies,
                     authenticators,
                     executionStrategies
                 )
-            );
+            )
+        returns (ERC1967Proxy space) {
             emit SpaceCreated(
                 address(space),
                 controller,
