@@ -7,10 +7,12 @@ import "../src/execution-strategies/OptimisticQuorumExecutionStrategy.sol";
 import "../src/types.sol";
 
 contract OptimisticTest is SpaceTest {
+    OptimisticQuorumExecutionStrategy optimisticQuorumStrategy;
+
     function setUp() public virtual override {
         super.setUp();
 
-        OptimisticQuorumExecutionStrategy optimisticQuorumStrategy = new OptimisticQuorumExecutionStrategy();
+        optimisticQuorumStrategy = new OptimisticQuorumExecutionStrategy();
         // Update Quorum. Will need 2 `NO` votes in order to be rejected.
         quorum = 2;
         Strategy[] memory newStrategies = new Strategy[](1);
@@ -105,5 +107,44 @@ contract OptimisticTest is SpaceTest {
         space.execute(proposalId, executionStrategy.params);
 
         assertEq(uint8(space.getProposalStatus(proposalId)), uint8(ProposalStatus.Executed));
+    }
+
+    function testOptimisticQuorumLotsOfVotes() public {
+        // SET A QUORUM OF 100
+        {
+            quorum = 100;
+            Strategy[] memory newStrategies = new Strategy[](1);
+            newStrategies[0] = Strategy(address(optimisticQuorumStrategy), abi.encode(quorum));
+
+            executionStrategy = IndexedStrategy(2, new bytes(0));
+            // Add the optimistic quorum execution strategy
+            space.addExecutionStrategies(newStrategies);
+
+            uint8[] memory toRemove = new uint8[](1);
+            toRemove[0] = 1;
+            // Remove the old execution strategy
+            space.removeExecutionStrategies(toRemove);
+        }
+
+        uint256 proposalId = _createProposal(author, proposalMetadataUri, executionStrategy, userVotingStrategies);
+        // Add 200 FOR votes
+        for (uint160 i = 10; i < 210; i++) {
+            _vote(address(i), proposalId, Choice.For, userVotingStrategies);
+        }
+        // Add 150 ABSTAIN votes
+        for (uint160 i = 500; i < 650; i++) {
+            _vote(address(i), proposalId, Choice.Abstain, userVotingStrategies);
+        }
+        // Add 100 AGAINST votes
+        for (uint160 i = 700; i < 800; i++) {
+            _vote(address(i), proposalId, Choice.Against, userVotingStrategies);
+        }
+
+        vm.warp(block.timestamp + space.maxVotingDuration());
+
+        vm.expectRevert(abi.encodeWithSelector(InvalidProposalStatus.selector, ProposalStatus.Rejected));
+        space.execute(proposalId, executionStrategy.params);
+
+        assertEq(uint8(space.getProposalStatus(proposalId)), uint8(ProposalStatus.Rejected));
     }
 }
