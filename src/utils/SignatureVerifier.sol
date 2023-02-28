@@ -72,7 +72,7 @@ abstract contract SignatureVerifier is EIP712 {
             uint256 proposeId,
             Choice choice,
             IndexedStrategy[] memory userVotingStrategies,
-            string memory voteMetadata
+            string memory voteMetadataUri
         ) = abi.decode(data, (address, uint256, Choice, IndexedStrategy[], string));
 
         address recoveredAddress = ECDSA.recover(
@@ -85,7 +85,7 @@ abstract contract SignatureVerifier is EIP712 {
                         proposeId,
                         choice,
                         userVotingStrategies.hash(),
-                        keccak256(bytes(voteMetadata))
+                        keccak256(bytes(voteMetadataUri))
                     )
                 )
             ),

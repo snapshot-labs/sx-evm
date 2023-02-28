@@ -17,7 +17,7 @@ interface ISpaceActions {
         uint256 proposalId,
         Choice choice,
         IndexedStrategy[] calldata userVotingStrategies,
-        string calldata voteMetadata
+        string calldata voteMetadataUri
     ) external;
 
     function execute(uint256 proposalId, bytes calldata payload) external;

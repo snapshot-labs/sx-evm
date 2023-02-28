@@ -93,7 +93,7 @@ contract GasSnapshotsTest is SpaceTest, SigUtils {
                 proposalId,
                 Choice.For,
                 userVotingStrategies,
-                voteMetadata
+                voteMetadataUri
             );
             (uint8 v, bytes32 r, bytes32 s) = vm.sign(voterKey, digest);
 
@@ -105,7 +105,7 @@ contract GasSnapshotsTest is SpaceTest, SigUtils {
                 0,
                 address(space),
                 VOTE_SELECTOR,
-                abi.encode(voter, proposalId, Choice.For, userVotingStrategies, voteMetadata)
+                abi.encode(voter, proposalId, Choice.For, userVotingStrategies, voteMetadataUri)
             );
             snapEnd();
         }
