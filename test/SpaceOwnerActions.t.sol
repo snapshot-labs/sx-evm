@@ -298,9 +298,24 @@ contract SpaceOwnerActionsTest is SpaceTest {
 
     // ------- Upgrading a Space ----
 
-    // function testSpaceUpgrade() public {
-    //     SpaceV2 spaceV2 = new SpaceV2();
+    function testSpaceUpgrade() public {
+        SpaceV2 spaceV2Implementation = new SpaceV2();
 
-    //     (, bytes memory data) = address(proxy).call(abi.encodeWithSignature("upgradeTo(address)", address(impl2)));
-    // }
+        space.upgradeTo(address(spaceV2Implementation));
+
+        // casting Space to SpaceV2
+        SpaceV2 space = SpaceV2(address(space));
+
+        // testing new functionality added in V2
+        assertEq(space.getMagicNumber(), 0);
+        space.setMagicNumber(42);
+        assertEq(space.getMagicNumber(), 42);
+    }
+
+    function testSpaceUpgradeUnauthorized() public {
+        SpaceV2 spaceV2Implementation = new SpaceV2();
+        vm.prank(unauthorized);
+        vm.expectRevert("Ownable: caller is not the owner");
+        space.upgradeTo(address(spaceV2Implementation));
+    }
 }

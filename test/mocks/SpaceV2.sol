@@ -8,7 +8,7 @@ pragma solidity ^0.8.15;
 contract SpaceV2 is Space {
     uint256 magicNumber;
 
-    function setMagicNumber(uint256 newMagicNumber) public onlyOwner {
+    function setMagicNumber(uint256 newMagicNumber) public {
         magicNumber = newMagicNumber;
     }
 
