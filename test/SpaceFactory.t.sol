@@ -153,8 +153,8 @@ contract SpaceFactoryTest is Test, ISpaceFactoryEvents, ISpaceFactoryErrors {
                                         type(ERC1967Proxy).creationCode,
                                         abi.encode(
                                             address(masterSpace),
-                                            abi.encodeWithSignature(
-                                                "initialize(address,uint32,uint32,uint32,uint256,(address,bytes)[],address[],(address,bytes)[])",
+                                            abi.encodeWithSelector(
+                                                Space.initialize.selector,
                                                 controller,
                                                 votingDelay,
                                                 minVotingDuration,
