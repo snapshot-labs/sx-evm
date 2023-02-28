@@ -125,7 +125,14 @@ abstract contract SigUtils {
                     )
                 ),
                 keccak256(
-                    abi.encode(UPDATE_PROPOSAL_TYPEHASH, space, author, proposalId, executionStrategy, metadataUri)
+                    abi.encode(
+                        UPDATE_PROPOSAL_TYPEHASH,
+                        space,
+                        author,
+                        proposalId,
+                        executionStrategy.hash(),
+                        keccak256(bytes(metadataUri))
+                    )
                 )
             )
         );

@@ -90,14 +90,21 @@ abstract contract SignatureVerifier is EIP712 {
         if (recoveredAddress != voter) revert InvalidSignature();
     }
 
-    function _verifyupdateProposalSig(uint8 v, bytes32 r, bytes32 s, address space, bytes memory data) internal {
-        (address author, uint256 proposeId, IndexedStrategy memory executionStrategy, string memory metadataUri) = abi
+    function _verifyUpdateProposalSig(uint8 v, bytes32 r, bytes32 s, address space, bytes memory data) internal {
+        (address author, uint256 proposalId, IndexedStrategy memory executionStrategy, string memory metadataUri) = abi
             .decode(data, (address, uint256, IndexedStrategy, string));
 
         address recoveredAddress = ECDSA.recover(
             _hashTypedDataV4(
                 keccak256(
-                    abi.encode(UPDATE_PROPOSAL_TYPEHASH, space, author, proposeId, executionStrategy, metadataUri)
+                    abi.encode(
+                        UPDATE_PROPOSAL_TYPEHASH,
+                        space,
+                        author,
+                        proposalId,
+                        executionStrategy.hash(),
+                        keccak256(bytes(metadataUri))
+                    )
                 )
             ),
             v,
