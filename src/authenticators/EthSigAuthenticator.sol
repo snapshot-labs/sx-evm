@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.15;
+pragma solidity ^0.8.18;
 
 import "./Authenticator.sol";
 import "../utils/SignatureVerifier.sol";
@@ -23,6 +23,8 @@ contract EthSigAuthenticator is Authenticator, SignatureVerifier {
             _verifyProposeSig(v, r, s, salt, target, data);
         } else if (functionSelector == VOTE_SELECTOR) {
             _verifyVoteSig(v, r, s, target, data);
+        } else if (functionSelector == UPDATE_PROPOSAL_SELECTOR) {
+            _verifyUpdateProposalSig(v, r, s, target, data);
         } else {
             revert InvalidFunctionSelector();
         }

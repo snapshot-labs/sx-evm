@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.15;
+pragma solidity ^0.8.18;
 
 interface ISpaceErrors {
     // Min duration should be smaller than or equal to max duration
@@ -7,6 +7,7 @@ interface ISpaceErrors {
     // Array is empty
     error EmptyArray();
 
+    error InvalidCaller();
     // All strategy addresses must be != address(0).
     error InvalidStrategyAddress();
     error InvalidVotingStrategyIndex(uint256 index);
@@ -24,4 +25,5 @@ interface ISpaceErrors {
     error VotingPeriodHasEnded();
     error VotingPeriodHasNotStarted();
     error ProposalFinalized();
+    error VotingDelayHasPassed();
 }
