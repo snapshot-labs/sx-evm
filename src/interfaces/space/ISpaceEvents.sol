@@ -4,13 +4,7 @@ pragma solidity ^0.8.15;
 import "src/types.sol";
 
 interface ISpaceEvents {
-    event ProposalCreated(
-        uint256 nextProposalId,
-        address proposerAddress,
-        Proposal proposal,
-        string metadataUri,
-        bytes payload
-    );
+    event ProposalCreated(uint256 nextProposalId, address author, Proposal proposal, string metadataUri, bytes payload);
     event VoteCreated(uint256 proposalId, address voterAddress, Vote vote);
     event ProposalExecuted(uint256 proposalId);
     event ProposalCancelled(uint256 proposalId);

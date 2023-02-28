@@ -29,7 +29,7 @@ abstract contract SigUtils {
         );
     bytes32 private constant UPDATE_PROPOSAL_TYPEHASH =
         keccak256(
-            "updateProposal(address space,address proposer,uint256 proposalId,"
+            "updateProposal(address space,address author,uint256 proposalId,"
             "IndexedStrategy executionStrategy,string metadataUri)"
             "IndexedStrategy(uint8 index,bytes params)"
         );
@@ -107,7 +107,7 @@ abstract contract SigUtils {
     function _getUpdateProposalDigest(
         address authenticator,
         address space,
-        address proposer,
+        address author,
         uint256 proposalId,
         IndexedStrategy memory executionStrategy,
         string memory metadataUri
@@ -125,7 +125,7 @@ abstract contract SigUtils {
                     )
                 ),
                 keccak256(
-                    abi.encode(UPDATE_PROPOSAL_TYPEHASH, space, proposer, proposalId, executionStrategy, metadataUri)
+                    abi.encode(UPDATE_PROPOSAL_TYPEHASH, space, author, proposalId, executionStrategy, metadataUri)
                 )
             )
         );

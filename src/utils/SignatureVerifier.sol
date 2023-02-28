@@ -28,7 +28,7 @@ abstract contract SignatureVerifier is EIP712 {
         );
     bytes32 private constant UPDATE_PROPOSAL_TYPEHASH =
         keccak256(
-            "updateProposal(address space,address proposer,uint256 proposalId,"
+            "updateProposal(address space,address author,uint256 proposalId,"
             "IndexedStrategy executionStrategy,string metadataUri)"
             "IndexedStrategy(uint8 index,bytes params)"
         );
@@ -91,13 +91,15 @@ abstract contract SignatureVerifier is EIP712 {
     }
 
     function _verifyupdateProposalSig(uint8 v, bytes32 r, bytes32 s, address space, bytes memory data) internal {
-        (address proposer, uint256 proposeId, Strategy memory executionStrategy, string memory metadataUri) = abi
-            .decode(data, (address, uint256, Strategy, string));
+        (address author, uint256 proposeId, Strategy memory executionStrategy, string memory metadataUri) = abi.decode(
+            data,
+            (address, uint256, Strategy, string)
+        );
 
         address recoveredAddress = ECDSA.recover(
             _hashTypedDataV4(
                 keccak256(
-                    abi.encode(UPDATE_PROPOSAL_TYPEHASH, space, proposer, proposeId, executionStrategy, metadataUri)
+                    abi.encode(UPDATE_PROPOSAL_TYPEHASH, space, author, proposeId, executionStrategy, metadataUri)
                 )
             ),
             v,
@@ -105,6 +107,6 @@ abstract contract SignatureVerifier is EIP712 {
             s
         );
 
-        if (recoveredAddress != proposer) revert InvalidSignature();
+        if (recoveredAddress != author) revert InvalidSignature();
     }
 }

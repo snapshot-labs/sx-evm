@@ -35,8 +35,8 @@ contract EthTxAuthenticator is Authenticator {
     }
 
     function _verifyUpdateProposal(bytes calldata data) internal view {
-        (address proposer, , , ) = abi.decode(data, (address, uint256, Strategy, string));
-        if (proposer != msg.sender) revert InvalidMessageSender();
+        (address author, , , ) = abi.decode(data, (address, uint256, Strategy, string));
+        if (author != msg.sender) revert InvalidMessageSender();
     }
 
     function authenticate(address target, bytes4 functionSelector, bytes calldata data) external {
