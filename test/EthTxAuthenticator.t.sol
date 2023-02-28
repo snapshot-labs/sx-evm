@@ -121,7 +121,7 @@ contract EthTxAuthenticatorTest is SpaceTest {
         space.execute(proposalId, executionStrategy.params);
     }
 
-    function testAuthenticateTxUpdateProposalInvalidVoter() public {
+    function testAuthenticateTxUpdateProposalInvalidCaller() public {
         uint256 proposalId = 1;
 
         vm.expectRevert(InvalidMessageSender.selector);
