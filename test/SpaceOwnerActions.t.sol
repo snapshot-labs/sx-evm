@@ -2,6 +2,7 @@
 pragma solidity ^0.8.15;
 
 import "./utils/Space.t.sol";
+import "./mocks/SpaceV2.sol";
 
 contract SpaceOwnerActionsTest is SpaceTest {
     // ------- Cancel Proposal ----
@@ -294,4 +295,12 @@ contract SpaceOwnerActionsTest is SpaceTest {
         vm.prank(unauthorized);
         space.removeExecutionStrategies(indices);
     }
+
+    // ------- Upgrading a Space ----
+
+    // function testSpaceUpgrade() public {
+    //     SpaceV2 spaceV2 = new SpaceV2();
+
+    //     (, bytes memory data) = address(proxy).call(abi.encodeWithSignature("upgradeTo(address)", address(impl2)));
+    // }
 }
