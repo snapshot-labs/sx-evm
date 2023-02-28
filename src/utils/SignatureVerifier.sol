@@ -91,10 +91,8 @@ abstract contract SignatureVerifier is EIP712 {
     }
 
     function _verifyupdateProposalSig(uint8 v, bytes32 r, bytes32 s, address space, bytes memory data) internal {
-        (address author, uint256 proposeId, Strategy memory executionStrategy, string memory metadataUri) = abi.decode(
-            data,
-            (address, uint256, Strategy, string)
-        );
+        (address author, uint256 proposeId, IndexedStrategy memory executionStrategy, string memory metadataUri) = abi
+            .decode(data, (address, uint256, IndexedStrategy, string));
 
         address recoveredAddress = ECDSA.recover(
             _hashTypedDataV4(
