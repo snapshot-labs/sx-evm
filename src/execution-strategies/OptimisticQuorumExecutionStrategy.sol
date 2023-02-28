@@ -4,24 +4,14 @@ pragma solidity ^0.8.15;
 
 import "../interfaces/IExecutionStrategy.sol";
 
-contract OptimisticQuorumExecutionStrategy is IExecutionStrategy {
-    uint256 numExecuted;
-
+abstract contract OptimisticQuorumExecutionStrategy is IExecutionStrategy {
     function execute(
         Proposal memory proposal,
         uint256 votesFor,
         uint256 votesAgainst,
         uint256 votesAbstain,
         bytes memory payload
-    ) external override {
-        ProposalStatus proposalStatus = getProposalStatus(proposal, votesFor, votesAgainst, votesAbstain);
-        if ((proposalStatus != ProposalStatus.Accepted) && (proposalStatus != ProposalStatus.VotingPeriodAccepted)) {
-            revert InvalidProposalStatus(proposalStatus);
-        }
-        // Check that the execution payload matches the payload supplied when the proposal was created
-        if (proposal.executionPayloadHash != keccak256(payload)) revert InvalidPayload();
-        numExecuted++;
-    }
+    ) external virtual override;
 
     function getProposalStatus(
         Proposal memory proposal,

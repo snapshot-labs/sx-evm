@@ -6,13 +6,34 @@ import "./utils/Space.t.sol";
 import "../src/execution-strategies/OptimisticQuorumExecutionStrategy.sol";
 import "../src/types.sol";
 
+// Dummy implementation of the optimistic quorum
+contract OptimisticExec is OptimisticQuorumExecutionStrategy {
+    uint256 numExecuted;
+
+    function execute(
+        Proposal memory proposal,
+        uint256 votesFor,
+        uint256 votesAgainst,
+        uint256 votesAbstain,
+        bytes memory payload
+    ) external override {
+        ProposalStatus proposalStatus = getProposalStatus(proposal, votesFor, votesAgainst, votesAbstain);
+        if ((proposalStatus != ProposalStatus.Accepted) && (proposalStatus != ProposalStatus.VotingPeriodAccepted)) {
+            revert InvalidProposalStatus(proposalStatus);
+        }
+        // Check that the execution payload matches the payload supplied when the proposal was created
+        if (proposal.executionPayloadHash != keccak256(payload)) revert InvalidPayload();
+        numExecuted++;
+    }
+}
+
 contract OptimisticTest is SpaceTest {
-    OptimisticQuorumExecutionStrategy optimisticQuorumStrategy;
+    OptimisticExec optimisticQuorumStrategy;
 
     function setUp() public virtual override {
         super.setUp();
 
-        optimisticQuorumStrategy = new OptimisticQuorumExecutionStrategy();
+        optimisticQuorumStrategy = new OptimisticExec();
         // Update Quorum. Will need 2 `NO` votes in order to be rejected.
         quorum = 2;
         Strategy[] memory newStrategies = new Strategy[](1);
