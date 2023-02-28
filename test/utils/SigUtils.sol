@@ -100,7 +100,7 @@ abstract contract SigUtils {
                         proposalId,
                         choice,
                         usedVotingStrategies.hash(),
-                        voteMetadata
+                        keccak256(bytes(voteMetadata))
                     )
                 )
             )

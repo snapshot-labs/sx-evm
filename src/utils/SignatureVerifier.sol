@@ -85,7 +85,7 @@ abstract contract SignatureVerifier is EIP712 {
                         proposeId,
                         choice,
                         userVotingStrategies.hash(),
-                        voteMetadata
+                        keccak256(bytes(voteMetadata))
                     )
                 )
             ),
