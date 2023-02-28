@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.15;
+pragma solidity ^0.8.18;
 
 import "../../types.sol";
 
@@ -14,6 +14,7 @@ interface ISpaceFactoryEvents {
         uint256 proposalThreshold,
         string metadataUri,
         Strategy[] votingStrategies,
+        bytes[] votingStrategyMetadata,
         address[] authenticators,
         Strategy[] executionStrategies
     );

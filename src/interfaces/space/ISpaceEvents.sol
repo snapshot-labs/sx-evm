@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.15;
+pragma solidity ^0.8.18;
 
 import "src/types.sol";
 
 interface ISpaceEvents {
     event ProposalCreated(uint256 nextProposalId, address author, Proposal proposal, string metadataUri, bytes payload);
-    event VoteCreated(uint256 proposalId, address voterAddress, Vote vote);
+    event VoteCreated(uint256 proposalId, address voterAddress, Vote vote, string voteMetadataUri);
     event ProposalExecuted(uint256 proposalId);
     event ProposalCancelled(uint256 proposalId);
-    event VotingStrategiesAdded(Strategy[] votingStrategies);
+    event VotingStrategiesAdded(Strategy[] votingStrategies, bytes[] data);
     event VotingStrategiesRemoved(uint8[] indices);
     event ExecutionStrategiesAdded(Strategy[] executionStrategies);
     event ExecutionStrategiesRemoved(uint8[] executionStrategies);

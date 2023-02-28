@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.15;
+pragma solidity ^0.8.18;
 
 import "@zodiac/interfaces/IAvatar.sol";
 import "./SimpleQuorumExecutionStrategy.sol";
@@ -90,5 +90,9 @@ contract AvatarExecutionStrategy is SpaceManager, SimpleQuorumExecutionStrategy 
             // If any transaction fails, the entire execution will revert
             if (!success) revert ExecutionFailed();
         }
+    }
+
+    function getStrategyType() external pure override returns (string memory) {
+        return "SimpleQuorumAvatar";
     }
 }

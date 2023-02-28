@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.15;
+pragma solidity ^0.8.18;
 
 import "../types.sol";
 import "./execution-strategies/IExecutionStrategyErrors.sol";
@@ -20,4 +20,6 @@ interface IExecutionStrategy is IExecutionStrategyErrors {
         uint256 votesAgainst,
         uint256 votesAbstain
     ) external view returns (ProposalStatus);
+
+    function getStrategyType() external view returns (string memory);
 }

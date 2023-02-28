@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.15;
+pragma solidity ^0.8.18;
 
 import "src/types.sol";
 
@@ -16,7 +16,8 @@ interface ISpaceActions {
         address voterAddress,
         uint256 proposalId,
         Choice choice,
-        IndexedStrategy[] calldata userVotingStrategies
+        IndexedStrategy[] calldata userVotingStrategies,
+        string calldata voteMetadataUri
     ) external;
 
     function execute(uint256 proposalId, bytes calldata payload) external;

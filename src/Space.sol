@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.15;
+pragma solidity ^0.8.18;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
@@ -35,13 +35,13 @@ contract Space is ISpace, Ownable, ReentrancyGuard {
     Strategy[] private executionStrategies;
 
     // Mapping of allowed authenticators.
-    mapping(address => bool) private authenticators;
+    mapping(address auth => bool allowed) private authenticators;
     // Mapping of all `Proposal`s of this space (past and present).
-    mapping(uint256 => Proposal) private proposalRegistry;
+    mapping(uint256 proposalId => Proposal proposal) private proposalRegistry;
     // Mapping used to know if a voter already voted on a specific proposal. Here to prevent double voting.
-    mapping(uint256 => mapping(address => bool)) private voteRegistry;
+    mapping(uint256 proposalId => mapping(address voter => bool hasVoted)) private voteRegistry;
     // Mapping used to check the current voting power in favor of a `Choice` for a specific proposal.
-    mapping(uint256 => mapping(Choice => uint256)) private votePower;
+    mapping(uint256 proposalId => mapping(Choice choice => uint256 votePower)) private votePower;
 
     // ------------------------------------
     // |                                  |
@@ -56,6 +56,7 @@ contract Space is ISpace, Ownable, ReentrancyGuard {
         uint32 _maxVotingDuration,
         uint256 _proposalThreshold,
         Strategy[] memory _votingStrategies,
+        bytes[] memory, // data
         address[] memory _authenticators,
         Strategy[] memory _executionStrategies
     ) {
@@ -340,9 +341,12 @@ contract Space is ISpace, Ownable, ReentrancyGuard {
         emit VotingDelayUpdated(_votingDelay);
     }
 
-    function addVotingStrategies(Strategy[] calldata _votingStrategies) external override onlyOwner {
+    function addVotingStrategies(
+        Strategy[] calldata _votingStrategies,
+        bytes[] calldata votingStrategyMetadata
+    ) external override onlyOwner {
         _addVotingStrategies(_votingStrategies);
-        emit VotingStrategiesAdded(_votingStrategies);
+        emit VotingStrategiesAdded(_votingStrategies, votingStrategyMetadata);
     }
 
     function removeVotingStrategies(uint8[] calldata _votingStrategyIndices) external override onlyOwner {
@@ -464,12 +468,14 @@ contract Space is ISpace, Ownable, ReentrancyGuard {
      * @param   proposalId  Proposal id.
      * @param   choice  Choice can be `For`, `Against` or `Abstain`.
      * @param   userVotingStrategies  Strategies to use to compute the voter's voting power.
+     * @param   voteMetadataUri  An optional metadata to give information about the vote.
      */
     function vote(
         address voterAddress,
         uint256 proposalId,
         Choice choice,
-        IndexedStrategy[] calldata userVotingStrategies
+        IndexedStrategy[] calldata userVotingStrategies,
+        string calldata voteMetadataUri
     ) external override {
         _assertValidAuthenticator();
 
@@ -496,7 +502,7 @@ contract Space is ISpace, Ownable, ReentrancyGuard {
 
         voteRegistry[proposalId][voterAddress] = true;
 
-        emit VoteCreated(proposalId, voterAddress, Vote(choice, votingPower));
+        emit VoteCreated(proposalId, voterAddress, Vote(choice, votingPower), voteMetadataUri);
     }
 
     /**

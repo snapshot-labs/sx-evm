@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.15;
+pragma solidity ^0.8.18;
 
 import "forge-std/Test.sol";
 import "../src/voting-strategies/CompVotingStrategy.sol";
@@ -28,9 +28,10 @@ contract GasSnapshotsTest is SpaceTest, SigUtils {
         compVotingStrategy = new CompVotingStrategy();
         compToken = new CompToken();
         newStrategies[0] = Strategy(address(compVotingStrategy), abi.encodePacked(address(compToken)));
+        bytes[] memory newData = new bytes[](0);
 
         // Update contract's voting strategies.
-        space.addVotingStrategies(newStrategies);
+        space.addVotingStrategies(newStrategies, newData);
 
         // Mint tokens for the user
         compToken.mint(user, 10000);
@@ -86,14 +87,14 @@ contract GasSnapshotsTest is SpaceTest, SigUtils {
         // Vote
         {
             uint256 proposalId = 1;
-            uint256 salt = 1;
             bytes32 digest = _getVoteDigest(
                 address(ethSigAuth),
                 address(space),
                 voter,
                 proposalId,
                 Choice.For,
-                userVotingStrategies
+                userVotingStrategies,
+                voteMetadataUri
             );
             (uint8 v, bytes32 r, bytes32 s) = vm.sign(voterKey, digest);
 
@@ -102,10 +103,10 @@ contract GasSnapshotsTest is SpaceTest, SigUtils {
                 v,
                 r,
                 s,
-                salt,
+                0,
                 address(space),
                 VOTE_SELECTOR,
-                abi.encode(voter, proposalId, Choice.For, userVotingStrategies)
+                abi.encode(voter, proposalId, Choice.For, userVotingStrategies, voteMetadataUri)
             );
             snapEnd();
         }

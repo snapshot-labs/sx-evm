@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.15;
+pragma solidity ^0.8.18;
 
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import "@openzeppelin/contracts/utils/cryptography/EIP712.sol";
@@ -33,7 +33,7 @@ abstract contract SignatureVerifier is EIP712 {
             "IndexedStrategy(uint8 index,bytes params)"
         );
 
-    mapping(address => mapping(uint256 => bool)) private usedSalts;
+    mapping(address author => mapping(uint256 salt => bool used)) private usedSalts;
 
     constructor(string memory name, string memory version) EIP712(name, version) {}
 
@@ -73,14 +73,27 @@ abstract contract SignatureVerifier is EIP712 {
     }
 
     function _verifyVoteSig(uint8 v, bytes32 r, bytes32 s, address space, bytes memory data) internal view {
-        (address voter, uint256 proposeId, Choice choice, IndexedStrategy[] memory userVotingStrategies) = abi.decode(
-            data,
-            (address, uint256, Choice, IndexedStrategy[])
-        );
+        (
+            address voter,
+            uint256 proposeId,
+            Choice choice,
+            IndexedStrategy[] memory userVotingStrategies,
+            string memory voteMetadataUri
+        ) = abi.decode(data, (address, uint256, Choice, IndexedStrategy[], string));
 
         address recoveredAddress = ECDSA.recover(
             _hashTypedDataV4(
-                keccak256(abi.encode(VOTE_TYPEHASH, space, voter, proposeId, choice, userVotingStrategies.hash()))
+                keccak256(
+                    abi.encode(
+                        VOTE_TYPEHASH,
+                        space,
+                        voter,
+                        proposeId,
+                        choice,
+                        userVotingStrategies.hash(),
+                        keccak256(bytes(voteMetadataUri))
+                    )
+                )
             ),
             v,
             r,
