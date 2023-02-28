@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.15;
+pragma solidity ^0.8.18;
 
 import "forge-std/Test.sol";
 import "../src/voting-strategies/CompVotingStrategy.sol";
@@ -7,7 +7,6 @@ import "./mocks/CompToken.sol";
 import "./utils/Space.t.sol";
 import "./utils/SigUtils.sol";
 import "../src/authenticators/EthSigAuthenticator.sol";
-import "forge-std/console2.sol";
 
 contract GasSnapshotsTest is SpaceTest, SigUtils {
     CompVotingStrategy public compVotingStrategy;

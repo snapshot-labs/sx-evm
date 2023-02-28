@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.15;
+pragma solidity ^0.8.18;
 
 import "../interfaces/IExecutionStrategy.sol";
-import "forge-std/console2.sol";
 
 abstract contract SimpleQuorumExecutionStrategy is IExecutionStrategy {
     function execute(
