@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.15;
+pragma solidity ^0.8.18;
 
 import "../interfaces/IExecutionStrategy.sol";
 
@@ -21,7 +21,7 @@ abstract contract OptimisticQuorumExecutionStrategy is IExecutionStrategy {
     ) public view override returns (ProposalStatus) {
         // Decode the quorum parameter from the execution strategy's params
         uint256 quorum = abi.decode(proposal.executionStrategy.params, (uint256));
-        bool accepted = votesAgainst < quorum;
+        bool rejected = votesAgainst >= quorum;
         if (proposal.finalizationStatus == FinalizationStatus.Cancelled) {
             return ProposalStatus.Cancelled;
         } else if (proposal.finalizationStatus == FinalizationStatus.Executed) {
@@ -31,15 +31,15 @@ abstract contract OptimisticQuorumExecutionStrategy is IExecutionStrategy {
         } else if (block.timestamp < proposal.minEndTimestamp) {
             return ProposalStatus.VotingPeriod;
         } else if (block.timestamp < proposal.maxEndTimestamp) {
-            if (accepted) {
-                return ProposalStatus.VotingPeriod;
-            } else {
+            if (rejected) {
                 return ProposalStatus.Rejected;
+            } else {
+                return ProposalStatus.VotingPeriod;
             }
-        } else if (accepted) {
-            return ProposalStatus.Accepted;
-        } else {
+        } else if (rejected) {
             return ProposalStatus.Rejected;
+        } else {
+            return ProposalStatus.Accepted;
         }
     }
 }
