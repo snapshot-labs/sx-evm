@@ -5,7 +5,7 @@ import "../interfaces/IVotingStrategy.sol";
 import "@openzeppelin/contracts/governance/utils/IVotes.sol";
 import "../utils/TimestampResolver.sol";
 
-contract ERC20VotingStrategy is IVotingStrategy, TimestampResolver {
+contract OZVotesVotingStrategy is IVotingStrategy, TimestampResolver {
     error InvalidByteArray();
 
     function getVotingPower(
