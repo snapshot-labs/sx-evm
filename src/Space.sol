@@ -90,14 +90,17 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         );
     }
 
-    // override from UUPSUpgradeable, added onlyOwner modifier for access control
-    function _authorizeUpgrade(address) internal override onlyOwner {}
-
     // ------------------------------------
     // |                                  |
     // |            INTERNAL              |
     // |                                  |
     // ------------------------------------
+
+    /**
+     * @notice Only the space controller can authorize an upgrade to this contract.
+     * @param newImplementation The address of the new implementation.
+     */
+    function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
 
     function _setMaxVotingDuration(uint32 _maxVotingDuration) internal {
         if (_maxVotingDuration < minVotingDuration) revert InvalidDuration(minVotingDuration, _maxVotingDuration);
