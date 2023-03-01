@@ -59,6 +59,7 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         uint32 _minVotingDuration,
         uint32 _maxVotingDuration,
         uint256 _proposalThreshold,
+        string memory _metadataUri,
         Strategy[] memory _votingStrategies,
         address[] memory _authenticators,
         Strategy[] memory _executionStrategies
@@ -75,8 +76,18 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
 
         nextProposalId = 1;
 
-        // No event events emitted here because the constructor is called by the factory,
-        // which emits a space creation event.
+        emit SpaceCreated(
+            address(this),
+            _controller,
+            _votingDelay,
+            _minVotingDuration,
+            _maxVotingDuration,
+            _proposalThreshold,
+            _metadataUri,
+            _votingStrategies,
+            _authenticators,
+            _executionStrategies
+        );
     }
 
     // override from UUPSUpgradeable, added onlyOwner modifier for access control
