@@ -2,9 +2,9 @@
 
 pragma solidity ^0.8.18;
 
-import "../interfaces/IVotingStrategy.sol";
-import "../interfaces/IComp.sol";
-import "../utils/TimestampResolver.sol";
+import { IVotingStrategy } from "../interfaces/IVotingStrategy.sol";
+import { IComp } from "../interfaces/IComp.sol";
+import { TimestampResolver } from "../utils/TimestampResolver.sol";
 
 contract CompVotingStrategy is IVotingStrategy, TimestampResolver {
     error InvalidByteArray();

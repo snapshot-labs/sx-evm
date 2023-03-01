@@ -2,7 +2,8 @@
 
 pragma solidity ^0.8.18;
 
-import "./SimpleQuorumExecutionStrategy.sol";
+import { SimpleQuorumExecutionStrategy } from "./SimpleQuorumExecutionStrategy.sol";
+import { Proposal, ProposalStatus } from "../types.sol";
 
 contract VanillaExecutionStrategy is SimpleQuorumExecutionStrategy {
     uint256 numExecuted;

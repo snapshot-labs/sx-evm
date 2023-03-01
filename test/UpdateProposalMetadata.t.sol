@@ -2,8 +2,8 @@
 
 pragma solidity ^0.8.18;
 
-import "./utils/Space.t.sol";
-import "../src/types.sol";
+import { SpaceTest } from "./utils/Space.t.sol";
+import { Choice, IndexedStrategy } from "../src/types.sol";
 
 contract updateProposalTest is SpaceTest {
     string newMetadataUri = "Testing123";

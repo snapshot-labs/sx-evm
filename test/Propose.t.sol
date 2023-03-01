@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.18;
 
-import "./utils/Space.t.sol";
+import { SpaceTest } from "./utils/Space.t.sol";
+import { FinalizationStatus, IndexedStrategy, Proposal, Strategy } from "../src/types.sol";
+import { VanillaVotingStrategy } from "../src/voting-strategies/VanillaVotingStrategy.sol";
 
 contract ProposeTest is SpaceTest {
     function testPropose() public {

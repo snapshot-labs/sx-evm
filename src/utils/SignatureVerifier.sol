@@ -2,9 +2,9 @@
 
 pragma solidity ^0.8.18;
 
-import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
-import "@openzeppelin/contracts/utils/cryptography/EIP712.sol";
-import "src/types.sol";
+import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
+import { EIP712 } from "@openzeppelin/contracts/utils/cryptography/EIP712.sol";
+import { Choice, IndexedStrategy } from "src/types.sol";
 import { SXHash } from "src/utils/SXHash.sol";
 
 abstract contract SignatureVerifier is EIP712 {

@@ -2,10 +2,11 @@
 
 pragma solidity ^0.8.18;
 
-import "./utils/Space.t.sol";
-import "./utils/Authenticator.t.sol";
-import "./utils/SigUtils.sol";
-import "../src/authenticators/EthSigAuthenticator.sol";
+import { SpaceTest } from "./utils/Space.t.sol";
+import { AuthenticatorTest } from "./utils/Authenticator.t.sol";
+import { SigUtils } from "./utils/SigUtils.sol";
+import { EthSigAuthenticator } from "../src/authenticators/EthSigAuthenticator.sol";
+import { Choice, IndexedStrategy } from "../src/types.sol";
 
 contract EthSigAuthenticatorTest is SpaceTest, SigUtils {
     error InvalidSignature();

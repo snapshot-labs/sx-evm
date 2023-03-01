@@ -2,17 +2,17 @@
 
 pragma solidity ^0.8.18;
 
-import "forge-std/Test.sol";
+import { Test } from "forge-std/Test.sol";
 import { GasSnapshot } from "forge-gas-snapshot/GasSnapshot.sol";
 
-import "../../src/Space.sol";
-import "../../src/authenticators/VanillaAuthenticator.sol";
-import "../../src/voting-strategies/VanillaVotingStrategy.sol";
-import "../../src/execution-strategies/VanillaExecutionStrategy.sol";
-import "../../src/interfaces/space/ISpaceEvents.sol";
-import "../../src/interfaces/space/ISpaceErrors.sol";
-import "../../src/interfaces/execution-strategies/IExecutionStrategyErrors.sol";
-import "../../src/types.sol";
+import { Space } from "../../src/Space.sol";
+import { VanillaAuthenticator } from "../../src/authenticators/VanillaAuthenticator.sol";
+import { VanillaVotingStrategy } from "../../src/voting-strategies/VanillaVotingStrategy.sol";
+import { VanillaExecutionStrategy } from "../../src/execution-strategies/VanillaExecutionStrategy.sol";
+import { ISpaceEvents } from "../../src/interfaces/space/ISpaceEvents.sol";
+import { ISpaceErrors } from "../../src/interfaces/space/ISpaceErrors.sol";
+import { IExecutionStrategyErrors } from "../../src/interfaces/execution-strategies/IExecutionStrategyErrors.sol";
+import { Choice, Strategy, IndexedStrategy } from "../../src/types.sol";
 
 abstract contract SpaceTest is Test, GasSnapshot, ISpaceEvents, ISpaceErrors, IExecutionStrategyErrors {
     bytes4 constant PROPOSE_SELECTOR = bytes4(keccak256("propose(address,string,(uint8,bytes),(uint8,bytes)[])"));

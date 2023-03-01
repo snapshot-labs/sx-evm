@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.18;
 
-import "../interfaces/IVotingStrategy.sol";
+import { IVotingStrategy } from "../interfaces/IVotingStrategy.sol";
 
 contract WhitelistStrategy is IVotingStrategy {
     struct Member {
