@@ -6,13 +6,14 @@ import "forge-std/Test.sol";
 import "../src/authenticators/VanillaAuthenticator.sol";
 import "../src/voting-strategies/VanillaVotingStrategy.sol";
 import "../src/execution-strategies/VanillaExecutionStrategy.sol";
-import "../src/SpaceFactory.sol";
-import "../src/interfaces/space-factory/ISpaceFactoryEvents.sol";
-import "../src/interfaces/space-factory/ISpaceFactoryErrors.sol";
+import "../src/ProxyFactory.sol";
+import "../src/Space.sol";
+import "../src/interfaces/factory/IProxyFactoryEvents.sol";
+import "../src/interfaces/factory/IProxyFactoryErrors.sol";
 
-contract SpaceFactoryTest is Test, ISpaceFactoryEvents, ISpaceFactoryErrors {
+contract SpaceFactoryTest is Test, IProxyFactoryEvents, IProxyFactoryErrors {
     Space public masterSpace;
-    SpaceFactory public factory;
+    ProxyFactory public factory;
     VanillaVotingStrategy vanillaVotingStrategy;
     VanillaAuthenticator vanillaAuthenticator;
     VanillaExecutionStrategy vanillaExecutionStrategy;
@@ -30,7 +31,7 @@ contract SpaceFactoryTest is Test, ISpaceFactoryEvents, ISpaceFactoryErrors {
 
     function setUp() public {
         masterSpace = new Space();
-        factory = new SpaceFactory(address(masterSpace));
+        factory = new ProxyFactory();
         vanillaVotingStrategy = new VanillaVotingStrategy();
         vanillaAuthenticator = new VanillaAuthenticator();
         vanillaExecutionStrategy = new VanillaExecutionStrategy();
@@ -48,81 +49,86 @@ contract SpaceFactoryTest is Test, ISpaceFactoryEvents, ISpaceFactoryErrors {
     function testCreateSpace() public {
         bytes32 salt = bytes32(keccak256(abi.encodePacked("random salt")));
         // Pre-computed address of the space (possible because of CREATE2 deployment)
-        address spaceProxy = _getProxyAddress(salt);
+        address spaceProxy = predictProxyAddress(address(factory), address(masterSpace), salt);
 
         vm.expectEmit(true, true, true, true);
-        emit SpaceCreated(
-            spaceProxy,
-            controller,
-            votingDelay,
-            minVotingDuration,
-            maxVotingDuration,
-            proposalThreshold,
-            metadataUri,
-            votingStrategies,
-            authenticators,
-            executionStrategies
-        );
-        factory.createSpace(
-            controller,
-            votingDelay,
-            minVotingDuration,
-            maxVotingDuration,
-            proposalThreshold,
-            metadataUri,
-            votingStrategies,
-            authenticators,
-            executionStrategies,
+        emit ProxyDeployed(address(masterSpace), spaceProxy);
+        factory.deployProxy(
+            address(masterSpace),
+            abi.encodeWithSelector(
+                Space.initialize.selector,
+                controller,
+                votingDelay,
+                minVotingDuration,
+                maxVotingDuration,
+                proposalThreshold,
+                metadataUri,
+                votingStrategies,
+                authenticators,
+                executionStrategies
+            ),
             salt
         );
     }
 
     function testCreateSpaceReusedSalt() public {
         bytes32 salt = bytes32(keccak256(abi.encodePacked("random salt")));
-        factory.createSpace(
-            controller,
-            votingDelay,
-            minVotingDuration,
-            maxVotingDuration,
-            proposalThreshold,
-            metadataUri,
-            votingStrategies,
-            authenticators,
-            executionStrategies,
+        factory.deployProxy(
+            address(masterSpace),
+            abi.encodeWithSelector(
+                Space.initialize.selector,
+                controller,
+                votingDelay,
+                minVotingDuration,
+                maxVotingDuration,
+                proposalThreshold,
+                metadataUri,
+                votingStrategies,
+                authenticators,
+                executionStrategies
+            ),
             salt
         );
         // Reusing the same salt should revert as the computed space address will be
         // the same as the first deployment.
-        vm.expectRevert(abi.encodePacked(SpaceCreationFailed.selector)); // EVM revert
-        factory.createSpace(
-            controller,
-            votingDelay,
-            minVotingDuration,
-            maxVotingDuration,
-            proposalThreshold,
-            metadataUri,
-            votingStrategies,
-            authenticators,
-            executionStrategies,
+        vm.expectRevert(abi.encodePacked(SaltAlreadyUsed.selector));
+        factory.deployProxy(
+            address(masterSpace),
+            abi.encodeWithSelector(
+                Space.initialize.selector,
+                controller,
+                votingDelay,
+                minVotingDuration,
+                maxVotingDuration,
+                proposalThreshold,
+                metadataUri,
+                votingStrategies,
+                authenticators,
+                executionStrategies
+            ),
             salt
         );
     }
 
     function testCreateSpaceReInitialize() public {
         bytes32 salt = bytes32(keccak256(abi.encodePacked("random salt")));
-        factory.createSpace(
-            controller,
-            votingDelay,
-            minVotingDuration,
-            maxVotingDuration,
-            proposalThreshold,
-            metadataUri,
-            votingStrategies,
-            authenticators,
-            executionStrategies,
+        factory.deployProxy(
+            address(masterSpace),
+            abi.encodeWithSelector(
+                Space.initialize.selector,
+                controller,
+                votingDelay,
+                minVotingDuration,
+                maxVotingDuration,
+                proposalThreshold,
+                metadataUri,
+                votingStrategies,
+                authenticators,
+                executionStrategies
+            ),
             salt
         );
-        address spaceProxy = _getProxyAddress(salt);
+        address spaceProxy = predictProxyAddress(address(factory), address(masterSpace), salt);
 
         // Initializing the space should revert as the space is already initialized
         vm.expectRevert("Initializable: contract is already initialized");
@@ -132,13 +138,18 @@ contract SpaceFactoryTest is Test, ISpaceFactoryEvents, ISpaceFactoryErrors {
             minVotingDuration,
             maxVotingDuration,
             proposalThreshold,
+            metadataUri,
             votingStrategies,
             authenticators,
             executionStrategies
         );
     }
 
-    function _getProxyAddress(bytes32 salt) internal view returns (address) {
+    function predictProxyAddress(
+        address factory,
+        address implementation,
+        bytes32 salt
+    ) internal view returns (address) {
         return
             address(
                 uint160(
@@ -146,26 +157,10 @@ contract SpaceFactoryTest is Test, ISpaceFactoryEvents, ISpaceFactoryErrors {
                         keccak256(
                             abi.encodePacked(
                                 bytes1(0xff),
-                                address(factory),
+                                factory,
                                 salt,
                                 keccak256(
-                                    abi.encodePacked(
-                                        type(ERC1967Proxy).creationCode,
-                                        abi.encode(
-                                            address(masterSpace),
-                                            abi.encodeWithSelector(
-                                                Space.initialize.selector,
-                                                controller,
-                                                votingDelay,
-                                                minVotingDuration,
-                                                maxVotingDuration,
-                                                proposalThreshold,
-                                                votingStrategies,
-                                                authenticators,
-                                                executionStrategies
-                                            )
-                                        )
-                                    )
+                                    abi.encodePacked(type(ERC1967Proxy).creationCode, abi.encode(implementation, ""))
                                 )
                             )
                         )
