@@ -85,6 +85,7 @@ abstract contract SpaceTest is Test, GasSnapshot, ISpaceEvents, ISpaceErrors, IE
                         minVotingDuration,
                         maxVotingDuration,
                         proposalThreshold,
+                        spaceMetadataUri,
                         votingStrategies,
                         authenticators,
                         executionStrategies
