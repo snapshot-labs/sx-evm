@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.15;
+pragma solidity ^0.8.18;
 
-import "./SimpleQuorumExecutionStrategy.sol";
+import { SimpleQuorumExecutionStrategy } from "./SimpleQuorumExecutionStrategy.sol";
+import { Proposal, ProposalStatus } from "../types.sol";
 
 contract VanillaExecutionStrategy is SimpleQuorumExecutionStrategy {
-    uint256 numExecuted;
+    uint256 internal numExecuted;
 
     function execute(
         Proposal memory proposal,
@@ -21,5 +22,9 @@ contract VanillaExecutionStrategy is SimpleQuorumExecutionStrategy {
         // Check that the execution payload matches the payload supplied when the proposal was created
         if (proposal.executionPayloadHash != keccak256(payload)) revert InvalidPayload();
         numExecuted++;
+    }
+
+    function getStrategyType() external pure override returns (string memory) {
+        return "SimpleQuorumVanilla";
     }
 }

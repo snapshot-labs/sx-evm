@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.15;
+pragma solidity ^0.8.18;
 
-import "./Authenticator.sol";
-import "../types.sol";
+import { Authenticator } from "./Authenticator.sol";
+import { Choice, IndexedStrategy, Strategy } from "../types.sol";
 
 /**
  * @author  SnapshotLabs
@@ -34,11 +34,22 @@ contract EthTxAuthenticator is Authenticator {
         if (voter != msg.sender) revert InvalidMessageSender();
     }
 
+    /**
+     * @notice  Internal function to verify that the the message sender is indeed the proposer
+     * @param   data  The data to verify
+     */
+    function _verifyUpdateProposal(bytes calldata data) internal view {
+        (address author, , , ) = abi.decode(data, (address, uint256, IndexedStrategy, string));
+        if (author != msg.sender) revert InvalidMessageSender();
+    }
+
     function authenticate(address target, bytes4 functionSelector, bytes calldata data) external {
         if (functionSelector == PROPOSE_SELECTOR) {
             _verifyPropose(data);
         } else if (functionSelector == VOTE_SELECTOR) {
             _verifyVote(data);
+        } else if (functionSelector == UPDATE_PROPOSAL_SELECTOR) {
+            _verifyUpdateProposal(data);
         } else {
             revert InvalidFunctionSelector();
         }

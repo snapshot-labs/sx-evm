@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.15;
+pragma solidity ^0.8.18;
 
-import "../types.sol";
-import "./execution-strategies/IExecutionStrategyErrors.sol";
+import { IndexedStrategy, Proposal, ProposalStatus } from "../types.sol";
+import { IExecutionStrategyErrors } from "./execution-strategies/IExecutionStrategyErrors.sol";
 
 interface IExecutionStrategy is IExecutionStrategyErrors {
     function execute(
@@ -22,4 +22,6 @@ interface IExecutionStrategy is IExecutionStrategyErrors {
     ) external view returns (ProposalStatus);
 
     function getQuorum(Proposal memory proposal) external view returns (uint256);
+
+    function getStrategyType() external view returns (string memory);
 }

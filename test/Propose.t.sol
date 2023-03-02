@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.15;
+pragma solidity ^0.8.18;
 
-import "./utils/Space.t.sol";
+import { SpaceTest } from "./utils/Space.t.sol";
+import { FinalizationStatus, IndexedStrategy, Proposal, Strategy } from "../src/types.sol";
+import { VanillaVotingStrategy } from "../src/voting-strategies/VanillaVotingStrategy.sol";
 
 contract ProposeTest is SpaceTest {
     function testPropose() public {
@@ -21,6 +23,7 @@ contract ProposeTest is SpaceTest {
             maxEndTimestamp,
             executionHash,
             executionStrategies[0],
+            author,
             FinalizationStatus.Pending,
             votingStrategies
         );
@@ -77,18 +80,18 @@ contract ProposeTest is SpaceTest {
 
     function testProposeMultipleStrategies() public {
         VanillaVotingStrategy strat2 = new VanillaVotingStrategy();
-        VanillaVotingStrategy strat3 = new VanillaVotingStrategy();
         Strategy[] memory toAdd = new Strategy[](2);
         toAdd[0] = Strategy(address(strat2), new bytes(0));
         toAdd[1] = Strategy(address(strat2), new bytes(0));
+        bytes[] memory newData = new bytes[](0);
 
-        space.addVotingStrategies(toAdd);
+        space.addVotingStrategies(toAdd, newData);
 
         IndexedStrategy[] memory newVotingStrategies = new IndexedStrategy[](3);
         newVotingStrategies[0] = userVotingStrategies[0]; // base strat
         newVotingStrategies[1] = IndexedStrategy(1, new bytes(0)); // strat2
         newVotingStrategies[2] = IndexedStrategy(2, new bytes(0)); // strat3
 
-        uint256 proposalId = _createProposal(author, proposalMetadataUri, executionStrategy, userVotingStrategies);
+        _createProposal(author, proposalMetadataUri, executionStrategy, userVotingStrategies);
     }
 }

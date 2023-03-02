@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.15;
+pragma solidity ^0.8.18;
 
-import "../../types.sol";
+import { Strategy } from "../../types.sol";
 
 interface ISpaceOwnerActions {
     function cancel(uint256 proposalId) external;
@@ -19,7 +19,10 @@ interface ISpaceOwnerActions {
 
     function setMetadataUri(string calldata metadataUri) external;
 
-    function addVotingStrategies(Strategy[] calldata _votingStrategies) external;
+    function addVotingStrategies(
+        Strategy[] calldata _votingStrategies,
+        bytes[] calldata votingStrategyMetadata
+    ) external;
 
     function removeVotingStrategies(uint8[] calldata indicesToRemove) external;
 

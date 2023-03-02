@@ -1,16 +1,19 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.15;
+pragma solidity ^0.8.18;
 
-import "./utils/Space.t.sol";
-import "./utils/Authenticator.t.sol";
-import "../src/authenticators/EthTxAuthenticator.sol";
+import { SpaceTest } from "./utils/Space.t.sol";
+import { AuthenticatorTest } from "./utils/Authenticator.t.sol";
+import { EthTxAuthenticator } from "../src/authenticators/EthTxAuthenticator.sol";
+import { Choice, IndexedStrategy } from "../src/types.sol";
 
 contract EthTxAuthenticatorTest is SpaceTest {
-    EthTxAuthenticator ethTxAuth;
-
     error InvalidFunctionSelector();
     error InvalidMessageSender();
+
+    EthTxAuthenticator internal ethTxAuth;
+    string internal newMetadataUri = "Test42";
+    IndexedStrategy internal newStrategy = IndexedStrategy(0, new bytes(0));
 
     function setUp() public virtual override {
         super.setUp();
@@ -28,7 +31,7 @@ contract EthTxAuthenticatorTest is SpaceTest {
         ethTxAuth.authenticate(
             address(space),
             PROPOSE_SELECTOR,
-            abi.encode(author, proposalMetadataUri, executionStrategy, userVotingStrategies)
+            abi.encode(author, proposalMetadataUri, executionStrategy, userVotingStrategies, voteMetadataUri)
         );
         snapEnd();
     }
@@ -39,7 +42,7 @@ contract EthTxAuthenticatorTest is SpaceTest {
         ethTxAuth.authenticate(
             address(space),
             PROPOSE_SELECTOR,
-            abi.encode(author, proposalMetadataUri, executionStrategy, userVotingStrategies)
+            abi.encode(author, proposalMetadataUri, executionStrategy, userVotingStrategies, voteMetadataUri)
         );
     }
 
@@ -49,7 +52,7 @@ contract EthTxAuthenticatorTest is SpaceTest {
         ethTxAuth.authenticate(
             address(space),
             bytes4(0xdeadbeef),
-            abi.encode(author, proposalMetadataUri, executionStrategy, userVotingStrategies)
+            abi.encode(author, proposalMetadataUri, executionStrategy, userVotingStrategies, voteMetadataUri)
         );
     }
 
@@ -62,32 +65,77 @@ contract EthTxAuthenticatorTest is SpaceTest {
         ethTxAuth.authenticate(
             address(space),
             VOTE_SELECTOR,
-            abi.encode(voter, proposalId, Choice.For, userVotingStrategies)
+            abi.encode(voter, proposalId, Choice.For, userVotingStrategies, voteMetadataUri)
         );
         snapEnd();
     }
 
     function testAuthenticateTxVoteInvalidVoter() public {
-        uint256 proposalId = _createProposal(author, proposalMetadataUri, executionStrategy, userVotingStrategies);
+        uint256 proposalId = 1;
 
         vm.expectRevert(InvalidMessageSender.selector);
         vm.prank(address(123));
         ethTxAuth.authenticate(
             address(space),
             VOTE_SELECTOR,
-            abi.encode(voter, proposalId, Choice.For, userVotingStrategies)
+            abi.encode(voter, proposalId, Choice.For, userVotingStrategies, voteMetadataUri)
         );
     }
 
     function testAuthenticateTxVoteInvalidSelector() public {
-        uint256 proposalId = _createProposal(author, proposalMetadataUri, executionStrategy, userVotingStrategies);
+        uint256 proposalId = 1;
 
         vm.expectRevert(InvalidFunctionSelector.selector);
         vm.prank(voter);
         ethTxAuth.authenticate(
             address(space),
             bytes4(0xdeadbeef),
-            abi.encode(voter, proposalId, Choice.For, userVotingStrategies)
+            abi.encode(voter, proposalId, Choice.For, userVotingStrategies, voteMetadataUri)
         );
+    }
+
+    function testAuthenticateTxUpdateProposal() public {
+        uint32 votingDelay = 10;
+        space.setVotingDelay(votingDelay);
+        uint256 proposalId = _createProposal(author, proposalMetadataUri, executionStrategy, userVotingStrategies);
+
+        vm.prank(author);
+        // vm.expectEmit(true, true, true, true);
+        // emit ProposalUpdated(proposalId, newStrategy, newMetadataUri);
+        ethTxAuth.authenticate(
+            address(space),
+            UPDATE_PROPOSAL_SELECTOR,
+            abi.encode(author, proposalId, newStrategy, newMetadataUri)
+        );
+
+        // Fast forward and ensure everything is still working correctly
+        vm.warp(block.timestamp + votingDelay);
+        vm.prank(voter);
+        ethTxAuth.authenticate(
+            address(space),
+            VOTE_SELECTOR,
+            abi.encode(voter, proposalId, Choice.For, userVotingStrategies, voteMetadataUri)
+        );
+
+        space.execute(proposalId, executionStrategy.params);
+    }
+
+    function testAuthenticateTxUpdateProposalInvalidCaller() public {
+        uint256 proposalId = 1;
+
+        vm.expectRevert(InvalidMessageSender.selector);
+        vm.prank(address(123));
+        ethTxAuth.authenticate(
+            address(space),
+            UPDATE_PROPOSAL_SELECTOR,
+            abi.encode(author, proposalId, newStrategy, newMetadataUri)
+        );
+    }
+
+    function testAuthenticateTxUpdateProposalInvalidSelector() public {
+        uint256 proposalId = 1;
+
+        vm.expectRevert(InvalidFunctionSelector.selector);
+        ethTxAuth.authenticate(address(space), bytes4(0xdeadbeef), abi.encode(author, proposalId, newMetadataUri));
     }
 }

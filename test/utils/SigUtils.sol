@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.15;
+pragma solidity ^0.8.18;
 
-import "../../src/types.sol";
+import { Choice, IndexedStrategy, Strategy } from "../../src/types.sol";
 import { SXHash } from "../../src/utils/SXHash.sol";
 
 abstract contract SigUtils {
@@ -24,7 +24,13 @@ abstract contract SigUtils {
     bytes32 private constant VOTE_TYPEHASH =
         keccak256(
             "Vote(address space,address voter,uint256 proposalId,uint8 choice,"
-            "IndexedStrategy[] userVotingStrategies)"
+            "IndexedStrategy[] userVotingStrategies,string voteMetadataUri)"
+            "IndexedStrategy(uint8 index,bytes params)"
+        );
+    bytes32 private constant UPDATE_PROPOSAL_TYPEHASH =
+        keccak256(
+            "updateProposal(address space,address author,uint256 proposalId,"
+            "IndexedStrategy executionStrategy,string metadataUri)"
             "IndexedStrategy(uint8 index,bytes params)"
         );
 
@@ -77,7 +83,8 @@ abstract contract SigUtils {
         address voter,
         uint256 proposalId,
         Choice choice,
-        IndexedStrategy[] memory usedVotingStrategies
+        IndexedStrategy[] memory usedVotingStrategies,
+        string memory voteMetadataUri
     ) internal view returns (bytes32) {
         bytes32 digest = keccak256(
             abi.encodePacked(
@@ -91,7 +98,53 @@ abstract contract SigUtils {
                         authenticator
                     )
                 ),
-                keccak256(abi.encode(VOTE_TYPEHASH, space, voter, proposalId, choice, usedVotingStrategies.hash()))
+                keccak256(
+                    abi.encode(
+                        VOTE_TYPEHASH,
+                        space,
+                        voter,
+                        proposalId,
+                        choice,
+                        usedVotingStrategies.hash(),
+                        keccak256(bytes(voteMetadataUri))
+                    )
+                )
+            )
+        );
+
+        return digest;
+    }
+
+    function _getUpdateProposalDigest(
+        address authenticator,
+        address space,
+        address author,
+        uint256 proposalId,
+        IndexedStrategy memory executionStrategy,
+        string memory metadataUri
+    ) internal view returns (bytes32) {
+        bytes32 digest = keccak256(
+            abi.encodePacked(
+                "\x19\x01",
+                keccak256(
+                    abi.encode(
+                        DOMAIN_TYPEHASH,
+                        keccak256(bytes(name)),
+                        keccak256(bytes(version)),
+                        block.chainid,
+                        authenticator
+                    )
+                ),
+                keccak256(
+                    abi.encode(
+                        UPDATE_PROPOSAL_TYPEHASH,
+                        space,
+                        author,
+                        proposalId,
+                        executionStrategy.hash(),
+                        keccak256(bytes(metadataUri))
+                    )
+                )
             )
         );
 

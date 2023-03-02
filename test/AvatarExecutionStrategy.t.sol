@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: UNLICENSED
 
-pragma solidity ^0.8.15;
+pragma solidity ^0.8.18;
 
-import "./utils/Space.t.sol";
-import "./mocks/Avatar.sol";
-import "../src/execution-strategies/AvatarExecutionStrategy.sol";
-import "../src/types.sol";
+import { SpaceTest } from "./utils/Space.t.sol";
+import { Avatar } from "./mocks/Avatar.sol";
+import { AvatarExecutionStrategy } from "../src/execution-strategies/AvatarExecutionStrategy.sol";
+import { Choice, Enum, IndexedStrategy, MetaTransaction, ProposalStatus, Strategy } from "../src/types.sol";
 
 contract AvatarExecutionStrategyTest is SpaceTest {
     error TransactionsFailed();
@@ -19,7 +19,7 @@ contract AvatarExecutionStrategyTest is SpaceTest {
     Avatar public avatar;
     AvatarExecutionStrategy public avatarExecutionStrategy;
 
-    address recipient = address(0xc0ffee);
+    address private recipient = address(0xc0ffee);
 
     function setUp() public override {
         super.setUp();
@@ -49,7 +49,7 @@ contract AvatarExecutionStrategyTest is SpaceTest {
             IndexedStrategy(1, abi.encode(transactions)),
             userVotingStrategies
         );
-        _vote(author, proposalId, Choice.For, userVotingStrategies);
+        _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataUri);
         vm.warp(block.timestamp + space.maxVotingDuration());
 
         vm.expectEmit(true, true, true, true);
@@ -71,7 +71,7 @@ contract AvatarExecutionStrategyTest is SpaceTest {
             IndexedStrategy(1, abi.encode(transactions)),
             userVotingStrategies
         );
-        _vote(author, proposalId, Choice.For, userVotingStrategies);
+        _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataUri);
         vm.warp(block.timestamp + space.maxVotingDuration());
 
         vm.expectRevert(ExecutionFailed.selector);
@@ -94,7 +94,7 @@ contract AvatarExecutionStrategyTest is SpaceTest {
             IndexedStrategy(1, abi.encode(transactions)),
             userVotingStrategies
         );
-        _vote(author, proposalId, Choice.For, userVotingStrategies);
+        _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataUri);
         vm.warp(block.timestamp + space.maxVotingDuration());
 
         assertEq(recipient.balance, 0); // sanity check
@@ -120,7 +120,7 @@ contract AvatarExecutionStrategyTest is SpaceTest {
             IndexedStrategy(1, abi.encode(transactions)),
             userVotingStrategies
         );
-        _vote(author, proposalId, Choice.For, userVotingStrategies);
+        _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataUri);
         vm.warp(block.timestamp + space.maxVotingDuration());
 
         vm.expectRevert(ExecutionFailed.selector);
@@ -213,7 +213,7 @@ contract AvatarExecutionStrategyTest is SpaceTest {
             IndexedStrategy(1, abi.encode(transactions)),
             userVotingStrategies
         );
-        _vote(author, proposalId, Choice.For, userVotingStrategies);
+        _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataUri);
         vm.warp(block.timestamp + space.maxVotingDuration());
 
         vm.expectRevert(InvalidSpace.selector);

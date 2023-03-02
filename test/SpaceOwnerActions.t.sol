@@ -1,15 +1,17 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.15;
+pragma solidity ^0.8.18;
 
-import "./utils/Space.t.sol";
-import "./mocks/SpaceV2.sol";
+import { SpaceV2 } from "./mocks/SpaceV2.sol";
+import { SpaceTest } from "./utils/Space.t.sol";
+import { Choice, IndexedStrategy, Strategy } from "../src/types.sol";
+import { VanillaExecutionStrategy } from "../src/execution-strategies/VanillaExecutionStrategy.sol";
 
 contract SpaceOwnerActionsTest is SpaceTest {
     // ------- Cancel Proposal ----
 
     function testCancel() public {
         uint256 proposalId = _createProposal(author, proposalMetadataUri, executionStrategy, userVotingStrategies);
-        _vote(author, proposalId, Choice.For, userVotingStrategies);
+        _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataUri);
 
         vm.expectEmit(true, true, true, true);
         emit ProposalCancelled(proposalId);
@@ -20,7 +22,7 @@ contract SpaceOwnerActionsTest is SpaceTest {
 
     function testCancelInvalidProposal() public {
         uint256 proposalId = _createProposal(author, proposalMetadataUri, executionStrategy, userVotingStrategies);
-        _vote(author, proposalId, Choice.For, userVotingStrategies);
+        _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataUri);
 
         // proposal does not exist
         uint256 invalidProposalId = proposalId + 1;
@@ -30,7 +32,7 @@ contract SpaceOwnerActionsTest is SpaceTest {
 
     function testCancelUnauthorized() public {
         uint256 proposalId = _createProposal(author, proposalMetadataUri, executionStrategy, userVotingStrategies);
-        _vote(author, proposalId, Choice.For, userVotingStrategies);
+        _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataUri);
 
         vm.expectRevert("Ownable: caller is not the owner");
         vm.prank(unauthorized);
@@ -39,7 +41,7 @@ contract SpaceOwnerActionsTest is SpaceTest {
 
     function testCancelAlreadyExecuted() public {
         uint256 proposalId = _createProposal(author, proposalMetadataUri, executionStrategy, userVotingStrategies);
-        _vote(author, proposalId, Choice.For, userVotingStrategies);
+        _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataUri);
         space.execute(proposalId, executionStrategy.params);
 
         vm.expectRevert(abi.encodeWithSelector(ProposalFinalized.selector));
@@ -48,7 +50,7 @@ contract SpaceOwnerActionsTest is SpaceTest {
 
     function testCancelAlreadyCancelled() public {
         uint256 proposalId = _createProposal(author, proposalMetadataUri, executionStrategy, userVotingStrategies);
-        _vote(author, proposalId, Choice.For, userVotingStrategies);
+        _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataUri);
         space.cancel(proposalId);
 
         vm.expectRevert(abi.encodeWithSelector(ProposalFinalized.selector));
@@ -172,13 +174,15 @@ contract SpaceOwnerActionsTest is SpaceTest {
         uint8[] memory newIndices = new uint8[](1);
         newIndices[0] = 1;
 
+        bytes[] memory votingStrategyMetadata = new bytes[](0);
+
         IndexedStrategy[] memory newUserVotingStrategies = new IndexedStrategy[](1);
         newUserVotingStrategies[0] = IndexedStrategy(newIndices[0], new bytes(0));
 
         vm.expectEmit(true, true, true, true);
-        emit VotingStrategiesAdded(newVotingStrategies);
+        emit VotingStrategiesAdded(newVotingStrategies, votingStrategyMetadata);
         vm.prank(owner);
-        space.addVotingStrategies(newVotingStrategies);
+        space.addVotingStrategies(newVotingStrategies, votingStrategyMetadata);
 
         // Try creating a proposal using these new strategies.
         _createProposal(author, proposalMetadataUri, executionStrategy, newUserVotingStrategies);
@@ -199,7 +203,9 @@ contract SpaceOwnerActionsTest is SpaceTest {
     function testAddVotingStrategiesUnauthorized() public {
         vm.expectRevert("Ownable: caller is not the owner");
         vm.prank(unauthorized);
-        space.addVotingStrategies(votingStrategies);
+        bytes[] memory newData = new bytes[](0);
+
+        space.addVotingStrategies(votingStrategies, newData);
     }
 
     function testRemoveVotingStrategiesUnauthorized() public {
@@ -264,7 +270,7 @@ contract SpaceOwnerActionsTest is SpaceTest {
             userVotingStrategies
         );
 
-        _vote(author, proposalId, Choice.For, userVotingStrategies);
+        _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataUri);
 
         // Ensure we can finalize
         space.execute(proposalId, new bytes(0));

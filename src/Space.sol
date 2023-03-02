@@ -1,17 +1,15 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.15;
+pragma solidity ^0.8.18;
 
-import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import { Initializable } from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import { UUPSUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import { ReentrancyGuard } from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
-import "src/interfaces/ISpace.sol";
-import "src/types.sol";
-import "src/interfaces/IVotingStrategy.sol";
-import "src/interfaces/IExecutionStrategy.sol";
-
-import "forge-std/console2.sol";
+import { ISpace } from "src/interfaces/ISpace.sol";
+import { Choice, FinalizationStatus, IndexedStrategy, Proposal, ProposalStatus, Strategy, Vote } from "src/types.sol";
+import { IVotingStrategy } from "src/interfaces/IVotingStrategy.sol";
+import { IExecutionStrategy } from "src/interfaces/IExecutionStrategy.sol";
 
 /**
  * @author  SnapshotLabs
@@ -39,13 +37,13 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
     Strategy[] private executionStrategies;
 
     // Mapping of allowed authenticators.
-    mapping(address => bool) private authenticators;
+    mapping(address auth => bool allowed) private authenticators;
     // Mapping of all `Proposal`s of this space (past and present).
-    mapping(uint256 => Proposal) private proposalRegistry;
+    mapping(uint256 proposalId => Proposal proposal) private proposalRegistry;
     // Mapping used to know if a voter already voted on a specific proposal. Here to prevent double voting.
-    mapping(uint256 => mapping(address => bool)) private voteRegistry;
+    mapping(uint256 proposalId => mapping(address voter => bool hasVoted)) private voteRegistry;
     // Mapping used to check the current voting power in favor of a `Choice` for a specific proposal.
-    mapping(uint256 => mapping(Choice => uint256)) private votePower;
+    mapping(uint256 proposalId => mapping(Choice choice => uint256 votePower)) private votePower;
 
     // ------------------------------------
     // |                                  |
@@ -61,6 +59,7 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         uint256 _proposalThreshold,
         string memory _metadataUri,
         Strategy[] memory _votingStrategies,
+        bytes[] memory _votingStrategyMetadata,
         address[] memory _authenticators,
         Strategy[] memory _executionStrategies
     ) public initializer {
@@ -85,6 +84,7 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
             _proposalThreshold,
             _metadataUri,
             _votingStrategies,
+            _votingStrategyMetadata,
             _authenticators,
             _executionStrategies
         );
@@ -232,7 +232,7 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
      * @dev     it has already been set. Time complexity is O(n).
      * @param   strats  Array to check for duplicates.
      */
-    function _assertNoDuplicateIndices(IndexedStrategy[] memory strats) internal {
+    function _assertNoDuplicateIndices(IndexedStrategy[] memory strats) internal pure {
         if (strats.length < 2) {
             return;
         }
@@ -362,9 +362,12 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         emit VotingDelayUpdated(_votingDelay);
     }
 
-    function addVotingStrategies(Strategy[] calldata _votingStrategies) external override onlyOwner {
+    function addVotingStrategies(
+        Strategy[] calldata _votingStrategies,
+        bytes[] calldata votingStrategyMetadata
+    ) external override onlyOwner {
         _addVotingStrategies(_votingStrategies);
-        emit VotingStrategiesAdded(_votingStrategies);
+        emit VotingStrategiesAdded(_votingStrategies, votingStrategyMetadata);
     }
 
     function removeVotingStrategies(uint8[] calldata _votingStrategyIndices) external override onlyOwner {
@@ -441,13 +444,13 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
 
     /**
      * @notice  Create a proposal.
-     * @param   proposerAddress  The address of the proposal creator.
+     * @param   author  The address of the proposal creator.
      * @param   metadataUri  The metadata URI for the proposal.
      * @param   executionStrategy  The execution strategy index and associated execution payload to use in the proposal.
      * @param   userVotingStrategies  The voting strategies indexes to use and the associated parameters for each.
      */
     function propose(
-        address proposerAddress,
+        address author,
         string calldata metadataUri,
         IndexedStrategy calldata executionStrategy,
         IndexedStrategy[] calldata userVotingStrategies
@@ -458,7 +461,7 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         // Casting to `uint32` is fine because this gives us until year ~2106.
         uint32 snapshotTimestamp = uint32(block.timestamp);
 
-        uint256 votingPower = _getCumulativeProposingPower(snapshotTimestamp, proposerAddress, userVotingStrategies);
+        uint256 votingPower = _getCumulativeProposingPower(snapshotTimestamp, author, userVotingStrategies);
         if (votingPower < proposalThreshold) revert ProposalThresholdNotReached(votingPower);
 
         uint32 startTimestamp = snapshotTimestamp + votingDelay;
@@ -475,12 +478,13 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
             maxEndTimestamp,
             executionPayloadHash,
             executionStrategies[executionStrategy.index],
+            author,
             FinalizationStatus.Pending,
             votingStrategies
         );
 
         proposalRegistry[nextProposalId] = proposal;
-        emit ProposalCreated(nextProposalId, proposerAddress, proposal, metadataUri, executionStrategy.params);
+        emit ProposalCreated(nextProposalId, author, proposal, metadataUri, executionStrategy.params);
 
         nextProposalId++;
     }
@@ -491,12 +495,14 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
      * @param   proposalId  Proposal id.
      * @param   choice  Choice can be `For`, `Against` or `Abstain`.
      * @param   userVotingStrategies  Strategies to use to compute the voter's voting power.
+     * @param   voteMetadataUri  An optional metadata to give information about the vote.
      */
     function vote(
         address voterAddress,
         uint256 proposalId,
         Choice choice,
-        IndexedStrategy[] calldata userVotingStrategies
+        IndexedStrategy[] calldata userVotingStrategies,
+        string calldata voteMetadataUri
     ) external override {
         _assertValidAuthenticator();
 
@@ -523,7 +529,7 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
 
         voteRegistry[proposalId][voterAddress] = true;
 
-        emit VoteCreated(proposalId, voterAddress, Vote(choice, votingPower));
+        emit VoteCreated(proposalId, voterAddress, Vote(choice, votingPower), voteMetadataUri);
     }
 
     /**
@@ -561,5 +567,31 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         if (proposal.finalizationStatus != FinalizationStatus.Pending) revert ProposalFinalized();
         proposal.finalizationStatus = FinalizationStatus.Cancelled;
         emit ProposalCancelled(proposalId);
+    }
+
+    /**
+     * @notice  Updates the proposal executionStrategy and metadata. Will only work if voting has 
+                not started yet, i.e `voting_delay` has not elapsed yet.
+     * @param   proposalId          The id of the proposal to edit
+     * @param   executionStrategy   The new strategy to use
+     * @param   metadataUri         The new metadata
+     */
+    function updateProposal(
+        address author,
+        uint256 proposalId,
+        IndexedStrategy calldata executionStrategy,
+        string calldata metadataUri
+    ) external {
+        _assertValidAuthenticator();
+        _assertValidExecutionStrategy(executionStrategy.index);
+
+        Proposal storage proposal = proposalRegistry[proposalId];
+        if (author != proposal.author) revert InvalidCaller();
+        if (block.timestamp >= proposal.startTimestamp) revert VotingDelayHasPassed();
+
+        proposal.executionPayloadHash = keccak256(executionStrategy.params);
+        proposal.executionStrategy = executionStrategies[executionStrategy.index];
+
+        emit ProposalUpdated(proposalId, executionStrategy, metadataUri);
     }
 }

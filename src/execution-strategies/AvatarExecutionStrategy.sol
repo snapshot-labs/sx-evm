@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.15;
+pragma solidity ^0.8.18;
 
-import "@zodiac/interfaces/IAvatar.sol";
-import "./SimpleQuorumExecutionStrategy.sol";
-import "../utils/SpaceManager.sol";
+import { IAvatar } from "@zodiac/interfaces/IAvatar.sol";
+import { SimpleQuorumExecutionStrategy } from "./SimpleQuorumExecutionStrategy.sol";
+import { SpaceManager } from "../utils/SpaceManager.sol";
+import { MetaTransaction, Proposal, ProposalStatus } from "../types.sol";
 
 /// @title Avatar Execution Strategy - An Execution strategy that executes transactions on an Avatar contract
 /// @dev An Avatar contract is any contract that implements the IAvatar interface, eg a Gnosis Safe.
@@ -90,5 +91,9 @@ contract AvatarExecutionStrategy is SpaceManager, SimpleQuorumExecutionStrategy 
             // If any transaction fails, the entire execution will revert
             if (!success) revert ExecutionFailed();
         }
+    }
+
+    function getStrategyType() external pure override returns (string memory) {
+        return "SimpleQuorumAvatar";
     }
 }

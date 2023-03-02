@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.15;
+pragma solidity ^0.8.18;
 
 import "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import "forge-std/Test.sol";
@@ -27,7 +27,8 @@ contract SpaceFactoryTest is Test, IProxyFactoryEvents, IProxyFactoryErrors {
     uint32 public maxVotingDuration;
     uint256 public proposalThreshold;
     uint32 public quorum;
-    string metadataUri = "SX-EVM";
+    string public metadataUri = "SX-EVM";
+    bytes[] public votingStrategyMetadata;
 
     function setUp() public {
         masterSpace = new Space();
@@ -64,6 +65,7 @@ contract SpaceFactoryTest is Test, IProxyFactoryEvents, IProxyFactoryErrors {
                 proposalThreshold,
                 metadataUri,
                 votingStrategies,
+                votingStrategyMetadata,
                 authenticators,
                 executionStrategies
             ),
@@ -84,6 +86,7 @@ contract SpaceFactoryTest is Test, IProxyFactoryEvents, IProxyFactoryErrors {
                 proposalThreshold,
                 metadataUri,
                 votingStrategies,
+                votingStrategyMetadata,
                 authenticators,
                 executionStrategies
             ),
@@ -103,6 +106,7 @@ contract SpaceFactoryTest is Test, IProxyFactoryEvents, IProxyFactoryErrors {
                 proposalThreshold,
                 metadataUri,
                 votingStrategies,
+                votingStrategyMetadata,
                 authenticators,
                 executionStrategies
             ),
@@ -123,6 +127,7 @@ contract SpaceFactoryTest is Test, IProxyFactoryEvents, IProxyFactoryErrors {
                 proposalThreshold,
                 metadataUri,
                 votingStrategies,
+                votingStrategyMetadata,
                 authenticators,
                 executionStrategies
             ),
@@ -140,6 +145,7 @@ contract SpaceFactoryTest is Test, IProxyFactoryEvents, IProxyFactoryErrors {
             proposalThreshold,
             metadataUri,
             votingStrategies,
+            votingStrategyMetadata,
             authenticators,
             executionStrategies
         );

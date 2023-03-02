@@ -2,7 +2,7 @@
 
 import "../../src/Space.sol";
 
-pragma solidity ^0.8.15;
+pragma solidity ^0.8.18;
 
 // Inheriting from the Space contract V1 ensures that there are no storage collisions.
 contract SpaceV2 is Space {
