@@ -5,7 +5,7 @@ pragma solidity ^0.8.18;
 import { SpaceTest } from "./utils/Space.t.sol";
 import { Choice, IndexedStrategy } from "../src/types.sol";
 
-contract updateProposalTest is SpaceTest {
+contract UpdateProposalTest is SpaceTest {
     string internal newMetadataUri = "Testing123";
     IndexedStrategy internal newStrategy = IndexedStrategy(0, new bytes(0));
 
