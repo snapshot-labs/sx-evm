@@ -43,7 +43,7 @@ contract Avatar {
     function getModulesPaginated(
         address,
         uint256 // pageSize
-    ) external view returns (address[] memory array, address next) {
+    ) external pure returns (address[] memory array, address next) {
         // Unimplemented
         return (new address[](0), address(0));
     }

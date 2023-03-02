@@ -211,7 +211,7 @@ contract Space is ISpace, Ownable, ReentrancyGuard {
      * @dev     it has already been set. Time complexity is O(n).
      * @param   strats  Array to check for duplicates.
      */
-    function _assertNoDuplicateIndices(IndexedStrategy[] memory strats) internal {
+    function _assertNoDuplicateIndices(IndexedStrategy[] memory strats) internal pure {
         if (strats.length < 2) {
             return;
         }
