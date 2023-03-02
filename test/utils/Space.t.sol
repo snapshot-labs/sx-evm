@@ -26,18 +26,18 @@ abstract contract SpaceTest is Test, GasSnapshot, ISpaceEvents, ISpaceErrors, IE
     VanillaAuthenticator internal vanillaAuthenticator;
     VanillaExecutionStrategy internal vanillaExecutionStrategy;
 
-    uint256 public constant authorKey = 1234;
-    uint256 public constant voterKey = 5678;
-    uint256 public constant unauthorizedKey = 4321;
+    uint256 public constant AUTHOR_KEY = 1234;
+    uint256 public constant VOTER_KEY = 5678;
+    uint256 public constant UNAUTHORIZED_KEY = 4321;
 
     string internal voteMetadataUri = "Hi";
 
     // Address of the meta transaction relayer (mana)
     address public relayer = address(this);
     address public owner = address(this);
-    address public author = vm.addr(authorKey);
-    address public voter = vm.addr(voterKey);
-    address public unauthorized = vm.addr(unauthorizedKey);
+    address public author = vm.addr(AUTHOR_KEY);
+    address public voter = vm.addr(VOTER_KEY);
+    address public unauthorized = vm.addr(UNAUTHORIZED_KEY);
 
     // Initial whitelisted modules set in the space
     Strategy[] internal votingStrategies;

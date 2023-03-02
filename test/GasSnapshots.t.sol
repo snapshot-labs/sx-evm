@@ -15,12 +15,12 @@ contract GasSnapshotsTest is SpaceTest, SigUtils {
 
     EthSigAuthenticator public ethSigAuth;
 
-    string private constant name = "snapshot-x";
-    string private constant version = "1";
+    string private constant NAME = "snapshot-x";
+    string private constant VERSION = "1";
 
     address public user = address(this);
 
-    constructor() SigUtils(name, version) {}
+    constructor() SigUtils(NAME, VERSION) {}
 
     function setUp() public virtual override {
         super.setUp();
@@ -40,7 +40,7 @@ contract GasSnapshotsTest is SpaceTest, SigUtils {
         compToken.delegate(user);
 
         // Adding the eth sig authenticator to the space
-        ethSigAuth = new EthSigAuthenticator(name, version);
+        ethSigAuth = new EthSigAuthenticator(NAME, VERSION);
         address[] memory newAuths = new address[](1);
         newAuths[0] = address(ethSigAuth);
         space.addAuthenticators(newAuths);
@@ -70,7 +70,7 @@ contract GasSnapshotsTest is SpaceTest, SigUtils {
                 userVotingStrategies,
                 salt
             );
-            (uint8 v, bytes32 r, bytes32 s) = vm.sign(authorKey, digest);
+            (uint8 v, bytes32 r, bytes32 s) = vm.sign(AUTHOR_KEY, digest);
 
             snapStart("ProposeSigComp");
             ethSigAuth.authenticate(
@@ -97,7 +97,7 @@ contract GasSnapshotsTest is SpaceTest, SigUtils {
                 userVotingStrategies,
                 voteMetadataUri
             );
-            (uint8 v, bytes32 r, bytes32 s) = vm.sign(voterKey, digest);
+            (uint8 v, bytes32 r, bytes32 s) = vm.sign(VOTER_KEY, digest);
 
             snapStart("VoteSigComp");
             ethSigAuth.authenticate(
