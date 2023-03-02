@@ -10,7 +10,7 @@ import "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
 /**
  * @title   Proxy Factory
- * @notice  A contract to deploy and track proxies of a given implementation.
+ * @notice  A contract to deploy and track ERC1967 proxies of a given UUPSUpgradeable implementation contract.
  * @author  Snapshot Labs
  */
 contract ProxyFactory is IProxyFactory {
