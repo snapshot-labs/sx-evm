@@ -34,6 +34,7 @@ contract Avatar {
         uint8 operation
     ) external returns (bool success) {
         if (!modules[msg.sender]) revert NotAuthorized();
+        // solhint-disable-next-line avoid-low-level-calls
         if (operation == 1) (success, ) = to.delegatecall(data);
         else (success, ) = to.call{ value: value }(data);
     }

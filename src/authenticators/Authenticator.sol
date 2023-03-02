@@ -10,6 +10,7 @@ abstract contract Authenticator {
         bytes4(keccak256("updateProposal(address,uint256,(uint8,bytes),string)"));
 
     function _call(address target, bytes4 functionSelector, bytes memory data) internal {
+        // solhint-disable-next-line avoid-low-level-calls
         (bool success, ) = target.call(abi.encodePacked(functionSelector, data));
         if (!success) {
             // If the call failed, we revert with the propagated error message.
