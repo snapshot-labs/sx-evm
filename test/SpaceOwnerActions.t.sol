@@ -298,8 +298,13 @@ contract SpaceOwnerActionsTest is SpaceTest {
 
     // ------- Upgrading a Space ----
 
+    event Upgraded(address indexed implementation);
+
     function testSpaceUpgrade() public {
         SpaceV2 spaceV2Implementation = new SpaceV2();
+
+        vm.expectEmit(true, true, true, true);
+        emit Upgraded(address(spaceV2Implementation));
 
         space.upgradeTo(address(spaceV2Implementation));
 
