@@ -15,8 +15,8 @@ contract EthSigAuthenticatorTest is SpaceTest, SigUtils {
 
     string private constant name = "snapshot-x";
     string private constant version = "1";
-    string newMetadataUri = "Test456";
-    IndexedStrategy newStrategy = IndexedStrategy(0, new bytes(0));
+    string private newMetadataUri = "Test456";
+    IndexedStrategy private newStrategy = IndexedStrategy(0, new bytes(0));
 
     EthSigAuthenticator public ethSigAuth;
 

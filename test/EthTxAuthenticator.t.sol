@@ -8,13 +8,12 @@ import { EthTxAuthenticator } from "../src/authenticators/EthTxAuthenticator.sol
 import { Choice, IndexedStrategy } from "../src/types.sol";
 
 contract EthTxAuthenticatorTest is SpaceTest {
-    EthTxAuthenticator ethTxAuth;
-
     error InvalidFunctionSelector();
     error InvalidMessageSender();
 
-    string newMetadataUri = "Test42";
-    IndexedStrategy newStrategy = IndexedStrategy(0, new bytes(0));
+    EthTxAuthenticator internal ethTxAuth;
+    string internal newMetadataUri = "Test42";
+    IndexedStrategy internal newStrategy = IndexedStrategy(0, new bytes(0));
 
     function setUp() public virtual override {
         super.setUp();

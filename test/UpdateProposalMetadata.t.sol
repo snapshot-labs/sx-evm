@@ -6,8 +6,8 @@ import { SpaceTest } from "./utils/Space.t.sol";
 import { Choice, IndexedStrategy } from "../src/types.sol";
 
 contract updateProposalTest is SpaceTest {
-    string newMetadataUri = "Testing123";
-    IndexedStrategy newStrategy = IndexedStrategy(0, new bytes(0));
+    string internal newMetadataUri = "Testing123";
+    IndexedStrategy internal newStrategy = IndexedStrategy(0, new bytes(0));
 
     function setUp() public virtual override {
         super.setUp();

@@ -14,13 +14,13 @@ import { Space } from "../src/Space.sol";
 contract SpaceFactoryTest is Test, ISpaceFactoryEvents, ISpaceFactoryErrors {
     SpaceFactory public factory;
 
-    VanillaVotingStrategy vanillaVotingStrategy;
-    VanillaAuthenticator vanillaAuthenticator;
-    VanillaExecutionStrategy vanillaExecutionStrategy;
+    VanillaVotingStrategy internal vanillaVotingStrategy;
+    VanillaAuthenticator internal vanillaAuthenticator;
+    VanillaExecutionStrategy internal vanillaExecutionStrategy;
 
-    Strategy[] votingStrategies;
-    address[] authenticators;
-    Strategy[] executionStrategies;
+    Strategy[] internal votingStrategies;
+    address[] internal authenticators;
+    Strategy[] internal executionStrategies;
 
     address public controller;
     uint32 public votingDelay;
@@ -29,9 +29,9 @@ contract SpaceFactoryTest is Test, ISpaceFactoryEvents, ISpaceFactoryErrors {
     uint256 public proposalThreshold;
     uint32 public quorum;
 
-    bytes[] votingStrategyMetadata;
+    bytes[] internal votingStrategyMetadata;
 
-    string metadataUri = "SX-EVM";
+    string internal metadataUri = "SX-EVM";
 
     function setUp() public {
         factory = new SpaceFactory();

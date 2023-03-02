@@ -19,7 +19,7 @@ contract AvatarExecutionStrategyTest is SpaceTest {
     Avatar public avatar;
     AvatarExecutionStrategy public avatarExecutionStrategy;
 
-    address recipient = address(0xc0ffee);
+    address private recipient = address(0xc0ffee);
 
     function setUp() public override {
         super.setUp();

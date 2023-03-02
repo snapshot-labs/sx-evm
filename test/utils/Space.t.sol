@@ -15,21 +15,22 @@ import { IExecutionStrategyErrors } from "../../src/interfaces/execution-strateg
 import { Choice, Strategy, IndexedStrategy } from "../../src/types.sol";
 
 abstract contract SpaceTest is Test, GasSnapshot, ISpaceEvents, ISpaceErrors, IExecutionStrategyErrors {
-    bytes4 constant PROPOSE_SELECTOR = bytes4(keccak256("propose(address,string,(uint8,bytes),(uint8,bytes)[])"));
-    bytes4 constant VOTE_SELECTOR = bytes4(keccak256("vote(address,uint256,uint8,(uint8,bytes)[],string)"));
-    bytes4 constant UPDATE_PROPOSAL_SELECTOR =
+    bytes4 internal constant PROPOSE_SELECTOR =
+        bytes4(keccak256("propose(address,string,(uint8,bytes),(uint8,bytes)[])"));
+    bytes4 internal constant VOTE_SELECTOR = bytes4(keccak256("vote(address,uint256,uint8,(uint8,bytes)[],string)"));
+    bytes4 internal constant UPDATE_PROPOSAL_SELECTOR =
         bytes4(keccak256("updateProposal(address,uint256,(uint8,bytes),string)"));
 
-    Space space;
-    VanillaVotingStrategy vanillaVotingStrategy;
-    VanillaAuthenticator vanillaAuthenticator;
-    VanillaExecutionStrategy vanillaExecutionStrategy;
+    Space internal space;
+    VanillaVotingStrategy internal vanillaVotingStrategy;
+    VanillaAuthenticator internal vanillaAuthenticator;
+    VanillaExecutionStrategy internal vanillaExecutionStrategy;
 
     uint256 public constant authorKey = 1234;
     uint256 public constant voterKey = 5678;
     uint256 public constant unauthorizedKey = 4321;
 
-    string voteMetadataUri = "Hi";
+    string internal voteMetadataUri = "Hi";
 
     // Address of the meta transaction relayer (mana)
     address public relayer = address(this);
@@ -39,9 +40,9 @@ abstract contract SpaceTest is Test, GasSnapshot, ISpaceEvents, ISpaceErrors, IE
     address public unauthorized = vm.addr(unauthorizedKey);
 
     // Initial whitelisted modules set in the space
-    Strategy[] votingStrategies;
-    address[] authenticators;
-    Strategy[] executionStrategies;
+    Strategy[] internal votingStrategies;
+    address[] internal authenticators;
+    Strategy[] internal executionStrategies;
 
     // Initial space parameters
     uint32 public votingDelay;

@@ -6,7 +6,7 @@ import { SimpleQuorumExecutionStrategy } from "./SimpleQuorumExecutionStrategy.s
 import { Proposal, ProposalStatus } from "../types.sol";
 
 contract VanillaExecutionStrategy is SimpleQuorumExecutionStrategy {
-    uint256 numExecuted;
+    uint256 internal numExecuted;
 
     function execute(
         Proposal memory proposal,
