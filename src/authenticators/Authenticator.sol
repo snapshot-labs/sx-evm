@@ -14,6 +14,7 @@ abstract contract Authenticator {
         (bool success, ) = target.call(abi.encodePacked(functionSelector, data));
         if (!success) {
             // If the call failed, we revert with the propagated error message.
+            // solhint-disable-next-line no-inline-assembly
             assembly {
                 let returnDataSize := returndatasize()
                 returndatacopy(0, 0, returnDataSize)

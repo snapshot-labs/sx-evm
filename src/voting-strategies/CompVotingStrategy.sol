@@ -29,6 +29,7 @@ contract CompVotingStrategy is IVotingStrategy, TimestampResolver {
         if (_bytes.length < _start + 20) revert InvalidByteArray();
         address tempAddress;
 
+        // solhint-disable-next-line no-inline-assembly
         assembly {
             tempAddress := div(mload(add(add(_bytes, 0x20), _start)), 0x1000000000000000000000000)
         }
