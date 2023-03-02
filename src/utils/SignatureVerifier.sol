@@ -35,6 +35,7 @@ abstract contract SignatureVerifier is EIP712 {
 
     mapping(address author => mapping(uint256 salt => bool used)) private usedSalts;
 
+    // solhint-disable-next-line no-empty-blocks
     constructor(string memory name, string memory version) EIP712(name, version) {}
 
     function _verifyProposeSig(uint8 v, bytes32 r, bytes32 s, uint256 salt, address space, bytes memory data) internal {

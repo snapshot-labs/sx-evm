@@ -20,6 +20,7 @@ contract GasSnapshotsTest is SpaceTest, SigUtils {
 
     address public user = address(this);
 
+    // solhint-disable-next-line no-empty-blocks
     constructor() SigUtils(NAME, VERSION) {}
 
     function setUp() public virtual override {

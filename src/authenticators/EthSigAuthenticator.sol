@@ -8,6 +8,7 @@ import { SignatureVerifier } from "../utils/SignatureVerifier.sol";
 contract EthSigAuthenticator is Authenticator, SignatureVerifier {
     error InvalidFunctionSelector();
 
+    // solhint-disable-next-line no-empty-blocks
     constructor(string memory name, string memory version) SignatureVerifier(name, version) {}
 
     function authenticate(

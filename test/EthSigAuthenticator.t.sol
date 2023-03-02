@@ -20,6 +20,7 @@ contract EthSigAuthenticatorTest is SpaceTest, SigUtils {
 
     EthSigAuthenticator public ethSigAuth;
 
+    // solhint-disable-next-line no-empty-blocks
     constructor() SigUtils(NAME, VERSION) {}
 
     function setUp() public virtual override {

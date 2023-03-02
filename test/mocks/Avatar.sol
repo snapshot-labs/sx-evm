@@ -9,6 +9,7 @@ contract Avatar {
 
     mapping(address module => bool isEnabled) internal modules;
 
+    // solhint-disable-next-line no-empty-blocks
     receive() external payable {}
 
     function enableModule(address _module) external {
