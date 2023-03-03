@@ -2,7 +2,8 @@
 
 pragma solidity ^0.8.18;
 
-import "../interfaces/IExecutionStrategy.sol";
+import { IExecutionStrategy } from "../interfaces/IExecutionStrategy.sol";
+import { FinalizationStatus, Proposal, ProposalStatus } from "../types.sol";
 
 abstract contract OptimisticQuorumExecutionStrategy is IExecutionStrategy {
     function execute(
@@ -15,9 +16,9 @@ abstract contract OptimisticQuorumExecutionStrategy is IExecutionStrategy {
 
     function getProposalStatus(
         Proposal memory proposal,
-        uint256 votesFor,
+        uint256, // votesFor,
         uint256 votesAgainst,
-        uint256 votesAbstain
+        uint256 // votesAbstain
     ) public view override returns (ProposalStatus) {
         // Decode the quorum parameter from the execution strategy's params
         uint256 quorum = abi.decode(proposal.executionStrategy.params, (uint256));
