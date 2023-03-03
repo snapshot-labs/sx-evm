@@ -508,7 +508,11 @@ contract Space is ISpace, Ownable, ReentrancyGuard {
 
         voteRegistry[proposalId][voterAddress] = true;
 
-        emit VoteCreated(proposalId, voterAddress, Vote(choice, votingPower, metadataUri));
+        if (bytes(metadataUri).length == 0) {
+            emit VoteCast(proposalId, voterAddress, choice, votingPower);
+        } else {
+            emit VoteCastWithMetadata(proposalId, voterAddress, choice, votingPower, metadataUri);
+        }
     }
 
     /**
