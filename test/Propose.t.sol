@@ -81,11 +81,11 @@ contract ProposeTest is SpaceTest {
     function testProposeMultipleStrategies() public {
         VanillaVotingStrategy strat2 = new VanillaVotingStrategy();
         Strategy[] memory toAdd = new Strategy[](2);
-        toAdd[0] = Strategy(address(strat2), new bytes(0));
-        toAdd[1] = Strategy(address(strat2), new bytes(0));
+        toAdd[0] = Strategy(address(strat2), new bytes(0), new bytes(0));
+        toAdd[1] = Strategy(address(strat2), new bytes(0), new bytes(0));
         bytes[] memory newData = new bytes[](0);
 
-        space.addVotingStrategies(toAdd, newData);
+        space.addVotingStrategies(toAdd);
 
         IndexedStrategy[] memory newVotingStrategies = new IndexedStrategy[](3);
         newVotingStrategies[0] = userVotingStrategies[0]; // base strat

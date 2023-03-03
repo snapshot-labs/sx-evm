@@ -29,7 +29,7 @@ contract PopulateVanillaSpace is Script {
         vanillaAuthenticator = VanillaAuthenticator(0xc4fb316710643f7FfBB566e5586862076198DAdB);
         vanillaExecutionStrategy = VanillaExecutionStrategy(0x81519C29621Ba131ea398c15B17391F53e8B9A94);
 
-        executionStrategy = Strategy(address(vanillaExecutionStrategy), new bytes(0));
+        executionStrategy = Strategy(address(vanillaExecutionStrategy), new bytes(0), new bytes(0));
         userVotingStrategies.push(IndexedStrategy(0, new bytes(0)));
 
         uint256 proposalId = _createProposal(

@@ -96,7 +96,7 @@ contract ExecuteTest is SpaceTest {
         VanillaExecutionStrategy _vanilla = new VanillaExecutionStrategy();
 
         Strategy[] memory newExecutionStrategies = new Strategy[](1);
-        newExecutionStrategies[0] = Strategy(address(_vanilla), abi.encode(uint256(quorum)));
+        newExecutionStrategies[0] = Strategy(address(_vanilla), abi.encode(uint256(quorum)), new bytes(0));
 
         // Add the strategy, which will be assigned the index `1`.
         space.addExecutionStrategies(newExecutionStrategies);

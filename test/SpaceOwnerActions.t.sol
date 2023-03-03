@@ -174,15 +174,13 @@ contract SpaceOwnerActionsTest is SpaceTest {
         uint8[] memory newIndices = new uint8[](1);
         newIndices[0] = 1;
 
-        bytes[] memory votingStrategyMetadata = new bytes[](0);
-
         IndexedStrategy[] memory newUserVotingStrategies = new IndexedStrategy[](1);
         newUserVotingStrategies[0] = IndexedStrategy(newIndices[0], new bytes(0));
 
         vm.expectEmit(true, true, true, true);
-        emit VotingStrategiesAdded(newVotingStrategies, votingStrategyMetadata);
+        emit VotingStrategiesAdded(newVotingStrategies);
         vm.prank(owner);
-        space.addVotingStrategies(newVotingStrategies, votingStrategyMetadata);
+        space.addVotingStrategies(newVotingStrategies);
 
         // Try creating a proposal using these new strategies.
         _createProposal(author, proposalMetadataUri, executionStrategy, newUserVotingStrategies);
@@ -205,7 +203,7 @@ contract SpaceOwnerActionsTest is SpaceTest {
         vm.prank(unauthorized);
         bytes[] memory newData = new bytes[](0);
 
-        space.addVotingStrategies(votingStrategies, newData);
+        space.addVotingStrategies(votingStrategies);
     }
 
     function testRemoveVotingStrategiesUnauthorized() public {
@@ -255,7 +253,7 @@ contract SpaceOwnerActionsTest is SpaceTest {
     function testAddAndRemoveExecutionStrategies() public {
         Strategy[] memory newExecutionStrategies = new Strategy[](1);
         VanillaExecutionStrategy _vanilla = new VanillaExecutionStrategy();
-        newExecutionStrategies[0] = Strategy(address(_vanilla), abi.encode(uint256(quorum)));
+        newExecutionStrategies[0] = Strategy(address(_vanilla), abi.encode(uint256(quorum)), new bytes(0));
 
         vm.expectEmit(true, true, true, true);
         emit ExecutionStrategiesAdded(newExecutionStrategies);

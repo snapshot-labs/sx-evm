@@ -28,7 +28,6 @@ contract SpaceFactoryTest is Test, IProxyFactoryEvents, IProxyFactoryErrors {
     uint256 public proposalThreshold;
     uint32 public quorum;
     string public metadataUri = "SX-EVM";
-    bytes[] public votingStrategyMetadata;
 
     function setUp() public {
         masterSpace = new Space();
@@ -42,9 +41,9 @@ contract SpaceFactoryTest is Test, IProxyFactoryEvents, IProxyFactoryErrors {
         maxVotingDuration = 1000;
         proposalThreshold = 1;
         quorum = 1;
-        votingStrategies.push(Strategy(address(vanillaVotingStrategy), new bytes(0)));
+        votingStrategies.push(Strategy(address(vanillaVotingStrategy), new bytes(0), new bytes(0)));
         authenticators.push(address(vanillaAuthenticator));
-        executionStrategies.push(Strategy(address(vanillaExecutionStrategy), new bytes(0)));
+        executionStrategies.push(Strategy(address(vanillaExecutionStrategy), new bytes(0), new bytes(0)));
     }
 
     function testCreateSpace() public {
@@ -65,7 +64,6 @@ contract SpaceFactoryTest is Test, IProxyFactoryEvents, IProxyFactoryErrors {
                 proposalThreshold,
                 metadataUri,
                 votingStrategies,
-                votingStrategyMetadata,
                 authenticators,
                 executionStrategies
             ),
@@ -86,7 +84,6 @@ contract SpaceFactoryTest is Test, IProxyFactoryEvents, IProxyFactoryErrors {
                 proposalThreshold,
                 metadataUri,
                 votingStrategies,
-                votingStrategyMetadata,
                 authenticators,
                 executionStrategies
             ),
@@ -106,7 +103,6 @@ contract SpaceFactoryTest is Test, IProxyFactoryEvents, IProxyFactoryErrors {
                 proposalThreshold,
                 metadataUri,
                 votingStrategies,
-                votingStrategyMetadata,
                 authenticators,
                 executionStrategies
             ),
@@ -127,7 +123,6 @@ contract SpaceFactoryTest is Test, IProxyFactoryEvents, IProxyFactoryErrors {
                 proposalThreshold,
                 metadataUri,
                 votingStrategies,
-                votingStrategyMetadata,
                 authenticators,
                 executionStrategies
             ),
@@ -145,7 +140,6 @@ contract SpaceFactoryTest is Test, IProxyFactoryEvents, IProxyFactoryErrors {
             proposalThreshold,
             metadataUri,
             votingStrategies,
-            votingStrategyMetadata,
             authenticators,
             executionStrategies
         );

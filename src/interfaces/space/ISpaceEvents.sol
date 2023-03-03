@@ -13,7 +13,6 @@ interface ISpaceEvents {
         uint256 proposalThreshold,
         string metadataUri,
         Strategy[] votingStrategies,
-        bytes[] votingStrategyMetadata,
         address[] authenticators,
         Strategy[] executionStrategies
     );
@@ -22,7 +21,7 @@ interface ISpaceEvents {
     event VoteCreated(uint256 proposalId, address voterAddress, Vote vote, string voteMetadataUri);
     event ProposalExecuted(uint256 proposalId);
     event ProposalCancelled(uint256 proposalId);
-    event VotingStrategiesAdded(Strategy[] votingStrategies, bytes[] data);
+    event VotingStrategiesAdded(Strategy[] votingStrategies);
     event VotingStrategiesRemoved(uint8[] indices);
     event ExecutionStrategiesAdded(Strategy[] executionStrategies);
     event ExecutionStrategiesRemoved(uint8[] executionStrategies);

@@ -104,7 +104,7 @@ contract VoteTest is SpaceTest {
         Strategy[] memory newVotingStrategies = new Strategy[](1);
         newVotingStrategies[0] = votingStrategies[0];
         bytes[] memory newData = new bytes[](0);
-        space.addVotingStrategies(newVotingStrategies, newData);
+        space.addVotingStrategies(newVotingStrategies);
 
         // attempting to use the new voting strategy to cast a vote.
         // this will fail fail because the strategy was added after the proposal was created.
@@ -138,11 +138,11 @@ contract VoteTest is SpaceTest {
         VanillaVotingStrategy strat2 = new VanillaVotingStrategy();
         VanillaVotingStrategy strat3 = new VanillaVotingStrategy();
         Strategy[] memory toAdd = new Strategy[](2);
-        toAdd[0] = Strategy(address(strat2), new bytes(0));
-        toAdd[1] = Strategy(address(strat3), new bytes(0));
+        toAdd[0] = Strategy(address(strat2), new bytes(0), new bytes(0));
+        toAdd[1] = Strategy(address(strat3), new bytes(0), new bytes(0));
         bytes[] memory newData;
 
-        space.addVotingStrategies(toAdd, newData);
+        space.addVotingStrategies(toAdd);
 
         IndexedStrategy[] memory newVotingStrategies = new IndexedStrategy[](3);
         newVotingStrategies[0] = userVotingStrategies[0]; // base strat

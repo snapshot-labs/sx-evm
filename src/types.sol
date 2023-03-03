@@ -26,6 +26,7 @@ struct Proposal {
 struct Strategy {
     address addy;
     bytes params;
+    bytes metadata;
 }
 
 struct IndexedStrategy {

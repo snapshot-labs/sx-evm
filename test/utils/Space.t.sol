@@ -63,8 +63,6 @@ abstract contract SpaceTest is Test, GasSnapshot, ISpaceEvents, ISpaceErrors, IE
 
     string public proposalMetadataUri = "SOC Test Proposal";
 
-    bytes[] public votingStrategyMetadata;
-
     function setUp() public virtual {
         masterSpace = new Space();
 
@@ -77,9 +75,11 @@ abstract contract SpaceTest is Test, GasSnapshot, ISpaceEvents, ISpaceErrors, IE
         maxVotingDuration = 1000;
         proposalThreshold = 1;
         quorum = 1;
-        votingStrategies.push(Strategy(address(vanillaVotingStrategy), new bytes(0)));
+        votingStrategies.push(Strategy(address(vanillaVotingStrategy), new bytes(0), new bytes(0)));
         authenticators.push(address(vanillaAuthenticator));
-        executionStrategies.push(Strategy(address(vanillaExecutionStrategy), abi.encode(uint256(quorum))));
+        executionStrategies.push(
+            Strategy(address(vanillaExecutionStrategy), abi.encode(uint256(quorum)), new bytes(0))
+        );
         userVotingStrategies.push(IndexedStrategy(0, new bytes(0)));
         executionStrategy = IndexedStrategy(0, new bytes(0));
         space = Space(
@@ -95,7 +95,6 @@ abstract contract SpaceTest is Test, GasSnapshot, ISpaceEvents, ISpaceErrors, IE
                         proposalThreshold,
                         spaceMetadataUri,
                         votingStrategies,
-                        votingStrategyMetadata,
                         authenticators,
                         executionStrategies
                     )

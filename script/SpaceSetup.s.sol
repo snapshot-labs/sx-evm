@@ -29,19 +29,16 @@ contract SpaceSetup is Script {
 
     function run() public {
         Strategy[] memory votingStrategies = new Strategy[](2);
-        bytes[] memory votingStrategyMetadata = new bytes[](2);
-        votingStrategies[0] = Strategy(vanillaVotingStrategy, new bytes(0));
-        votingStrategyMetadata[0] = new bytes(0);
+        votingStrategies[0] = Strategy(vanillaVotingStrategy, new bytes(0), new bytes(0));
         address uni = address(0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984); // Goerli UNI token
-        votingStrategies[1] = Strategy(compVotingStrategy, abi.encode(uni));
-        votingStrategyMetadata[1] = new bytes(18); // UNI token decimals
+        votingStrategies[1] = Strategy(compVotingStrategy, abi.encode(uni), new bytes(18)); // 18 decimals
 
         address[] memory authenticators = new address[](3);
         authenticators[0] = vanillaAuthenticator;
         authenticators[1] = ethSigAuthenticator;
         authenticators[2] = ethTxAuthenticator;
         Strategy[] memory executionStrategies = new Strategy[](1);
-        executionStrategies[0] = Strategy(vanillaExecutionStrategy, new bytes(quorum));
+        executionStrategies[0] = Strategy(vanillaExecutionStrategy, new bytes(quorum), new bytes(0));
         votingDelay = 0;
         minVotingDuration = 0;
         maxVotingDuration = 1000;
@@ -60,7 +57,6 @@ contract SpaceSetup is Script {
                 proposalThreshold,
                 metadataUri,
                 votingStrategies,
-                votingStrategyMetadata,
                 authenticators,
                 executionStrategies
             ),
