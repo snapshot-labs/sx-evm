@@ -10,8 +10,8 @@ contract VoteTest is SpaceTest {
     function testVote() public {
         uint256 proposalId = _createProposal(author, proposalMetadataUri, executionStrategy, userVotingStrategies);
 
-        // vm.expectEmit(true, true, true, true);
-        // emit VoteCreated(proposalId, author, Vote(Choice.For, 1), voteMetadataUri);
+        vm.expectEmit(true, true, true, true);
+        emit VoteCreated(proposalId, author, Vote(Choice.For, 1, voteMetadataUri));
         snapStart("Vote");
         vanillaAuthenticator.authenticate(
             address(space),
@@ -153,7 +153,7 @@ contract VoteTest is SpaceTest {
 
         uint256 expectedVotingPower = 3; // 1 voting power per vanilla strat, so 3
         vm.expectEmit(true, true, true, true);
-        emit VoteCreated(proposalId, author, Vote(Choice.For, expectedVotingPower), voteMetadataUri);
+        emit VoteCreated(proposalId, author, Vote(Choice.For, expectedVotingPower, voteMetadataUri));
         _vote(author, proposalId, Choice.For, newVotingStrategies, voteMetadataUri);
     }
 }

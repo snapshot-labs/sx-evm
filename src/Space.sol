@@ -474,14 +474,14 @@ contract Space is ISpace, Ownable, ReentrancyGuard {
      * @param   proposalId  Proposal id.
      * @param   choice  Choice can be `For`, `Against` or `Abstain`.
      * @param   userVotingStrategies  Strategies to use to compute the voter's voting power.
-     * @param   voteMetadataUri  An optional metadata to give information about the vote.
+     * @param   metadataUri  An optional metadata to give information about the vote.
      */
     function vote(
         address voterAddress,
         uint256 proposalId,
         Choice choice,
         IndexedStrategy[] calldata userVotingStrategies,
-        string calldata voteMetadataUri
+        string calldata metadataUri
     ) external override {
         _assertValidAuthenticator();
 
@@ -508,7 +508,7 @@ contract Space is ISpace, Ownable, ReentrancyGuard {
 
         voteRegistry[proposalId][voterAddress] = true;
 
-        emit VoteCreated(proposalId, voterAddress, Vote(choice, votingPower), voteMetadataUri);
+        emit VoteCreated(proposalId, voterAddress, Vote(choice, votingPower, metadataUri));
     }
 
     /**

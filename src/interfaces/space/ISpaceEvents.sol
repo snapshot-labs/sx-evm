@@ -5,7 +5,7 @@ import { IndexedStrategy, Proposal, Strategy, Vote } from "src/types.sol";
 
 interface ISpaceEvents {
     event ProposalCreated(uint256 nextProposalId, address author, Proposal proposal, string metadataUri, bytes payload);
-    event VoteCreated(uint256 proposalId, address voterAddress, Vote vote, string voteMetadataUri);
+    event VoteCreated(uint256 proposalId, address voterAddress, Vote vote);
     event ProposalExecuted(uint256 proposalId);
     event ProposalCancelled(uint256 proposalId);
     event VotingStrategiesAdded(Strategy[] votingStrategies, bytes[] data);

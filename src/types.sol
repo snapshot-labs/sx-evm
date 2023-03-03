@@ -60,6 +60,7 @@ enum Choice {
 struct Vote {
     Choice choice;
     uint256 votingPower;
+    string metadataUri;
 }
 
 struct MetaTransaction {
