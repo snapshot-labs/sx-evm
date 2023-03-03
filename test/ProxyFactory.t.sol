@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.18;
 
-import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import { Test } from "forge-std/Test.sol";
+import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import { VanillaAuthenticator } from "../src/authenticators/VanillaAuthenticator.sol";
 import { VanillaVotingStrategy } from "../src/voting-strategies/VanillaVotingStrategy.sol";
 import { VanillaExecutionStrategy } from "../src/execution-strategies/VanillaExecutionStrategy.sol";
@@ -10,6 +10,7 @@ import { ProxyFactory } from "../src/ProxyFactory.sol";
 import { Space } from "../src/Space.sol";
 import { IProxyFactoryEvents } from "../src/interfaces/factory/IProxyFactoryEvents.sol";
 import { IProxyFactoryErrors } from "../src/interfaces/factory/IProxyFactoryErrors.sol";
+import { Strategy } from "../src/types.sol";
 
 // solhint-disable-next-line max-states-count
 contract SpaceFactoryTest is Test, IProxyFactoryEvents, IProxyFactoryErrors {
@@ -51,7 +52,7 @@ contract SpaceFactoryTest is Test, IProxyFactoryEvents, IProxyFactoryErrors {
     function testCreateSpace() public {
         bytes32 salt = bytes32(keccak256(abi.encodePacked("random salt")));
         // Pre-computed address of the space (possible because of CREATE2 deployment)
-        address spaceProxy = predictProxyAddress(address(factory), address(masterSpace), salt);
+        address spaceProxy = _predictProxyAddress(address(factory), address(masterSpace), salt);
 
         vm.expectEmit(true, true, true, true);
         emit ProxyDeployed(address(masterSpace), spaceProxy);
@@ -134,7 +135,7 @@ contract SpaceFactoryTest is Test, IProxyFactoryEvents, IProxyFactoryErrors {
             ),
             salt
         );
-        address spaceProxy = predictProxyAddress(address(factory), address(masterSpace), salt);
+        address spaceProxy = _predictProxyAddress(address(factory), address(masterSpace), salt);
 
         // Initializing the space should revert as the space is already initialized
         vm.expectRevert("Initializable: contract is already initialized");
@@ -152,7 +153,16 @@ contract SpaceFactoryTest is Test, IProxyFactoryEvents, IProxyFactoryErrors {
         );
     }
 
-    function predictProxyAddress(
+    function testPredictProxyAddress() public {
+        bytes32 salt = bytes32(keccak256(abi.encodePacked("random salt")));
+        // Checking predictProxyAddress in the factory returns the same address as the helper in this test
+        assertEq(
+            address(factory.predictProxyAddress(address(masterSpace), salt)),
+            _predictProxyAddress(address(factory), address(masterSpace), salt)
+        );
+    }
+
+    function _predictProxyAddress(
         address factory,
         address implementation,
         bytes32 salt
