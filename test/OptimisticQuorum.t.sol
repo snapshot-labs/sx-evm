@@ -2,13 +2,13 @@
 
 pragma solidity ^0.8.18;
 
-import "./utils/Space.t.sol";
-import "../src/execution-strategies/OptimisticQuorumExecutionStrategy.sol";
-import "../src/types.sol";
+import { SpaceTest } from "./utils/Space.t.sol";
+import { OptimisticQuorumExecutionStrategy } from "../src/execution-strategies/OptimisticQuorumExecutionStrategy.sol";
+import { Choice, IndexedStrategy, Proposal, ProposalStatus, Strategy } from "../src/types.sol";
 
 // Dummy implementation of the optimistic quorum
 contract OptimisticExec is OptimisticQuorumExecutionStrategy {
-    uint256 numExecuted;
+    uint256 internal numExecuted;
 
     function execute(
         Proposal memory proposal,
@@ -26,13 +26,13 @@ contract OptimisticExec is OptimisticQuorumExecutionStrategy {
         numExecuted++;
     }
 
-    function getStrategyType() external view returns (string memory) {
+    function getStrategyType() external pure returns (string memory) {
         return "OptimisticQuorumExecution";
     }
 }
 
 contract OptimisticTest is SpaceTest {
-    OptimisticExec optimisticQuorumStrategy;
+    OptimisticExec internal optimisticQuorumStrategy;
 
     function setUp() public virtual override {
         super.setUp();
