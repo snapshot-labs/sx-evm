@@ -4,6 +4,7 @@ pragma solidity ^0.8.18;
 import "forge-std/Script.sol";
 
 import "../src/ProxyFactory.sol";
+import "../src/Space.sol";
 import "../src/authenticators/VanillaAuthenticator.sol";
 import "../src/voting-strategies/VanillaVotingStrategy.sol";
 import "../src/execution-strategies/VanillaExecutionStrategy.sol";
