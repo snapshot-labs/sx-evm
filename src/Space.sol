@@ -406,12 +406,6 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         return owner();
     }
 
-    function quorum(uint256 proposalId) external view override returns (uint256) {
-        Proposal memory proposal = proposalRegistry[proposalId];
-        _assertProposalExists(proposal);
-        return IExecutionStrategy(proposal.executionStrategy.addy).getQuorum(proposal);
-    }
-
     function getProposal(uint256 proposalId) external view override returns (Proposal memory) {
         Proposal memory proposal = proposalRegistry[proposalId];
         _assertProposalExists(proposal);
