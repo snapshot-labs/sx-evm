@@ -28,17 +28,17 @@ abstract contract OptimisticQuorumExecutionStrategy is IExecutionStrategy {
             return ProposalStatus.Executed;
         } else if (block.timestamp < proposal.startTimestamp) {
             return ProposalStatus.VotingDelay;
+        } else if (rejected) {
+            // We're past the vote start. If it has been rejected, we can short-circuit and return Rejected
+            return ProposalStatus.Rejected;
         } else if (block.timestamp < proposal.minEndTimestamp) {
+            // minEndTimestamp not reached, indicate we're still in the voting period
             return ProposalStatus.VotingPeriod;
         } else if (block.timestamp < proposal.maxEndTimestamp) {
-            if (rejected) {
-                return ProposalStatus.Rejected;
-            } else {
-                return ProposalStatus.VotingPeriod;
-            }
-        } else if (rejected) {
-            return ProposalStatus.Rejected;
+            // minEndTimestamp < now < maxEndTimestamp ; if not `rejected`, we can indicate it can be `accepted`.
+            return ProposalStatus.VotingPeriodAccepted;
         } else {
+            // maxEndTimestamp < now ; proposal has not been `rejected` ; we can indicate it's `accepted`.
             return ProposalStatus.Accepted;
         }
     }

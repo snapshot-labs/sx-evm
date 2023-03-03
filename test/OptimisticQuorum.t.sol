@@ -118,17 +118,11 @@ contract OptimisticTest is SpaceTest {
         assertEq(uint8(space.getProposalStatus(proposalId)), uint8(ProposalStatus.Rejected));
     }
 
-    function testOptimisticQuorumMinVotingPeriodNotReached() public {
+    function testOptimisticQuorumMinVotingPeriodAccepted() public {
         uint256 proposalId = _createProposal(author, proposalMetadataUri, executionStrategy, userVotingStrategies);
 
         vm.warp(block.timestamp + space.minVotingDuration());
 
-        vm.expectRevert(abi.encodeWithSelector(InvalidProposalStatus.selector, ProposalStatus.VotingPeriod));
-        space.execute(proposalId, executionStrategy.params);
-
-        // Go to max voting period
-        vm.warp(block.timestamp + space.maxVotingDuration() - space.minVotingDuration());
-        // Execution should work fine
         space.execute(proposalId, executionStrategy.params);
 
         assertEq(uint8(space.getProposalStatus(proposalId)), uint8(ProposalStatus.Executed));
