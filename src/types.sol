@@ -57,12 +57,6 @@ enum Choice {
     Abstain
 }
 
-struct Vote {
-    Choice choice;
-    uint256 votingPower;
-    string metadataUri;
-}
-
 struct MetaTransaction {
     address to;
     uint256 value;

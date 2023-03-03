@@ -5,7 +5,7 @@ import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 import { ReentrancyGuard } from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
 import { ISpace } from "src/interfaces/ISpace.sol";
-import { Choice, FinalizationStatus, IndexedStrategy, Proposal, ProposalStatus, Strategy, Vote } from "src/types.sol";
+import { Choice, FinalizationStatus, IndexedStrategy, Proposal, ProposalStatus, Strategy } from "src/types.sol";
 import { IVotingStrategy } from "src/interfaces/IVotingStrategy.sol";
 import { IExecutionStrategy } from "src/interfaces/IExecutionStrategy.sol";
 
@@ -486,13 +486,11 @@ contract Space is ISpace, Ownable, ReentrancyGuard {
         _assertValidAuthenticator();
 
         Proposal memory proposal = proposalRegistry[proposalId];
-        _assertProposalExists(proposal);
-
-        uint32 currentTimestamp = uint32(block.timestamp);
-        if (currentTimestamp >= proposal.maxEndTimestamp) revert VotingPeriodHasEnded();
-        if (currentTimestamp < proposal.startTimestamp) revert VotingPeriodHasNotStarted();
+        if (proposal.startTimestamp == 0) revert InvalidProposal();
+        if (block.timestamp >= uint256(proposal.maxEndTimestamp)) revert VotingPeriodHasEnded();
+        if (block.timestamp < uint256(proposal.startTimestamp)) revert VotingPeriodHasNotStarted();
         if (proposal.finalizationStatus != FinalizationStatus.Pending) revert ProposalFinalized();
-        if (voteRegistry[proposalId][voterAddress] == true) revert UserHasAlreadyVoted();
+        if (voteRegistry[proposalId][voterAddress]) revert UserHasAlreadyVoted();
 
         uint256 votingPower = _getCumulativeVotingPower(
             proposal.snapshotTimestamp,
@@ -500,12 +498,8 @@ contract Space is ISpace, Ownable, ReentrancyGuard {
             userVotingStrategies,
             proposal.votingStrategies
         );
-
         if (votingPower == 0) revert UserHasNoVotingPower();
-        uint256 previousVotingPower = votePower[proposalId][choice];
-        uint256 newVotingPower = previousVotingPower + votingPower;
-        votePower[proposalId][choice] = newVotingPower;
-
+        votePower[proposalId][choice] += votingPower;
         voteRegistry[proposalId][voterAddress] = true;
 
         if (bytes(metadataUri).length == 0) {

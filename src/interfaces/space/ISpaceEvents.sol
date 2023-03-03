@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.18;
 
-import { IndexedStrategy, Proposal, Strategy, Vote, Choice } from "src/types.sol";
+import { IndexedStrategy, Proposal, Strategy, Choice } from "src/types.sol";
 
 interface ISpaceEvents {
     event ProposalCreated(uint256 nextProposalId, address author, Proposal proposal, string metadataUri, bytes payload);
