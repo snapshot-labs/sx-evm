@@ -2,11 +2,8 @@
 
 pragma solidity ^0.8.18;
 
-import "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
-
-import "./Space.sol";
-import "./interfaces/IProxyFactory.sol";
-import "./types.sol";
+import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
+import { IProxyFactory } from "./interfaces/IProxyFactory.sol";
 
 /**
  * @title   Proxy Factory
@@ -18,6 +15,7 @@ contract ProxyFactory is IProxyFactory {
         if (implementation == address(0) || implementation.code.length == 0) revert InvalidImplementation();
         if (predictProxyAddress(implementation, salt).code.length > 0) revert SaltAlreadyUsed();
         address proxy = address(new ERC1967Proxy{ salt: salt }(implementation, ""));
+        // solhint-disable-next-line avoid-low-level-calls
         (bool success, ) = proxy.call(initializer);
         if (!success) revert FailedInitialization();
 

@@ -100,6 +100,7 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
      * @notice Only the space controller can authorize an upgrade to this contract.
      * @param newImplementation The address of the new implementation.
      */
+    // solhint-disable-next-line no-empty-blocks
     function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
 
     function _setMaxVotingDuration(uint32 _maxVotingDuration) internal {

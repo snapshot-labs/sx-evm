@@ -2,10 +2,8 @@
 
 pragma solidity ^0.8.18;
 
-import "./factory/IProxyFactoryErrors.sol";
-import "./factory/IProxyFactoryEvents.sol";
-
-import "../types.sol";
+import { IProxyFactoryErrors } from "./factory/IProxyFactoryErrors.sol";
+import { IProxyFactoryEvents } from "./factory/IProxyFactoryEvents.sol";
 
 interface IProxyFactory is IProxyFactoryErrors, IProxyFactoryEvents {
     function deployProxy(address implementation, bytes memory initializer, bytes32 salt) external;
