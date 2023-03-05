@@ -5,13 +5,16 @@ pragma solidity ^0.8.18;
 import { SimpleQuorumExecutionStrategy } from "./SimpleQuorumExecutionStrategy.sol";
 import { SpaceManager } from "../utils/SpaceManager.sol";
 import { MetaTransaction, Proposal, ProposalStatus } from "../types.sol";
+import { Enum } from "@gnosis.pm/safe-contracts/contracts/common/Enum.sol";
 
-/// @title Avatar Execution Strategy - An Execution strategy that executes transactions on an Avatar contract
-/// @dev An Avatar contract is any contract that implements the IAvatar interface, eg a Gnosis Safe.
+/// @title Timelock Execution Strategy - An Execution strategy that executes transactions according to a timelock delay.
 contract TimelockExecutionStrategy is SpaceManager, SimpleQuorumExecutionStrategy {
     error TransactionsFailed();
     error TimelockDelayNotMet();
     error ProposalNotQueued();
+
+    event TransactionQueued(MetaTransaction transaction, uint256 executionTime);
+    event TransactionExecuted(MetaTransaction transaction);
 
     /// @notice The delay in seconds between a proposal being queued and the execution of the proposal.
     uint256 public timelockDelay;
@@ -22,26 +25,35 @@ contract TimelockExecutionStrategy is SpaceManager, SimpleQuorumExecutionStrateg
     /// @notice Constructor
     /// @param _owner Address of the owner of this contract.
     /// @param _spaces Array of whitelisted space contracts.
-    constructor(address _owner, address[] memory _spaces, uint256 _timelockDelay) {
+    constructor(address _owner, address[] memory _spaces, uint256 _timelockDelay) initializer {
         __Ownable_init();
         transferOwnership(_owner);
         __SpaceManager_init(_spaces);
         timelockDelay = _timelockDelay;
     }
 
+    /// @notice Effectively a timelock queue function. Can only be called by approved spaces.
     function execute(
         Proposal memory proposal,
         uint256 votesFor,
         uint256 votesAgainst,
         uint256 votesAbstain,
-        bytes memory
+        bytes memory payload
     ) external override onlySpace(msg.sender) {
+        if (proposal.executionPayloadHash != keccak256(payload)) revert InvalidPayload();
+
         ProposalStatus proposalStatus = getProposalStatus(proposal, votesFor, votesAgainst, votesAbstain);
         if ((proposalStatus != ProposalStatus.Accepted) && (proposalStatus != ProposalStatus.VotingPeriodAccepted)) {
             revert InvalidProposalStatus(proposalStatus);
         }
 
-        proposalExecutionTime[proposal.executionPayloadHash] = block.timestamp + timelockDelay;
+        uint256 executionTime = block.timestamp + timelockDelay;
+        proposalExecutionTime[proposal.executionPayloadHash] = executionTime;
+
+        MetaTransaction[] memory transactions = abi.decode(payload, (MetaTransaction[]));
+        for (uint i = 0; i < transactions.length; i++) {
+            emit TransactionQueued(transactions[i], executionTime);
+        }
     }
 
     function execute(Proposal memory proposal, bytes memory payload) external {
@@ -57,8 +69,15 @@ contract TimelockExecutionStrategy is SpaceManager, SimpleQuorumExecutionStrateg
 
         MetaTransaction[] memory transactions = abi.decode(payload, (MetaTransaction[]));
         for (uint i = 0; i < transactions.length; i++) {
-            (bool success, ) = transactions[i].to.call{ value: transactions[i].value }(transactions[i].data);
+            bool success;
+            if (transactions[i].operation == Enum.Operation.DelegateCall) {
+                (success, ) = transactions[i].to.delegatecall(transactions[i].data);
+            } else {
+                (success, ) = transactions[i].to.call{ value: transactions[i].value }(transactions[i].data);
+            }
             if (!success) revert TransactionsFailed();
+
+            emit TransactionExecuted(transactions[i]);
         }
     }
 
