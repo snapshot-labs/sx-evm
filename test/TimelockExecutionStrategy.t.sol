@@ -7,6 +7,7 @@ import { Choice, Enum, IndexedStrategy, MetaTransaction, ProposalStatus, Strateg
 import { TimelockExecutionStrategy } from "../src/execution-strategies/TimelockExecutionStrategy.sol";
 
 contract TimelockExecutionStrategyTest is SpaceTest {
+    error TransactionsFailed();
     error TimelockDelayNotMet();
     error ProposalNotQueued();
     event TransactionQueued(MetaTransaction transaction, uint256 executionTime);
@@ -101,6 +102,92 @@ contract TimelockExecutionStrategyTest is SpaceTest {
         space.execute(proposalId, abi.encode(transactions));
     }
 
+    function testQueueingInvalidPayload() external {
+        MetaTransaction[] memory transactions = new MetaTransaction[](1);
+        transactions[0] = MetaTransaction(recipient, 1, "", Enum.Operation.Call);
+        uint256 proposalId = _createProposal(
+            author,
+            proposalMetadataUri,
+            IndexedStrategy(1, abi.encode(transactions)),
+            userVotingStrategies
+        );
+        _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataUri);
+        vm.warp(block.timestamp + space.maxVotingDuration());
+
+        transactions[0] = MetaTransaction(recipient, 2, "", Enum.Operation.Call);
+
+        vm.expectRevert(InvalidPayload.selector);
+        space.execute(proposalId, abi.encode(transactions));
+    }
+
+    function testExecute() external {
+        MetaTransaction[] memory transactions = new MetaTransaction[](1);
+        transactions[0] = MetaTransaction(recipient, 1, "", Enum.Operation.Call);
+        uint256 proposalId = _createProposal(
+            author,
+            proposalMetadataUri,
+            IndexedStrategy(1, abi.encode(transactions)),
+            userVotingStrategies
+        );
+        _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataUri);
+        vm.warp(block.timestamp + space.maxVotingDuration());
+
+        vm.expectEmit(true, true, true, true);
+        emit TransactionQueued(transactions[0], block.timestamp + 1000);
+        space.execute(proposalId, abi.encode(transactions));
+
+        assertEq(recipient.balance, 0);
+
+        vm.warp(block.timestamp + timelockExecutionStrategy.timelockDelay());
+        timelockExecutionStrategy.execute(space.getProposal(proposalId), abi.encode(transactions));
+
+        assertEq(recipient.balance, 1);
+    }
+
+    function testExecuteTransactionFailed() external {
+        MetaTransaction[] memory transactions = new MetaTransaction[](1);
+        transactions[0] = MetaTransaction(recipient, 1001, "", Enum.Operation.Call);
+        uint256 proposalId = _createProposal(
+            author,
+            proposalMetadataUri,
+            IndexedStrategy(1, abi.encode(transactions)),
+            userVotingStrategies
+        );
+        _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataUri);
+        vm.warp(block.timestamp + space.maxVotingDuration());
+
+        space.execute(proposalId, abi.encode(transactions));
+
+        vm.warp(block.timestamp + timelockExecutionStrategy.timelockDelay());
+
+        Proposal memory proposal = space.getProposal(proposalId);
+
+        vm.expectRevert(TransactionsFailed.selector);
+        timelockExecutionStrategy.execute(proposal, abi.encode(transactions));
+    }
+
+    function testExecuteInvalidPayload() external {
+        MetaTransaction[] memory transactions = new MetaTransaction[](1);
+        transactions[0] = MetaTransaction(recipient, 1, "", Enum.Operation.Call);
+        uint256 proposalId = _createProposal(
+            author,
+            proposalMetadataUri,
+            IndexedStrategy(1, abi.encode(transactions)),
+            userVotingStrategies
+        );
+        _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataUri);
+        vm.warp(block.timestamp + space.maxVotingDuration());
+
+        space.execute(proposalId, abi.encode(transactions));
+
+        vm.warp(block.timestamp + timelockExecutionStrategy.timelockDelay());
+        transactions[0] = MetaTransaction(recipient, 2, "", Enum.Operation.Call);
+        Proposal memory proposal = space.getProposal(proposalId);
+
+        vm.expectRevert(InvalidPayload.selector);
+        timelockExecutionStrategy.execute(proposal, abi.encode(transactions));
+    }
+
     function testExecuteBeforeDelay() external {
         MetaTransaction[] memory transactions = new MetaTransaction[](1);
         transactions[0] = MetaTransaction(recipient, 1, "", Enum.Operation.Call);
@@ -139,30 +226,6 @@ contract TimelockExecutionStrategyTest is SpaceTest {
 
         vm.expectRevert(ProposalNotQueued.selector);
         timelockExecutionStrategy.execute(proposal, abi.encode(transactions));
-    }
-
-    function testExecute() external {
-        MetaTransaction[] memory transactions = new MetaTransaction[](1);
-        transactions[0] = MetaTransaction(recipient, 1, "", Enum.Operation.Call);
-        uint256 proposalId = _createProposal(
-            author,
-            proposalMetadataUri,
-            IndexedStrategy(1, abi.encode(transactions)),
-            userVotingStrategies
-        );
-        _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataUri);
-        vm.warp(block.timestamp + space.maxVotingDuration());
-
-        vm.expectEmit(true, true, true, true);
-        emit TransactionQueued(transactions[0], block.timestamp + 1000);
-        space.execute(proposalId, abi.encode(transactions));
-
-        assertEq(recipient.balance, 0);
-
-        vm.warp(block.timestamp + timelockExecutionStrategy.timelockDelay());
-        timelockExecutionStrategy.execute(space.getProposal(proposalId), abi.encode(transactions));
-
-        assertEq(recipient.balance, 1);
     }
 
     function testExecuteDoubleExecution() external {
