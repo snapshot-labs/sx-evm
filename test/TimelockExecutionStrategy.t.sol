@@ -10,6 +10,7 @@ contract TimelockExecutionStrategyTest is SpaceTest {
     error TransactionsFailed();
     error TimelockDelayNotMet();
     error ProposalNotQueued();
+    error DuplicateExecutionPayloadHash();
     event TransactionQueued(MetaTransaction transaction, uint256 executionTime);
 
     TimelockExecutionStrategy public timelockExecutionStrategy;
@@ -102,6 +103,32 @@ contract TimelockExecutionStrategyTest is SpaceTest {
         space.execute(proposalId, abi.encode(transactions));
     }
 
+    function testQueueingQueueDuplicate() external {
+        MetaTransaction[] memory transactions = new MetaTransaction[](1);
+        transactions[0] = MetaTransaction(recipient, 1, "", Enum.Operation.Call);
+        uint256 proposalId = _createProposal(
+            author,
+            proposalMetadataUri,
+            IndexedStrategy(1, abi.encode(transactions)),
+            userVotingStrategies
+        );
+        uint256 proposalId2 = _createProposal(
+            author,
+            proposalMetadataUri,
+            IndexedStrategy(1, abi.encode(transactions)),
+            userVotingStrategies
+        );
+        _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataUri);
+        _vote(author, proposalId2, Choice.For, userVotingStrategies, voteMetadataUri);
+        vm.warp(block.timestamp + space.maxVotingDuration());
+
+        space.execute(proposalId, abi.encode(transactions));
+
+        // Will revert due to duplicate execution payload hash
+        vm.expectRevert(DuplicateExecutionPayloadHash.selector);
+        space.execute(proposalId2, abi.encode(transactions));
+    }
+
     function testQueueingInvalidPayload() external {
         MetaTransaction[] memory transactions = new MetaTransaction[](1);
         transactions[0] = MetaTransaction(recipient, 1, "", Enum.Operation.Call);
@@ -139,7 +166,7 @@ contract TimelockExecutionStrategyTest is SpaceTest {
         assertEq(recipient.balance, 0);
 
         vm.warp(block.timestamp + timelockExecutionStrategy.timelockDelay());
-        timelockExecutionStrategy.execute(space.getProposal(proposalId), abi.encode(transactions));
+        timelockExecutionStrategy.execute(space.getProposal(proposalId).executionPayloadHash, abi.encode(transactions));
 
         assertEq(recipient.balance, 1);
     }
@@ -163,7 +190,7 @@ contract TimelockExecutionStrategyTest is SpaceTest {
         Proposal memory proposal = space.getProposal(proposalId);
 
         vm.expectRevert(TransactionsFailed.selector);
-        timelockExecutionStrategy.execute(proposal, abi.encode(transactions));
+        timelockExecutionStrategy.execute(proposal.executionPayloadHash, abi.encode(transactions));
     }
 
     function testExecuteInvalidPayload() external {
@@ -185,7 +212,7 @@ contract TimelockExecutionStrategyTest is SpaceTest {
         Proposal memory proposal = space.getProposal(proposalId);
 
         vm.expectRevert(InvalidPayload.selector);
-        timelockExecutionStrategy.execute(proposal, abi.encode(transactions));
+        timelockExecutionStrategy.execute(proposal.executionPayloadHash, abi.encode(transactions));
     }
 
     function testExecuteBeforeDelay() external {
@@ -207,7 +234,7 @@ contract TimelockExecutionStrategyTest is SpaceTest {
         Proposal memory proposal = space.getProposal(proposalId);
 
         vm.expectRevert(TimelockDelayNotMet.selector);
-        timelockExecutionStrategy.execute(proposal, abi.encode(transactions));
+        timelockExecutionStrategy.execute(proposal.executionPayloadHash, abi.encode(transactions));
     }
 
     function testExecuteNotQueued() external {
@@ -225,7 +252,7 @@ contract TimelockExecutionStrategyTest is SpaceTest {
         Proposal memory proposal = space.getProposal(proposalId);
 
         vm.expectRevert(ProposalNotQueued.selector);
-        timelockExecutionStrategy.execute(proposal, abi.encode(transactions));
+        timelockExecutionStrategy.execute(proposal.executionPayloadHash, abi.encode(transactions));
     }
 
     function testExecuteDoubleExecution() external {
@@ -249,9 +276,9 @@ contract TimelockExecutionStrategyTest is SpaceTest {
         Proposal memory proposal = space.getProposal(proposalId);
 
         vm.warp(block.timestamp + timelockExecutionStrategy.timelockDelay());
-        timelockExecutionStrategy.execute(proposal, abi.encode(transactions));
+        timelockExecutionStrategy.execute(proposal.executionPayloadHash, abi.encode(transactions));
 
         vm.expectRevert();
-        timelockExecutionStrategy.execute(proposal, abi.encode(transactions));
+        timelockExecutionStrategy.execute(proposal.executionPayloadHash, abi.encode(transactions));
     }
 }

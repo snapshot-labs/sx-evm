@@ -12,6 +12,7 @@ contract TimelockExecutionStrategy is SpaceManager, SimpleQuorumExecutionStrateg
     error TransactionsFailed();
     error TimelockDelayNotMet();
     error ProposalNotQueued();
+    error DuplicateExecutionPayloadHash();
 
     event TransactionQueued(MetaTransaction transaction, uint256 executionTime);
     event TransactionExecuted(MetaTransaction transaction);
@@ -47,6 +48,8 @@ contract TimelockExecutionStrategy is SpaceManager, SimpleQuorumExecutionStrateg
             revert InvalidProposalStatus(proposalStatus);
         }
 
+        if (proposalExecutionTime[proposal.executionPayloadHash] != 0) revert DuplicateExecutionPayloadHash();
+
         uint256 executionTime = block.timestamp + timelockDelay;
         proposalExecutionTime[proposal.executionPayloadHash] = executionTime;
 
@@ -56,16 +59,17 @@ contract TimelockExecutionStrategy is SpaceManager, SimpleQuorumExecutionStrateg
         }
     }
 
-    function execute(Proposal memory proposal, bytes memory payload) external {
+    function execute(bytes32 executionPayloadHash, bytes memory payload) external {
         // Check that the execution payload matches the payload supplied when the proposal was created
-        if (proposal.executionPayloadHash != keccak256(payload)) revert InvalidPayload();
+        if (executionPayloadHash != keccak256(payload)) revert InvalidPayload();
 
-        uint256 executionTime = proposalExecutionTime[proposal.executionPayloadHash];
+        uint256 executionTime = proposalExecutionTime[executionPayloadHash];
 
         if (executionTime == 0) revert ProposalNotQueued();
-        if (proposalExecutionTime[proposal.executionPayloadHash] > block.timestamp) revert TimelockDelayNotMet();
+        if (proposalExecutionTime[executionPayloadHash] > block.timestamp) revert TimelockDelayNotMet();
 
-        proposalExecutionTime[proposal.executionPayloadHash] = 0;
+        // Reset the execution time to 0 to prevent reentrancy
+        proposalExecutionTime[executionPayloadHash] = 0;
 
         MetaTransaction[] memory transactions = abi.decode(payload, (MetaTransaction[]));
         for (uint i = 0; i < transactions.length; i++) {
