@@ -17,7 +17,6 @@ interface ISpaceEvents {
         address[] authenticators,
         Strategy[] executionStrategies
     );
-    event VoteCreated(uint256 proposalId, address voterAddress, Vote vote);
     event ProposalCreated(uint256 nextProposalId, address author, Proposal proposal, string metadataUri, bytes payload);
     event VoteCast(uint256 proposalId, address voterAddress, Choice choice, uint256 votingPower);
     event VoteCastWithMetadata(
