@@ -14,9 +14,7 @@ contract SpaceOwnerActionsTest is SpaceTest {
 
         vm.expectEmit(true, true, true, true);
         emit ProposalCancelled(proposalId);
-        snapStart("Cancel");
         space.cancel(proposalId);
-        snapEnd();
     }
 
     function testCancelInvalidProposal() public {

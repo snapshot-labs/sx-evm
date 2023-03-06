@@ -27,13 +27,11 @@ contract EthTxAuthenticatorTest is SpaceTest {
 
     function testAuthenticateTxPropose() public {
         vm.prank(address(author));
-        snapStart("ProposeWithTx");
         ethTxAuth.authenticate(
             address(space),
             PROPOSE_SELECTOR,
             abi.encode(author, proposalMetadataUri, executionStrategy, userVotingStrategies, voteMetadataUri)
         );
-        snapEnd();
     }
 
     function testAuthenticateTxProposeInvalidAuthor() public {
@@ -61,13 +59,11 @@ contract EthTxAuthenticatorTest is SpaceTest {
         uint256 proposalId = _createProposal(author, proposalMetadataUri, executionStrategy, userVotingStrategies);
 
         vm.prank(voter);
-        snapStart("VoteWithTx");
         ethTxAuth.authenticate(
             address(space),
             VOTE_SELECTOR,
             abi.encode(voter, proposalId, Choice.For, userVotingStrategies, voteMetadataUri)
         );
-        snapEnd();
     }
 
     function testAuthenticateTxVoteInvalidVoter() public {
@@ -100,8 +96,8 @@ contract EthTxAuthenticatorTest is SpaceTest {
         uint256 proposalId = _createProposal(author, proposalMetadataUri, executionStrategy, userVotingStrategies);
 
         vm.prank(author);
-        // vm.expectEmit(true, true, true, true);
-        // emit ProposalUpdated(proposalId, newStrategy, newMetadataUri);
+        vm.expectEmit(true, true, true, true);
+        emit ProposalUpdated(proposalId, newStrategy, newMetadataUri);
         ethTxAuth.authenticate(
             address(space),
             UPDATE_PROPOSAL_SELECTOR,
