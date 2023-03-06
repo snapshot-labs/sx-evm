@@ -243,18 +243,16 @@ contract Space is ISpace, Ownable, ReentrancyGuard {
         // Ensure there are no duplicates to avoid an attack where people double count a voting strategy
         _assertNoDuplicateIndices(userVotingStrategies);
 
-        uint256 totalVotingPower = 0;
-        for (uint256 i = 0; i < userVotingStrategies.length; i++) {
+        uint256 totalVotingPower;
+        for (uint256 i = 0; i < userVotingStrategies.length; ++i) {
             uint256 votingStrategyIndex = userVotingStrategies[i].index;
             if (votingStrategyIndex >= votingStrategies.length) revert InvalidVotingStrategyIndex(votingStrategyIndex);
             Strategy memory votingStrategy = votingStrategies[votingStrategyIndex];
             // A strategyAddress set to 0 indicates that this address has already been removed and is
             // no longer a valid voting strategy. See `_removeVotingStrategies`.
             if (votingStrategy.addy == address(0)) revert InvalidVotingStrategyIndex(votingStrategyIndex);
-            IVotingStrategy strategy = IVotingStrategy(votingStrategy.addy);
 
-            // With solc 0.8, this will revert in case of overflow.
-            totalVotingPower += strategy.getVotingPower(
+            totalVotingPower += IVotingStrategy(votingStrategy.addy).getVotingPower(
                 timestamp,
                 userAddress,
                 votingStrategy.params,
@@ -285,18 +283,16 @@ contract Space is ISpace, Ownable, ReentrancyGuard {
         // Ensure there are no duplicates to avoid an attack where people double count a voting strategy
         _assertNoDuplicateIndices(userVotingStrategies);
 
-        uint256 totalVotingPower = 0;
-        for (uint256 i = 0; i < userVotingStrategies.length; i++) {
+        uint256 totalVotingPower;
+        for (uint256 i = 0; i < userVotingStrategies.length; ++i) {
             uint256 votingStrategyIndex = userVotingStrategies[i].index;
             if (votingStrategyIndex >= _votingStrategies.length) revert InvalidVotingStrategyIndex(votingStrategyIndex);
             Strategy memory votingStrategy = _votingStrategies[votingStrategyIndex];
             // A strategyAddress set to 0 indicates that this address has already been removed and is
             // no longer a valid voting strategy. See `_removeVotingStrategies`.
             if (votingStrategy.addy == address(0)) revert InvalidVotingStrategyIndex(votingStrategyIndex);
-            IVotingStrategy strategy = IVotingStrategy(votingStrategy.addy);
 
-            // With solc 0.8, this will revert in case of overflow.
-            totalVotingPower += strategy.getVotingPower(
+            totalVotingPower += IVotingStrategy(votingStrategy.addy).getVotingPower(
                 timestamp,
                 userAddress,
                 votingStrategy.params,
@@ -486,7 +482,7 @@ contract Space is ISpace, Ownable, ReentrancyGuard {
         _assertValidAuthenticator();
 
         Proposal memory proposal = proposalRegistry[proposalId];
-        if (proposal.startTimestamp == 0) revert InvalidProposal();
+        _assertProposalExists(proposal);
         if (block.timestamp >= uint256(proposal.maxEndTimestamp)) revert VotingPeriodHasEnded();
         if (block.timestamp < uint256(proposal.startTimestamp)) revert VotingPeriodHasNotStarted();
         if (proposal.finalizationStatus != FinalizationStatus.Pending) revert ProposalFinalized();
