@@ -59,7 +59,7 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         uint256 _proposalThreshold,
         string memory _metadataURI,
         Strategy[] memory _votingStrategies,
-        bytes[] memory _votingStrategyMetadata,
+        string[] memory _votingStrategyMetadataURIs,
         address[] memory _authenticators,
         Strategy[] memory _executionStrategies
     ) public initializer {
@@ -84,7 +84,7 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
             _proposalThreshold,
             _metadataURI,
             _votingStrategies,
-            _votingStrategyMetadata,
+            _votingStrategyMetadataURIs,
             _authenticators,
             _executionStrategies
         );
@@ -365,10 +365,10 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
 
     function addVotingStrategies(
         Strategy[] calldata _votingStrategies,
-        bytes[] calldata votingStrategyMetadata
+        string[] calldata votingStrategyMetadataURIs
     ) external override onlyOwner {
         _addVotingStrategies(_votingStrategies);
-        emit VotingStrategiesAdded(_votingStrategies, votingStrategyMetadata);
+        emit VotingStrategiesAdded(_votingStrategies, votingStrategyMetadataURIs);
     }
 
     function removeVotingStrategies(uint8[] calldata _votingStrategyIndices) external override onlyOwner {

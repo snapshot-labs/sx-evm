@@ -30,7 +30,7 @@ contract SpaceFactoryTest is Test, IProxyFactoryEvents, IProxyFactoryErrors {
     uint256 public proposalThreshold;
     uint32 public quorum;
     string public metadataURI = "SX-EVM";
-    bytes[] public votingStrategyMetadata;
+    string[] public votingStrategyMetadataURIs;
 
     function setUp() public {
         masterSpace = new Space();
@@ -67,7 +67,7 @@ contract SpaceFactoryTest is Test, IProxyFactoryEvents, IProxyFactoryErrors {
                 proposalThreshold,
                 metadataURI,
                 votingStrategies,
-                votingStrategyMetadata,
+                votingStrategyMetadataURIs,
                 authenticators,
                 executionStrategies
             ),
@@ -88,7 +88,7 @@ contract SpaceFactoryTest is Test, IProxyFactoryEvents, IProxyFactoryErrors {
                 proposalThreshold,
                 metadataURI,
                 votingStrategies,
-                votingStrategyMetadata,
+                votingStrategyMetadataURIs,
                 authenticators,
                 executionStrategies
             ),
@@ -108,7 +108,7 @@ contract SpaceFactoryTest is Test, IProxyFactoryEvents, IProxyFactoryErrors {
                 proposalThreshold,
                 metadataURI,
                 votingStrategies,
-                votingStrategyMetadata,
+                votingStrategyMetadataURIs,
                 authenticators,
                 executionStrategies
             ),
@@ -129,7 +129,7 @@ contract SpaceFactoryTest is Test, IProxyFactoryEvents, IProxyFactoryErrors {
                 proposalThreshold,
                 metadataURI,
                 votingStrategies,
-                votingStrategyMetadata,
+                votingStrategyMetadataURIs,
                 authenticators,
                 executionStrategies
             ),
@@ -147,7 +147,7 @@ contract SpaceFactoryTest is Test, IProxyFactoryEvents, IProxyFactoryErrors {
             proposalThreshold,
             metadataURI,
             votingStrategies,
-            votingStrategyMetadata,
+            votingStrategyMetadataURIs,
             authenticators,
             executionStrategies
         );

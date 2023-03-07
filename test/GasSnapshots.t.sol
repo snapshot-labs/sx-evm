@@ -26,14 +26,14 @@ contract GasSnapshotsTest is SpaceTest, SigUtils {
     function setUp() public virtual override {
         super.setUp();
 
-        Strategy[] memory newStrategies = new Strategy[](1);
+        Strategy[] memory newVotingStrategies = new Strategy[](1);
         compVotingStrategy = new CompVotingStrategy();
         compToken = new CompToken();
-        newStrategies[0] = Strategy(address(compVotingStrategy), abi.encodePacked(address(compToken)));
-        bytes[] memory newData = new bytes[](0);
+        newVotingStrategies[0] = Strategy(address(compVotingStrategy), abi.encodePacked(address(compToken)));
+        string[] memory newVotingStrategyMetadataURIs = new string[](0);
 
         // Update contract's voting strategies.
-        space.addVotingStrategies(newStrategies, newData);
+        space.addVotingStrategies(newVotingStrategies, newVotingStrategyMetadataURIs);
 
         // Mint tokens for the user
         compToken.mint(user, 10000);

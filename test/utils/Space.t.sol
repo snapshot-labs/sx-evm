@@ -58,12 +58,10 @@ abstract contract SpaceTest is Test, GasSnapshot, ISpaceEvents, ISpaceErrors, IE
     IndexedStrategy[] public userVotingStrategies;
     IndexedStrategy public executionStrategy;
 
-    // TODO: emit in the space factory event - (once we have a factory)
+    // Dummy metadata URIs
     string public spaceMetadataURI = "SOC Test Space";
-
     string public proposalMetadataURI = "SOC Test Proposal";
-
-    bytes[] public votingStrategyMetadata;
+    string[] public votingStrategyMetadataURIs;
 
     function setUp() public virtual {
         masterSpace = new Space();
@@ -95,7 +93,7 @@ abstract contract SpaceTest is Test, GasSnapshot, ISpaceEvents, ISpaceErrors, IE
                         proposalThreshold,
                         spaceMetadataURI,
                         votingStrategies,
-                        votingStrategyMetadata,
+                        votingStrategyMetadataURIs,
                         authenticators,
                         executionStrategies
                     )
