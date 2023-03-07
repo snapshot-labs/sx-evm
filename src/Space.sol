@@ -499,8 +499,8 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
 
         Proposal memory proposal = proposalRegistry[proposalId];
         _assertProposalExists(proposal);
-        if (block.timestamp >= uint256(proposal.maxEndTimestamp)) revert VotingPeriodHasEnded();
-        if (block.timestamp < uint256(proposal.startTimestamp)) revert VotingPeriodHasNotStarted();
+        if (block.timestamp >= proposal.maxEndTimestamp) revert VotingPeriodHasEnded();
+        if (block.timestamp < proposal.startTimestamp) revert VotingPeriodHasNotStarted();
         if (proposal.finalizationStatus != FinalizationStatus.Pending) revert ProposalFinalized();
         if (voteRegistry[proposalId][voterAddress]) revert UserHasAlreadyVoted();
 
