@@ -233,7 +233,7 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
      * @dev     it has already been set. Time complexity is O(n).
      * @param   strats  Array to check for duplicates.
      */
-    function _assertNoDuplicateIndices(IndexedStrategy[] memory strats) internal pure {
+    function _assertNoDuplicateIndices(IndexedStrategy[] calldata strats) internal pure {
         if (strats.length < 2) {
             return;
         }
