@@ -4,7 +4,7 @@ pragma solidity ^0.8.18;
 import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import { Initializable } from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import { UUPSUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
-import { ReentrancyGuard } from "@openzeppelin/contracts/secURIty/ReentrancyGuard.sol";
+import { ReentrancyGuard } from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
 import { ISpace } from "src/interfaces/ISpace.sol";
 import { Choice, FinalizationStatus, IndexedStrategy, Proposal, ProposalStatus, Strategy, Vote } from "src/types.sol";
