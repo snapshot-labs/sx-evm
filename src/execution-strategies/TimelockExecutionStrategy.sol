@@ -9,16 +9,18 @@ import { Enum } from "@gnosis.pm/safe-contracts/contracts/common/Enum.sol";
 
 /// @title Timelock Execution Strategy - An Execution strategy that executes transactions according to a timelock delay.
 contract TimelockExecutionStrategy is SpaceManager, SimpleQuorumExecutionStrategy {
-    error TransactionsFailed();
+    /// @notice Returned if timelock delay is in the future.
     error TimelockDelayNotMet();
+    /// @notice Returned if the proposal execution payload hash is not queued.
     error ProposalNotQueued();
+    /// @notice Returned if the proposal execution payload hash is already queued.
     error DuplicateExecutionPayloadHash();
 
     event TransactionQueued(MetaTransaction transaction, uint256 executionTime);
     event TransactionExecuted(MetaTransaction transaction);
 
     /// @notice The delay in seconds between a proposal being queued and the execution of the proposal.
-    uint256 public timelockDelay;
+    uint256 public immutable TIMELOCK_DELAY;
 
     /// @notice The time at which a proposal can be executed. Indexed by the hash of the proposal execution payload.
     mapping(bytes32 => uint256) public proposalExecutionTime;
@@ -26,11 +28,12 @@ contract TimelockExecutionStrategy is SpaceManager, SimpleQuorumExecutionStrateg
     /// @notice Constructor
     /// @param _owner Address of the owner of this contract.
     /// @param _spaces Array of whitelisted space contracts.
+    /// @param _timelockDelay The timelock delay in seconds.
     constructor(address _owner, address[] memory _spaces, uint256 _timelockDelay) initializer {
         __Ownable_init();
         transferOwnership(_owner);
         __SpaceManager_init(_spaces);
-        timelockDelay = _timelockDelay;
+        TIMELOCK_DELAY = _timelockDelay;
     }
 
     /// @notice Effectively a timelock queue function. Can only be called by approved spaces.
@@ -50,7 +53,7 @@ contract TimelockExecutionStrategy is SpaceManager, SimpleQuorumExecutionStrateg
 
         if (proposalExecutionTime[proposal.executionPayloadHash] != 0) revert DuplicateExecutionPayloadHash();
 
-        uint256 executionTime = block.timestamp + timelockDelay;
+        uint256 executionTime = block.timestamp + TIMELOCK_DELAY;
         proposalExecutionTime[proposal.executionPayloadHash] = executionTime;
 
         MetaTransaction[] memory transactions = abi.decode(payload, (MetaTransaction[]));
@@ -59,9 +62,9 @@ contract TimelockExecutionStrategy is SpaceManager, SimpleQuorumExecutionStrateg
         }
     }
 
-    function execute(bytes32 executionPayloadHash, bytes memory payload) external {
-        // Check that the execution payload matches the payload supplied when the proposal was created
-        if (executionPayloadHash != keccak256(payload)) revert InvalidPayload();
+    /// @notice Executes a queued proposal. Can be called by anyone with the execution payload.
+    function execute(bytes memory payload) external {
+        bytes32 executionPayloadHash = keccak256(payload);
 
         uint256 executionTime = proposalExecutionTime[executionPayloadHash];
 
