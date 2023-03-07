@@ -4,7 +4,7 @@ pragma solidity ^0.8.18;
 import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import { Initializable } from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import { UUPSUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
-import { ReentrancyGuard } from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import { ReentrancyGuard } from "@openzeppelin/contracts/secURIty/ReentrancyGuard.sol";
 
 import { ISpace } from "src/interfaces/ISpace.sol";
 import { Choice, FinalizationStatus, IndexedStrategy, Proposal, ProposalStatus, Strategy, Vote } from "src/types.sol";
@@ -57,7 +57,7 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         uint32 _minVotingDuration,
         uint32 _maxVotingDuration,
         uint256 _proposalThreshold,
-        string memory _metadataUri,
+        string memory _metadataURI,
         Strategy[] memory _votingStrategies,
         bytes[] memory _votingStrategyMetadata,
         address[] memory _authenticators,
@@ -82,7 +82,7 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
             _minVotingDuration,
             _maxVotingDuration,
             _proposalThreshold,
-            _metadataUri,
+            _metadataURI,
             _votingStrategies,
             _votingStrategyMetadata,
             _authenticators,
@@ -349,8 +349,8 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         emit MinVotingDurationUpdated(_minVotingDuration);
     }
 
-    function setMetadataUri(string calldata _metadataUri) external override onlyOwner {
-        emit MetadataUriUpdated(_metadataUri);
+    function setMetadataURI(string calldata _metadataURI) external override onlyOwner {
+        emit MetadataURIUpdated(_metadataURI);
     }
 
     function setProposalThreshold(uint256 _proposalThreshold) external override onlyOwner {
@@ -440,13 +440,13 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
     /**
      * @notice  Create a proposal.
      * @param   author  The address of the proposal creator.
-     * @param   metadataUri  The metadata URI for the proposal.
+     * @param   metadataURI  The metadata URI for the proposal.
      * @param   executionStrategy  The execution strategy index and associated execution payload to use in the proposal.
      * @param   userVotingStrategies  The voting strategies indexes to use and the associated parameters for each.
      */
     function propose(
         address author,
-        string calldata metadataUri,
+        string calldata metadataURI,
         IndexedStrategy calldata executionStrategy,
         IndexedStrategy[] calldata userVotingStrategies
     ) external override {
@@ -479,7 +479,7 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         );
 
         proposalRegistry[nextProposalId] = proposal;
-        emit ProposalCreated(nextProposalId, author, proposal, metadataUri, executionStrategy.params);
+        emit ProposalCreated(nextProposalId, author, proposal, metadataURI, executionStrategy.params);
 
         nextProposalId++;
     }
@@ -490,14 +490,14 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
      * @param   proposalId  Proposal id.
      * @param   choice  Choice can be `For`, `Against` or `Abstain`.
      * @param   userVotingStrategies  Strategies to use to compute the voter's voting power.
-     * @param   voteMetadataUri  An optional metadata to give information about the vote.
+     * @param   voteMetadataURI  An optional metadata to give information about the vote.
      */
     function vote(
         address voterAddress,
         uint256 proposalId,
         Choice choice,
         IndexedStrategy[] calldata userVotingStrategies,
-        string calldata voteMetadataUri
+        string calldata voteMetadataURI
     ) external override {
         _assertValidAuthenticator();
 
@@ -524,7 +524,7 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
 
         voteRegistry[proposalId][voterAddress] = true;
 
-        emit VoteCreated(proposalId, voterAddress, Vote(choice, votingPower), voteMetadataUri);
+        emit VoteCreated(proposalId, voterAddress, Vote(choice, votingPower), voteMetadataURI);
     }
 
     /**
@@ -569,13 +569,13 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
                 not started yet, i.e `voting_delay` has not elapsed yet.
      * @param   proposalId          The id of the proposal to edit
      * @param   executionStrategy   The new strategy to use
-     * @param   metadataUri         The new metadata
+     * @param   metadataURI         The new metadata
      */
     function updateProposal(
         address author,
         uint256 proposalId,
         IndexedStrategy calldata executionStrategy,
-        string calldata metadataUri
+        string calldata metadataURI
     ) external {
         _assertValidAuthenticator();
         _assertValidExecutionStrategy(executionStrategy.index);
@@ -587,6 +587,6 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         proposal.executionPayloadHash = keccak256(executionStrategy.params);
         proposal.executionStrategy = executionStrategies[executionStrategy.index];
 
-        emit ProposalUpdated(proposalId, executionStrategy, metadataUri);
+        emit ProposalUpdated(proposalId, executionStrategy, metadataURI);
     }
 }

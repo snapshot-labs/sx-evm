@@ -17,7 +17,7 @@ interface ISpaceOwnerActions {
 
     function setProposalThreshold(uint256 threshold) external;
 
-    function setMetadataUri(string calldata metadataUri) external;
+    function setMetadataURI(string calldata metadataURI) external;
 
     function addVotingStrategies(
         Strategy[] calldata _votingStrategies,

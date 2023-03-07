@@ -66,7 +66,7 @@ contract GasSnapshotsTest is SpaceTest, SigUtils {
                 address(ethSigAuth),
                 address(space),
                 address(author),
-                proposalMetadataUri,
+                proposalMetadataURI,
                 executionStrategy,
                 userVotingStrategies,
                 salt
@@ -81,7 +81,7 @@ contract GasSnapshotsTest is SpaceTest, SigUtils {
                 salt,
                 address(space),
                 PROPOSE_SELECTOR,
-                abi.encode(author, proposalMetadataUri, executionStrategy, userVotingStrategies)
+                abi.encode(author, proposalMetadataURI, executionStrategy, userVotingStrategies)
             );
             snapEnd();
         }
@@ -96,7 +96,7 @@ contract GasSnapshotsTest is SpaceTest, SigUtils {
                 proposalId,
                 Choice.For,
                 userVotingStrategies,
-                voteMetadataUri
+                voteMetadataURI
             );
             (uint8 v, bytes32 r, bytes32 s) = vm.sign(VOTER_KEY, digest);
 
@@ -108,7 +108,7 @@ contract GasSnapshotsTest is SpaceTest, SigUtils {
                 0,
                 address(space),
                 VOTE_SELECTOR,
-                abi.encode(voter, proposalId, Choice.For, userVotingStrategies, voteMetadataUri)
+                abi.encode(voter, proposalId, Choice.For, userVotingStrategies, voteMetadataURI)
             );
             snapEnd();
         }
