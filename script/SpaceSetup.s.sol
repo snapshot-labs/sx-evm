@@ -7,6 +7,7 @@ import { Space } from "../src/Space.sol";
 import { VanillaAuthenticator } from "../src/authenticators/VanillaAuthenticator.sol";
 import { VanillaVotingStrategy } from "../src/voting-strategies/VanillaVotingStrategy.sol";
 import { VanillaExecutionStrategy } from "../src/execution-strategies/VanillaExecutionStrategy.sol";
+import { Strategy } from "../src/types.sol";
 
 // solhint-disable-next-line max-states-count
 contract SpaceSetup is Script {

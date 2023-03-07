@@ -6,7 +6,7 @@ import { Space } from "../src/Space.sol";
 import { VanillaAuthenticator } from "../src/authenticators/VanillaAuthenticator.sol";
 import { VanillaVotingStrategy } from "../src/voting-strategies/VanillaVotingStrategy.sol";
 import { VanillaExecutionStrategy } from "../src/execution-strategies/VanillaExecutionStrategy.sol";
-import { Choice, IndexedStrategy } from "../src/types.sol";
+import { Choice, IndexedStrategy, Strategy } from "../src/types.sol";
 
 contract PopulateVanillaSpace is Script {
     bytes4 internal constant PROPOSE_SELECTOR =
