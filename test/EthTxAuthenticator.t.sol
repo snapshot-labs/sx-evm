@@ -12,7 +12,7 @@ contract EthTxAuthenticatorTest is SpaceTest {
     error InvalidMessageSender();
 
     EthTxAuthenticator internal ethTxAuth;
-    string internal newMetadataUri = "Test42";
+    string internal newMetadataURI = "Test42";
     IndexedStrategy internal newStrategy = IndexedStrategy(0, new bytes(0));
 
     function setUp() public virtual override {
@@ -30,7 +30,7 @@ contract EthTxAuthenticatorTest is SpaceTest {
         ethTxAuth.authenticate(
             address(space),
             PROPOSE_SELECTOR,
-            abi.encode(author, proposalMetadataUri, executionStrategy, userVotingStrategies, voteMetadataUri)
+            abi.encode(author, proposalMetadataURI, executionStrategy, userVotingStrategies, voteMetadataURI)
         );
     }
 
@@ -40,7 +40,7 @@ contract EthTxAuthenticatorTest is SpaceTest {
         ethTxAuth.authenticate(
             address(space),
             PROPOSE_SELECTOR,
-            abi.encode(author, proposalMetadataUri, executionStrategy, userVotingStrategies, voteMetadataUri)
+            abi.encode(author, proposalMetadataURI, executionStrategy, userVotingStrategies, voteMetadataURI)
         );
     }
 
@@ -50,19 +50,19 @@ contract EthTxAuthenticatorTest is SpaceTest {
         ethTxAuth.authenticate(
             address(space),
             bytes4(0xdeadbeef),
-            abi.encode(author, proposalMetadataUri, executionStrategy, userVotingStrategies, voteMetadataUri)
+            abi.encode(author, proposalMetadataURI, executionStrategy, userVotingStrategies, voteMetadataURI)
         );
     }
 
     function testAuthenticateTxVote() public {
         // Creating demo proposal using vanilla authenticator (both vanilla and eth tx authenticators are whitelisted)
-        uint256 proposalId = _createProposal(author, proposalMetadataUri, executionStrategy, userVotingStrategies);
+        uint256 proposalId = _createProposal(author, proposalMetadataURI, executionStrategy, userVotingStrategies);
 
         vm.prank(voter);
         ethTxAuth.authenticate(
             address(space),
             VOTE_SELECTOR,
-            abi.encode(voter, proposalId, Choice.For, userVotingStrategies, voteMetadataUri)
+            abi.encode(voter, proposalId, Choice.For, userVotingStrategies, voteMetadataURI)
         );
     }
 
@@ -74,7 +74,7 @@ contract EthTxAuthenticatorTest is SpaceTest {
         ethTxAuth.authenticate(
             address(space),
             VOTE_SELECTOR,
-            abi.encode(voter, proposalId, Choice.For, userVotingStrategies, voteMetadataUri)
+            abi.encode(voter, proposalId, Choice.For, userVotingStrategies, voteMetadataURI)
         );
     }
 
@@ -86,22 +86,22 @@ contract EthTxAuthenticatorTest is SpaceTest {
         ethTxAuth.authenticate(
             address(space),
             bytes4(0xdeadbeef),
-            abi.encode(voter, proposalId, Choice.For, userVotingStrategies, voteMetadataUri)
+            abi.encode(voter, proposalId, Choice.For, userVotingStrategies, voteMetadataURI)
         );
     }
 
     function testAuthenticateTxUpdateProposal() public {
         uint32 votingDelay = 10;
         space.setVotingDelay(votingDelay);
-        uint256 proposalId = _createProposal(author, proposalMetadataUri, executionStrategy, userVotingStrategies);
+        uint256 proposalId = _createProposal(author, proposalMetadataURI, executionStrategy, userVotingStrategies);
 
         vm.prank(author);
         vm.expectEmit(true, true, true, true);
-        emit ProposalUpdated(proposalId, newStrategy, newMetadataUri);
+        emit ProposalUpdated(proposalId, newStrategy, newMetadataURI);
         ethTxAuth.authenticate(
             address(space),
             UPDATE_PROPOSAL_SELECTOR,
-            abi.encode(author, proposalId, newStrategy, newMetadataUri)
+            abi.encode(author, proposalId, newStrategy, newMetadataURI)
         );
 
         // Fast forward and ensure everything is still working correctly
@@ -110,7 +110,7 @@ contract EthTxAuthenticatorTest is SpaceTest {
         ethTxAuth.authenticate(
             address(space),
             VOTE_SELECTOR,
-            abi.encode(voter, proposalId, Choice.For, userVotingStrategies, voteMetadataUri)
+            abi.encode(voter, proposalId, Choice.For, userVotingStrategies, voteMetadataURI)
         );
 
         space.execute(proposalId, executionStrategy.params);
@@ -124,7 +124,7 @@ contract EthTxAuthenticatorTest is SpaceTest {
         ethTxAuth.authenticate(
             address(space),
             UPDATE_PROPOSAL_SELECTOR,
-            abi.encode(author, proposalId, newStrategy, newMetadataUri)
+            abi.encode(author, proposalId, newStrategy, newMetadataURI)
         );
     }
 
@@ -132,6 +132,6 @@ contract EthTxAuthenticatorTest is SpaceTest {
         uint256 proposalId = 1;
 
         vm.expectRevert(InvalidFunctionSelector.selector);
-        ethTxAuth.authenticate(address(space), bytes4(0xdeadbeef), abi.encode(author, proposalId, newMetadataUri));
+        ethTxAuth.authenticate(address(space), bytes4(0xdeadbeef), abi.encode(author, proposalId, newMetadataURI));
     }
 }

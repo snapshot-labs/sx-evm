@@ -29,9 +29,9 @@ contract ProposeTest is SpaceTest {
         );
 
         vm.expectEmit(true, true, true, true);
-        emit ProposalCreated(proposalId, author, proposal, proposalMetadataUri, executionStrategy.params);
+        emit ProposalCreated(proposalId, author, proposal, proposalMetadataURI, executionStrategy.params);
 
-        _createProposal(author, proposalMetadataUri, executionStrategy, userVotingStrategies);
+        _createProposal(author, proposalMetadataURI, executionStrategy, userVotingStrategies);
 
         // Actual content of the proposal struct
         Proposal memory _proposal = space.getProposal(proposalId);
@@ -43,7 +43,7 @@ contract ProposeTest is SpaceTest {
     function testProposeInvalidAuth() public {
         //  Using this contract as an authenticator, which is not whitelisted
         vm.expectRevert(abi.encodeWithSelector(AuthenticatorNotWhitelisted.selector, address(this)));
-        space.propose(author, proposalMetadataUri, executionStrategy, userVotingStrategies);
+        space.propose(author, proposalMetadataURI, executionStrategy, userVotingStrategies);
     }
 
     function testProposeInvalidExecutionStrategy() public {
@@ -53,7 +53,7 @@ contract ProposeTest is SpaceTest {
             abi.encodeWithSelector(InvalidExecutionStrategyIndex.selector, invalidExecutionStrategies[0].index)
         );
 
-        _createProposal(author, proposalMetadataUri, invalidExecutionStrategies[0], userVotingStrategies);
+        _createProposal(author, proposalMetadataURI, invalidExecutionStrategies[0], userVotingStrategies);
     }
 
     function testProposeInvalidUserVotingStrategy() public {
@@ -62,7 +62,7 @@ contract ProposeTest is SpaceTest {
 
         // out of bounds revert
         vm.expectRevert();
-        _createProposal(author, proposalMetadataUri, executionStrategy, invalidUsedStrategies);
+        _createProposal(author, proposalMetadataURI, executionStrategy, invalidUsedStrategies);
     }
 
     function testProposeDuplicateUserVotingStrategy() public {
@@ -73,23 +73,23 @@ contract ProposeTest is SpaceTest {
         invalidUsedStrategies[3] = IndexedStrategy(0, new bytes(0)); // Duplicate index
 
         vm.expectRevert(abi.encodeWithSelector(DuplicateFound.selector, 0));
-        _createProposal(author, proposalMetadataUri, executionStrategy, invalidUsedStrategies);
+        _createProposal(author, proposalMetadataURI, executionStrategy, invalidUsedStrategies);
     }
 
-    function testProposeMultipleStrategies() public {
+    function testProposeMultipleVotingStrategies() public {
         VanillaVotingStrategy strat2 = new VanillaVotingStrategy();
         Strategy[] memory toAdd = new Strategy[](2);
         toAdd[0] = Strategy(address(strat2), new bytes(0));
         toAdd[1] = Strategy(address(strat2), new bytes(0));
-        bytes[] memory newData = new bytes[](0);
+        string[] memory newVotingStrategyMetadataURIs = new string[](2);
 
-        space.addVotingStrategies(toAdd, newData);
+        space.addVotingStrategies(toAdd, newVotingStrategyMetadataURIs);
 
         IndexedStrategy[] memory newVotingStrategies = new IndexedStrategy[](3);
         newVotingStrategies[0] = userVotingStrategies[0]; // base strat
         newVotingStrategies[1] = IndexedStrategy(1, new bytes(0)); // strat2
         newVotingStrategies[2] = IndexedStrategy(2, new bytes(0)); // strat3
 
-        _createProposal(author, proposalMetadataUri, executionStrategy, userVotingStrategies);
+        _createProposal(author, proposalMetadataURI, executionStrategy, userVotingStrategies);
     }
 }

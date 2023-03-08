@@ -15,7 +15,7 @@ contract EthSigAuthenticatorTest is SpaceTest, SigUtils {
 
     string private constant NAME = "snapshot-x";
     string private constant VERSION = "1";
-    string private newMetadataUri = "Test456";
+    string private newMetadataURI = "Test456";
     IndexedStrategy private newStrategy = IndexedStrategy(0, new bytes(0));
 
     EthSigAuthenticator public ethSigAuth;
@@ -39,7 +39,7 @@ contract EthSigAuthenticatorTest is SpaceTest, SigUtils {
             address(ethSigAuth),
             address(space),
             address(author),
-            proposalMetadataUri,
+            proposalMetadataURI,
             executionStrategy,
             userVotingStrategies,
             salt
@@ -53,7 +53,7 @@ contract EthSigAuthenticatorTest is SpaceTest, SigUtils {
             salt,
             address(space),
             PROPOSE_SELECTOR,
-            abi.encode(author, proposalMetadataUri, executionStrategy, userVotingStrategies)
+            abi.encode(author, proposalMetadataURI, executionStrategy, userVotingStrategies)
         );
     }
 
@@ -63,7 +63,7 @@ contract EthSigAuthenticatorTest is SpaceTest, SigUtils {
             address(ethSigAuth),
             address(space),
             address(author),
-            proposalMetadataUri,
+            proposalMetadataURI,
             executionStrategy,
             userVotingStrategies,
             salt
@@ -80,7 +80,7 @@ contract EthSigAuthenticatorTest is SpaceTest, SigUtils {
             salt,
             address(space),
             PROPOSE_SELECTOR,
-            abi.encode(author, proposalMetadataUri, executionStrategy, userVotingStrategies)
+            abi.encode(author, proposalMetadataURI, executionStrategy, userVotingStrategies)
         );
     }
 
@@ -91,7 +91,7 @@ contract EthSigAuthenticatorTest is SpaceTest, SigUtils {
             address(ethSigAuth),
             address(space),
             address(author),
-            "invalid metadata uri",
+            "invalid metadata URI",
             executionStrategy,
             userVotingStrategies,
             salt
@@ -106,7 +106,7 @@ contract EthSigAuthenticatorTest is SpaceTest, SigUtils {
             salt,
             address(space),
             PROPOSE_SELECTOR,
-            abi.encode(author, proposalMetadataUri, executionStrategy, userVotingStrategies)
+            abi.encode(author, proposalMetadataURI, executionStrategy, userVotingStrategies)
         );
     }
 
@@ -116,7 +116,7 @@ contract EthSigAuthenticatorTest is SpaceTest, SigUtils {
             address(ethSigAuth),
             address(space),
             address(author),
-            proposalMetadataUri,
+            proposalMetadataURI,
             executionStrategy,
             userVotingStrategies,
             salt
@@ -129,7 +129,7 @@ contract EthSigAuthenticatorTest is SpaceTest, SigUtils {
             salt,
             address(space),
             PROPOSE_SELECTOR,
-            abi.encode(author, proposalMetadataUri, executionStrategy, userVotingStrategies)
+            abi.encode(author, proposalMetadataURI, executionStrategy, userVotingStrategies)
         );
 
         vm.expectRevert(SaltAlreadyUsed.selector);
@@ -140,7 +140,7 @@ contract EthSigAuthenticatorTest is SpaceTest, SigUtils {
             salt,
             address(space),
             PROPOSE_SELECTOR,
-            abi.encode(author, proposalMetadataUri, executionStrategy, userVotingStrategies)
+            abi.encode(author, proposalMetadataURI, executionStrategy, userVotingStrategies)
         );
     }
 
@@ -150,7 +150,7 @@ contract EthSigAuthenticatorTest is SpaceTest, SigUtils {
             address(ethSigAuth),
             address(space),
             address(author),
-            proposalMetadataUri,
+            proposalMetadataURI,
             executionStrategy,
             userVotingStrategies,
             salt
@@ -165,13 +165,13 @@ contract EthSigAuthenticatorTest is SpaceTest, SigUtils {
             salt,
             address(space),
             bytes4(0xdeadbeef),
-            abi.encode(author, proposalMetadataUri, executionStrategy, userVotingStrategies)
+            abi.encode(author, proposalMetadataURI, executionStrategy, userVotingStrategies)
         );
     }
 
     function testAuthenticateVote() public {
         // Creating demo proposal using vanilla authenticator (both vanilla and eth sig authenticators are whitelisted)
-        uint256 proposalId = _createProposal(author, proposalMetadataUri, executionStrategy, userVotingStrategies);
+        uint256 proposalId = _createProposal(author, proposalMetadataURI, executionStrategy, userVotingStrategies);
 
         bytes32 digest = _getVoteDigest(
             address(ethSigAuth),
@@ -180,7 +180,7 @@ contract EthSigAuthenticatorTest is SpaceTest, SigUtils {
             proposalId,
             Choice.For,
             userVotingStrategies,
-            voteMetadataUri
+            voteMetadataURI
         );
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(VOTER_KEY, digest);
 
@@ -191,7 +191,7 @@ contract EthSigAuthenticatorTest is SpaceTest, SigUtils {
             0,
             address(space),
             VOTE_SELECTOR,
-            abi.encode(voter, proposalId, Choice.For, userVotingStrategies, voteMetadataUri)
+            abi.encode(voter, proposalId, Choice.For, userVotingStrategies, voteMetadataURI)
         );
     }
 
@@ -206,7 +206,7 @@ contract EthSigAuthenticatorTest is SpaceTest, SigUtils {
             proposalId,
             Choice.For,
             userVotingStrategies,
-            voteMetadataUri
+            voteMetadataURI
         );
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(UNAUTHORIZED_KEY, digest);
 
@@ -218,7 +218,7 @@ contract EthSigAuthenticatorTest is SpaceTest, SigUtils {
             salt,
             address(space),
             VOTE_SELECTOR,
-            abi.encode(voter, proposalId, Choice.For, userVotingStrategies, voteMetadataUri)
+            abi.encode(voter, proposalId, Choice.For, userVotingStrategies, voteMetadataURI)
         );
     }
 
@@ -234,7 +234,7 @@ contract EthSigAuthenticatorTest is SpaceTest, SigUtils {
             proposalId,
             Choice.Against,
             userVotingStrategies,
-            voteMetadataUri
+            voteMetadataURI
         );
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(VOTER_KEY, digest);
 
@@ -246,12 +246,12 @@ contract EthSigAuthenticatorTest is SpaceTest, SigUtils {
             salt,
             address(space),
             VOTE_SELECTOR,
-            abi.encode(voter, proposalId, Choice.For, userVotingStrategies, voteMetadataUri)
+            abi.encode(voter, proposalId, Choice.For, userVotingStrategies, voteMetadataURI)
         );
     }
 
     function testAuthenticateVoteReusedSignature() public {
-        uint256 proposalId = _createProposal(author, proposalMetadataUri, executionStrategy, userVotingStrategies);
+        uint256 proposalId = _createProposal(author, proposalMetadataURI, executionStrategy, userVotingStrategies);
 
         uint256 salt = 0;
         bytes32 digest = _getVoteDigest(
@@ -261,7 +261,7 @@ contract EthSigAuthenticatorTest is SpaceTest, SigUtils {
             proposalId,
             Choice.For,
             userVotingStrategies,
-            voteMetadataUri
+            voteMetadataURI
         );
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(VOTER_KEY, digest);
 
@@ -272,7 +272,7 @@ contract EthSigAuthenticatorTest is SpaceTest, SigUtils {
             salt,
             address(space),
             VOTE_SELECTOR,
-            abi.encode(voter, proposalId, Choice.For, userVotingStrategies, voteMetadataUri)
+            abi.encode(voter, proposalId, Choice.For, userVotingStrategies, voteMetadataURI)
         );
 
         vm.expectRevert(UserHasAlreadyVoted.selector);
@@ -283,7 +283,7 @@ contract EthSigAuthenticatorTest is SpaceTest, SigUtils {
             salt,
             address(space),
             VOTE_SELECTOR,
-            abi.encode(voter, proposalId, Choice.For, userVotingStrategies, voteMetadataUri)
+            abi.encode(voter, proposalId, Choice.For, userVotingStrategies, voteMetadataURI)
         );
     }
 
@@ -298,7 +298,7 @@ contract EthSigAuthenticatorTest is SpaceTest, SigUtils {
             proposalId,
             Choice.For,
             userVotingStrategies,
-            voteMetadataUri
+            voteMetadataURI
         );
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(VOTER_KEY, digest);
 
@@ -310,13 +310,13 @@ contract EthSigAuthenticatorTest is SpaceTest, SigUtils {
             salt,
             address(space),
             bytes4(0xdeadbeef),
-            abi.encode(voter, proposalId, Choice.For, userVotingStrategies, voteMetadataUri)
+            abi.encode(voter, proposalId, Choice.For, userVotingStrategies, voteMetadataURI)
         );
     }
 
     function testAuthenticateUpdateProposal() public {
         space.setVotingDelay(10);
-        uint256 proposalId = _createProposal(author, proposalMetadataUri, executionStrategy, userVotingStrategies);
+        uint256 proposalId = _createProposal(author, proposalMetadataURI, executionStrategy, userVotingStrategies);
 
         bytes32 digest = _getUpdateProposalDigest(
             address(ethSigAuth),
@@ -324,12 +324,12 @@ contract EthSigAuthenticatorTest is SpaceTest, SigUtils {
             author,
             proposalId,
             newStrategy,
-            newMetadataUri
+            newMetadataURI
         );
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(AUTHOR_KEY, digest);
 
         vm.expectEmit(true, true, true, true);
-        emit ProposalUpdated(proposalId, newStrategy, newMetadataUri);
+        emit ProposalUpdated(proposalId, newStrategy, newMetadataURI);
         ethSigAuth.authenticate(
             v,
             r,
@@ -337,13 +337,13 @@ contract EthSigAuthenticatorTest is SpaceTest, SigUtils {
             0,
             address(space),
             UPDATE_PROPOSAL_SELECTOR,
-            abi.encode(author, proposalId, newStrategy, newMetadataUri)
+            abi.encode(author, proposalId, newStrategy, newMetadataURI)
         );
     }
 
     function testAuthenticateUpdateProposalInvalidSignature() public {
         space.setVotingDelay(10);
-        uint256 proposalId = _createProposal(author, proposalMetadataUri, executionStrategy, userVotingStrategies);
+        uint256 proposalId = _createProposal(author, proposalMetadataURI, executionStrategy, userVotingStrategies);
 
         bytes32 digest = _getUpdateProposalDigest(
             address(ethSigAuth),
@@ -351,7 +351,7 @@ contract EthSigAuthenticatorTest is SpaceTest, SigUtils {
             author,
             proposalId + 1, // proposalId + 1 will be invalid
             newStrategy,
-            newMetadataUri
+            newMetadataURI
         );
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(AUTHOR_KEY, digest);
 
@@ -363,7 +363,7 @@ contract EthSigAuthenticatorTest is SpaceTest, SigUtils {
             0,
             address(space),
             UPDATE_PROPOSAL_SELECTOR,
-            abi.encode(author, proposalId, newStrategy, newMetadataUri)
+            abi.encode(author, proposalId, newStrategy, newMetadataURI)
         );
     }
 
@@ -377,7 +377,7 @@ contract EthSigAuthenticatorTest is SpaceTest, SigUtils {
             author,
             proposalId,
             newStrategy,
-            newMetadataUri
+            newMetadataURI
         );
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(AUTHOR_KEY, digest);
 
@@ -389,7 +389,7 @@ contract EthSigAuthenticatorTest is SpaceTest, SigUtils {
             salt,
             address(space),
             bytes4(0xdeadbeef),
-            abi.encode(author, proposalId, newStrategy, newMetadataUri)
+            abi.encode(author, proposalId, newStrategy, newMetadataURI)
         );
     }
 }

@@ -43,14 +43,14 @@ contract GasSnapshotsTest is SpaceTest, SigUtils {
         (voter5, VOTER5_KEY) = makeAddrAndKey("Voter 5 Key");
         (voter6, VOTER6_KEY) = makeAddrAndKey("Voter 6 Key");
 
-        Strategy[] memory newStrategies = new Strategy[](1);
+        Strategy[] memory newVotingStrategies = new Strategy[](1);
         compVotingStrategy = new CompVotingStrategy();
         compToken = new CompToken();
-        newStrategies[0] = Strategy(address(compVotingStrategy), abi.encodePacked(address(compToken)));
-        bytes[] memory newData = new bytes[](0);
+        newVotingStrategies[0] = Strategy(address(compVotingStrategy), abi.encodePacked(address(compToken)));
+        string[] memory newVotingStrategyMetadataURIs = new string[](0);
 
         // Update contract's voting strategies.
-        space.addVotingStrategies(newStrategies, newData);
+        space.addVotingStrategies(newVotingStrategies, newVotingStrategyMetadataURIs);
 
         // Mint tokens for the users
         compToken.mint(author, 10000);
@@ -93,7 +93,7 @@ contract GasSnapshotsTest is SpaceTest, SigUtils {
                 address(ethSigAuth),
                 address(space),
                 address(author),
-                proposalMetadataUri,
+                proposalMetadataURI,
                 executionStrategy,
                 userVotingStrategies,
                 0
@@ -107,7 +107,7 @@ contract GasSnapshotsTest is SpaceTest, SigUtils {
             0,
             address(space),
             PROPOSE_SELECTOR,
-            abi.encode(author, proposalMetadataUri, executionStrategy, userVotingStrategies)
+            abi.encode(author, proposalMetadataURI, executionStrategy, userVotingStrategies)
         );
 
         (v, r, s) = vm.sign(
@@ -116,7 +116,7 @@ contract GasSnapshotsTest is SpaceTest, SigUtils {
                 address(ethSigAuth),
                 address(space),
                 address(author),
-                proposalMetadataUri,
+                proposalMetadataURI,
                 executionStrategy,
                 userVotingStrategies,
                 1
@@ -132,7 +132,7 @@ contract GasSnapshotsTest is SpaceTest, SigUtils {
             1,
             address(space),
             PROPOSE_SELECTOR,
-            abi.encode(author, proposalMetadataUri, executionStrategy, userVotingStrategies)
+            abi.encode(author, proposalMetadataURI, executionStrategy, userVotingStrategies)
         );
         snapEnd();
 

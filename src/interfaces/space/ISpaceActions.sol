@@ -7,7 +7,7 @@ import { Choice, IndexedStrategy } from "src/types.sol";
 interface ISpaceActions {
     function propose(
         address author,
-        string calldata metadataUri,
+        string calldata metadataURI,
         IndexedStrategy calldata executionStrategy,
         IndexedStrategy[] calldata userVotingStrategies
     ) external;
@@ -26,6 +26,6 @@ interface ISpaceActions {
         address author,
         uint256 proposalId,
         IndexedStrategy calldata executionStrategy,
-        string calldata metadataUri
+        string calldata metadataURI
     ) external;
 }
