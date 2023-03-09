@@ -21,17 +21,8 @@ contract AvatarExecutionStrategy is SpaceManager, SimpleQuorumExecutionStrategy 
     /// @dev Address of the avatar that this module will pass transactions to.
     address public target;
 
-    /// @notice Constructor
-    /// @param _owner Address of the owner of this contract.
-    /// @param _target Address of the avatar that this module will pass transactions to.
-    /// @param _spaces Array of whitelisted space contracts.
-    constructor(address _owner, address _target, address[] memory _spaces) {
-        bytes memory initParams = abi.encode(_owner, _target, _spaces);
-        setUp(initParams);
-    }
-
     /// @notice Initialize function, should be called immediately after deploying a new proxy to this contract.
-    /// @param initParams ABI encoded parameters, in the same order as the constructor.
+    /// @param initParams ABI encoded parameters
     /// @notice Can only be called once.
     function setUp(bytes memory initParams) public initializer {
         (address _owner, address _target, address[] memory _spaces) = abi.decode(

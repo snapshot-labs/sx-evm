@@ -3,6 +3,7 @@
 pragma solidity ^0.8.18;
 
 import { SpaceTest } from "./utils/Space.t.sol";
+import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import { Avatar } from "./mocks/Avatar.sol";
 import { AvatarExecutionStrategy } from "../src/execution-strategies/AvatarExecutionStrategy.sol";
 import { Choice, Enum, IndexedStrategy, MetaTransaction, ProposalStatus, Strategy } from "../src/types.sol";
@@ -17,6 +18,7 @@ contract AvatarExecutionStrategyTest is SpaceTest {
     event SpaceDisabled(address space);
 
     Avatar public avatar;
+    AvatarExecutionStrategy public masterAvatarExecutionStrategy;
     AvatarExecutionStrategy public avatarExecutionStrategy;
 
     address private recipient = address(0xc0ffee);
@@ -30,7 +32,23 @@ contract AvatarExecutionStrategyTest is SpaceTest {
         // Deploy and activate the execution strategy on the avatar
         address[] memory spaces = new address[](1);
         spaces[0] = address(space);
-        avatarExecutionStrategy = new AvatarExecutionStrategy(owner, address(avatar), spaces);
+        masterAvatarExecutionStrategy = new AvatarExecutionStrategy();
+
+        // TODO: this is failing. Cant figure out why
+        // masterAvatarExecutionStrategy.setUp(abi.encode(owner, address(avatar), spaces));
+
+        avatarExecutionStrategy = AvatarExecutionStrategy(
+            address(
+                new ERC1967Proxy(
+                    address(masterAvatarExecutionStrategy),
+                    abi.encodeWithSelector(
+                        AvatarExecutionStrategy.setUp.selector,
+                        abi.encode(owner, address(avatar), spaces)
+                    )
+                )
+            )
+        );
+
         avatar.enableModule(address(avatarExecutionStrategy));
 
         // Activate the execution strategy on the space
