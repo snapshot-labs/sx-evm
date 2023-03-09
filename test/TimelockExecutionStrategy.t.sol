@@ -12,7 +12,10 @@ contract TimelockExecutionStrategyTest is SpaceTest {
     error TimelockDelayNotMet();
     error ProposalNotQueued();
     error DuplicateExecutionPayloadHash();
+    error OnlyVetoGuardian();
     event TransactionQueued(MetaTransaction transaction, uint256 executionTime);
+    event ProposalVetoed(bytes32 executionPayloadHash);
+    event VetoGuardianSet(address vetoGuardian, address newVetoGuardian);
 
     TimelockExecutionStrategy public timelockExecutionStrategy;
 
@@ -167,7 +170,7 @@ contract TimelockExecutionStrategyTest is SpaceTest {
         assertEq(recipient.balance, 0);
 
         vm.warp(block.timestamp + timelockExecutionStrategy.TIMELOCK_DELAY());
-        timelockExecutionStrategy.execute(abi.encode(transactions));
+        timelockExecutionStrategy.executeQueuedProposal(abi.encode(transactions));
 
         assertEq(recipient.balance, 1);
     }
@@ -189,7 +192,7 @@ contract TimelockExecutionStrategyTest is SpaceTest {
         vm.warp(block.timestamp + timelockExecutionStrategy.TIMELOCK_DELAY());
 
         vm.expectRevert(TransactionsFailed.selector);
-        timelockExecutionStrategy.execute(abi.encode(transactions));
+        timelockExecutionStrategy.executeQueuedProposal(abi.encode(transactions));
     }
 
     function testExecuteInvalidPayload() external {
@@ -210,7 +213,7 @@ contract TimelockExecutionStrategyTest is SpaceTest {
         transactions[0] = MetaTransaction(recipient, 2, "", Enum.Operation.Call);
 
         vm.expectRevert(ProposalNotQueued.selector);
-        timelockExecutionStrategy.execute(abi.encode(transactions));
+        timelockExecutionStrategy.executeQueuedProposal(abi.encode(transactions));
     }
 
     function testExecuteBeforeDelay() external {
@@ -230,7 +233,7 @@ contract TimelockExecutionStrategyTest is SpaceTest {
         space.execute(proposalId, abi.encode(transactions));
 
         vm.expectRevert(TimelockDelayNotMet.selector);
-        timelockExecutionStrategy.execute(abi.encode(transactions));
+        timelockExecutionStrategy.executeQueuedProposal(abi.encode(transactions));
     }
 
     function testExecuteNotQueued() external {
@@ -246,7 +249,7 @@ contract TimelockExecutionStrategyTest is SpaceTest {
         vm.warp(block.timestamp + space.maxVotingDuration());
 
         vm.expectRevert(ProposalNotQueued.selector);
-        timelockExecutionStrategy.execute(abi.encode(transactions));
+        timelockExecutionStrategy.executeQueuedProposal(abi.encode(transactions));
     }
 
     function testExecuteDoubleExecution() external {
@@ -268,10 +271,10 @@ contract TimelockExecutionStrategyTest is SpaceTest {
         assertEq(recipient.balance, 0);
 
         vm.warp(block.timestamp + timelockExecutionStrategy.TIMELOCK_DELAY());
-        timelockExecutionStrategy.execute(abi.encode(transactions));
+        timelockExecutionStrategy.executeQueuedProposal(abi.encode(transactions));
 
         vm.expectRevert();
-        timelockExecutionStrategy.execute(abi.encode(transactions));
+        timelockExecutionStrategy.executeQueuedProposal(abi.encode(transactions));
     }
 
     function testExecuteDelegateCall() external {
@@ -300,8 +303,58 @@ contract TimelockExecutionStrategyTest is SpaceTest {
         assertEq(recipient.balance, 0);
 
         vm.warp(block.timestamp + timelockExecutionStrategy.TIMELOCK_DELAY());
-        timelockExecutionStrategy.execute(abi.encode(transactions));
+        timelockExecutionStrategy.executeQueuedProposal(abi.encode(transactions));
 
         assertEq(recipient.balance, 1);
+    }
+
+    function testVetoProposal() external {
+        MetaTransaction[] memory transactions = new MetaTransaction[](1);
+        transactions[0] = MetaTransaction(recipient, 1, "", Enum.Operation.Call);
+        uint256 proposalId = _createProposal(
+            author,
+            proposalMetadataUri,
+            IndexedStrategy(1, abi.encode(transactions)),
+            userVotingStrategies
+        );
+        _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataUri);
+        vm.warp(block.timestamp + space.maxVotingDuration());
+
+        space.execute(proposalId, abi.encode(transactions));
+
+        // Set veto guardian
+        address vetoGuardian = address(0x7e20);
+        vm.expectEmit(true, true, true, true);
+        emit VetoGuardianSet(address(0), vetoGuardian);
+        timelockExecutionStrategy.setVetoGuardian(vetoGuardian);
+
+        vm.prank(vetoGuardian);
+        vm.expectEmit(true, true, true, true);
+        emit ProposalVetoed(keccak256(abi.encode(transactions)));
+        timelockExecutionStrategy.veto(keccak256(abi.encode(transactions)));
+
+        vm.warp(block.timestamp + timelockExecutionStrategy.TIMELOCK_DELAY());
+        vm.expectRevert(ProposalNotQueued.selector);
+        timelockExecutionStrategy.executeQueuedProposal(abi.encode(transactions));
+    }
+
+    function testVetoOnlyGuardian() external {
+        MetaTransaction[] memory transactions = new MetaTransaction[](1);
+        transactions[0] = MetaTransaction(recipient, 1, "", Enum.Operation.Call);
+        uint256 proposalId = _createProposal(
+            author,
+            proposalMetadataUri,
+            IndexedStrategy(1, abi.encode(transactions)),
+            userVotingStrategies
+        );
+        _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataUri);
+        vm.warp(block.timestamp + space.maxVotingDuration());
+
+        space.execute(proposalId, abi.encode(transactions));
+
+        address vetoGuardian = address(0x7e20);
+        vm.prank(vetoGuardian);
+        vm.expectRevert(OnlyVetoGuardian.selector);
+        timelockExecutionStrategy.veto(keccak256(abi.encode(transactions)));
     }
 }

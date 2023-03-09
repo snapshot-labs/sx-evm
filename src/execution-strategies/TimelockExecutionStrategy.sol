@@ -9,21 +9,30 @@ import { Enum } from "@gnosis.pm/safe-contracts/contracts/common/Enum.sol";
 
 /// @title Timelock Execution Strategy - An Execution strategy that executes transactions according to a timelock delay.
 contract TimelockExecutionStrategy is SpaceManager, SimpleQuorumExecutionStrategy {
-    /// @notice Returned if timelock delay is in the future.
+    /// @notice Thrown if timelock delay is in the future.
     error TimelockDelayNotMet();
-    /// @notice Returned if the proposal execution payload hash is not queued.
+    /// @notice Thrown if the proposal execution payload hash is not queued.
     error ProposalNotQueued();
-    /// @notice Returned if the proposal execution payload hash is already queued.
+    /// @notice Thrown if the proposal execution payload hash is already queued.
     error DuplicateExecutionPayloadHash();
+    /// @notice Thrown if veto caller is not the veto guardian.
+    error OnlyVetoGuardian();
 
     event TransactionQueued(MetaTransaction transaction, uint256 executionTime);
     event TransactionExecuted(MetaTransaction transaction);
+    event VetoGuardianSet(address vetoGuardian, address newVetoGuardian);
+    event ProposalVetoed(bytes32 executionPayloadHash);
+    event ProposalQueued(bytes32 executionPayloadHash);
+    event ProposalExecuted(bytes32 executionPayloadHash);
 
     /// @notice The delay in seconds between a proposal being queued and the execution of the proposal.
     uint256 public immutable TIMELOCK_DELAY;
 
     /// @notice The time at which a proposal can be executed. Indexed by the hash of the proposal execution payload.
     mapping(bytes32 => uint256) public proposalExecutionTime;
+
+    /// @notice Veto guardian is given permission to veto any queued proposal.
+    address public vetoGuardian;
 
     /// @notice Constructor
     /// @param _owner Address of the owner of this contract.
@@ -60,10 +69,11 @@ contract TimelockExecutionStrategy is SpaceManager, SimpleQuorumExecutionStrateg
         for (uint i = 0; i < transactions.length; i++) {
             emit TransactionQueued(transactions[i], executionTime);
         }
+        emit ProposalQueued(proposal.executionPayloadHash);
     }
 
     /// @notice Executes a queued proposal. Can be called by anyone with the execution payload.
-    function execute(bytes memory payload) external {
+    function executeQueuedProposal(bytes memory payload) external {
         bytes32 executionPayloadHash = keccak256(payload);
 
         uint256 executionTime = proposalExecutionTime[executionPayloadHash];
@@ -78,6 +88,7 @@ contract TimelockExecutionStrategy is SpaceManager, SimpleQuorumExecutionStrateg
         for (uint i = 0; i < transactions.length; i++) {
             bool success;
             if (transactions[i].operation == Enum.Operation.DelegateCall) {
+                // solhint-disable-next-line avoid-low-level-calls
                 (success, ) = transactions[i].to.delegatecall(transactions[i].data);
             } else {
                 (success, ) = transactions[i].to.call{ value: transactions[i].value }(transactions[i].data);
@@ -86,6 +97,20 @@ contract TimelockExecutionStrategy is SpaceManager, SimpleQuorumExecutionStrateg
 
             emit TransactionExecuted(transactions[i]);
         }
+        emit ProposalExecuted(executionPayloadHash);
+    }
+
+    function veto(bytes32 executionPayloadHash) external {
+        if (msg.sender != vetoGuardian) revert OnlyVetoGuardian();
+        if (proposalExecutionTime[executionPayloadHash] == 0) revert ProposalNotQueued();
+
+        proposalExecutionTime[executionPayloadHash] = 0;
+        emit ProposalVetoed(executionPayloadHash);
+    }
+
+    function setVetoGuardian(address newVetoGuardian) external onlyOwner {
+        emit VetoGuardianSet(vetoGuardian, newVetoGuardian);
+        vetoGuardian = newVetoGuardian;
     }
 
     function getStrategyType() external pure override returns (string memory) {
