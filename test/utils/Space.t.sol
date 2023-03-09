@@ -5,7 +5,6 @@ pragma solidity ^0.8.18;
 import { Test } from "forge-std/Test.sol";
 import { GasSnapshot } from "forge-gas-snapshot/GasSnapshot.sol";
 import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
-
 import { Space } from "../../src/Space.sol";
 import { VanillaAuthenticator } from "../../src/authenticators/VanillaAuthenticator.sol";
 import { VanillaVotingStrategy } from "../../src/voting-strategies/VanillaVotingStrategy.sol";
