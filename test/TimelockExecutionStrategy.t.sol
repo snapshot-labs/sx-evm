@@ -44,11 +44,11 @@ contract TimelockExecutionStrategyTest is SpaceTest {
         transactions[0] = MetaTransaction(recipient, 1, "", Enum.Operation.Call);
         uint256 proposalId = _createProposal(
             author,
-            proposalMetadataUri,
+            proposalMetadataURI,
             IndexedStrategy(1, abi.encode(transactions)),
             userVotingStrategies
         );
-        _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataUri);
+        _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataURI);
         vm.warp(block.timestamp + space.maxVotingDuration());
 
         vm.expectRevert();
@@ -60,11 +60,11 @@ contract TimelockExecutionStrategyTest is SpaceTest {
         transactions[0] = MetaTransaction(recipient, 1, "", Enum.Operation.Call);
         uint256 proposalId = _createProposal(
             author,
-            proposalMetadataUri,
+            proposalMetadataURI,
             IndexedStrategy(1, abi.encode(transactions)),
             userVotingStrategies
         );
-        _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataUri);
+        _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataURI);
         vm.warp(block.timestamp + space.maxVotingDuration());
 
         vm.expectEmit(true, true, true, true);
@@ -77,7 +77,7 @@ contract TimelockExecutionStrategyTest is SpaceTest {
         transactions[0] = MetaTransaction(recipient, 1, "", Enum.Operation.Call);
         uint256 proposalId = _createProposal(
             author,
-            proposalMetadataUri,
+            proposalMetadataURI,
             IndexedStrategy(1, abi.encode(transactions)),
             userVotingStrategies
         );
@@ -92,11 +92,11 @@ contract TimelockExecutionStrategyTest is SpaceTest {
         transactions[0] = MetaTransaction(recipient, 1, "", Enum.Operation.Call);
         uint256 proposalId = _createProposal(
             author,
-            proposalMetadataUri,
+            proposalMetadataURI,
             IndexedStrategy(1, abi.encode(transactions)),
             userVotingStrategies
         );
-        _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataUri);
+        _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataURI);
         vm.warp(block.timestamp + space.maxVotingDuration());
 
         vm.expectEmit(true, true, true, true);
@@ -112,18 +112,18 @@ contract TimelockExecutionStrategyTest is SpaceTest {
         transactions[0] = MetaTransaction(recipient, 1, "", Enum.Operation.Call);
         uint256 proposalId = _createProposal(
             author,
-            proposalMetadataUri,
+            proposalMetadataURI,
             IndexedStrategy(1, abi.encode(transactions)),
             userVotingStrategies
         );
         uint256 proposalId2 = _createProposal(
             author,
-            proposalMetadataUri,
+            proposalMetadataURI,
             IndexedStrategy(1, abi.encode(transactions)),
             userVotingStrategies
         );
-        _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataUri);
-        _vote(author, proposalId2, Choice.For, userVotingStrategies, voteMetadataUri);
+        _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataURI);
+        _vote(author, proposalId2, Choice.For, userVotingStrategies, voteMetadataURI);
         vm.warp(block.timestamp + space.maxVotingDuration());
 
         space.execute(proposalId, abi.encode(transactions));
@@ -138,11 +138,11 @@ contract TimelockExecutionStrategyTest is SpaceTest {
         transactions[0] = MetaTransaction(recipient, 1, "", Enum.Operation.Call);
         uint256 proposalId = _createProposal(
             author,
-            proposalMetadataUri,
+            proposalMetadataURI,
             IndexedStrategy(1, abi.encode(transactions)),
             userVotingStrategies
         );
-        _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataUri);
+        _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataURI);
         vm.warp(block.timestamp + space.maxVotingDuration());
 
         transactions[0] = MetaTransaction(recipient, 2, "", Enum.Operation.Call);
@@ -156,11 +156,11 @@ contract TimelockExecutionStrategyTest is SpaceTest {
         transactions[0] = MetaTransaction(recipient, 1, "", Enum.Operation.Call);
         uint256 proposalId = _createProposal(
             author,
-            proposalMetadataUri,
+            proposalMetadataURI,
             IndexedStrategy(1, abi.encode(transactions)),
             userVotingStrategies
         );
-        _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataUri);
+        _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataURI);
         vm.warp(block.timestamp + space.maxVotingDuration());
 
         vm.expectEmit(true, true, true, true);
@@ -169,7 +169,7 @@ contract TimelockExecutionStrategyTest is SpaceTest {
 
         assertEq(recipient.balance, 0);
 
-        vm.warp(block.timestamp + timelockExecutionStrategy.TIMELOCK_DELAY());
+        vm.warp(block.timestamp + timelockExecutionStrategy.timelockDelay());
         timelockExecutionStrategy.executeQueuedProposal(abi.encode(transactions));
 
         assertEq(recipient.balance, 1);
@@ -180,16 +180,16 @@ contract TimelockExecutionStrategyTest is SpaceTest {
         transactions[0] = MetaTransaction(recipient, 1001, "", Enum.Operation.Call);
         uint256 proposalId = _createProposal(
             author,
-            proposalMetadataUri,
+            proposalMetadataURI,
             IndexedStrategy(1, abi.encode(transactions)),
             userVotingStrategies
         );
-        _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataUri);
+        _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataURI);
         vm.warp(block.timestamp + space.maxVotingDuration());
 
         space.execute(proposalId, abi.encode(transactions));
 
-        vm.warp(block.timestamp + timelockExecutionStrategy.TIMELOCK_DELAY());
+        vm.warp(block.timestamp + timelockExecutionStrategy.timelockDelay());
 
         vm.expectRevert(TransactionsFailed.selector);
         timelockExecutionStrategy.executeQueuedProposal(abi.encode(transactions));
@@ -200,16 +200,16 @@ contract TimelockExecutionStrategyTest is SpaceTest {
         transactions[0] = MetaTransaction(recipient, 1, "", Enum.Operation.Call);
         uint256 proposalId = _createProposal(
             author,
-            proposalMetadataUri,
+            proposalMetadataURI,
             IndexedStrategy(1, abi.encode(transactions)),
             userVotingStrategies
         );
-        _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataUri);
+        _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataURI);
         vm.warp(block.timestamp + space.maxVotingDuration());
 
         space.execute(proposalId, abi.encode(transactions));
 
-        vm.warp(block.timestamp + timelockExecutionStrategy.TIMELOCK_DELAY());
+        vm.warp(block.timestamp + timelockExecutionStrategy.timelockDelay());
         transactions[0] = MetaTransaction(recipient, 2, "", Enum.Operation.Call);
 
         vm.expectRevert(ProposalNotQueued.selector);
@@ -221,11 +221,11 @@ contract TimelockExecutionStrategyTest is SpaceTest {
         transactions[0] = MetaTransaction(recipient, 1, "", Enum.Operation.Call);
         uint256 proposalId = _createProposal(
             author,
-            proposalMetadataUri,
+            proposalMetadataURI,
             IndexedStrategy(1, abi.encode(transactions)),
             userVotingStrategies
         );
-        _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataUri);
+        _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataURI);
         vm.warp(block.timestamp + space.maxVotingDuration());
 
         vm.expectEmit(true, true, true, true);
@@ -241,11 +241,11 @@ contract TimelockExecutionStrategyTest is SpaceTest {
         transactions[0] = MetaTransaction(recipient, 1, "", Enum.Operation.Call);
         uint256 proposalId = _createProposal(
             author,
-            proposalMetadataUri,
+            proposalMetadataURI,
             IndexedStrategy(1, abi.encode(transactions)),
             userVotingStrategies
         );
-        _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataUri);
+        _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataURI);
         vm.warp(block.timestamp + space.maxVotingDuration());
 
         vm.expectRevert(ProposalNotQueued.selector);
@@ -257,11 +257,11 @@ contract TimelockExecutionStrategyTest is SpaceTest {
         transactions[0] = MetaTransaction(recipient, 1, "", Enum.Operation.Call);
         uint256 proposalId = _createProposal(
             author,
-            proposalMetadataUri,
+            proposalMetadataURI,
             IndexedStrategy(1, abi.encode(transactions)),
             userVotingStrategies
         );
-        _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataUri);
+        _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataURI);
         vm.warp(block.timestamp + space.maxVotingDuration());
 
         vm.expectEmit(true, true, true, true);
@@ -270,7 +270,7 @@ contract TimelockExecutionStrategyTest is SpaceTest {
 
         assertEq(recipient.balance, 0);
 
-        vm.warp(block.timestamp + timelockExecutionStrategy.TIMELOCK_DELAY());
+        vm.warp(block.timestamp + timelockExecutionStrategy.timelockDelay());
         timelockExecutionStrategy.executeQueuedProposal(abi.encode(transactions));
 
         vm.expectRevert();
@@ -289,11 +289,11 @@ contract TimelockExecutionStrategyTest is SpaceTest {
         );
         uint256 proposalId = _createProposal(
             author,
-            proposalMetadataUri,
+            proposalMetadataURI,
             IndexedStrategy(1, abi.encode(transactions)),
             userVotingStrategies
         );
-        _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataUri);
+        _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataURI);
         vm.warp(block.timestamp + space.maxVotingDuration());
 
         vm.expectEmit(true, true, true, true);
@@ -302,7 +302,7 @@ contract TimelockExecutionStrategyTest is SpaceTest {
 
         assertEq(recipient.balance, 0);
 
-        vm.warp(block.timestamp + timelockExecutionStrategy.TIMELOCK_DELAY());
+        vm.warp(block.timestamp + timelockExecutionStrategy.timelockDelay());
         timelockExecutionStrategy.executeQueuedProposal(abi.encode(transactions));
 
         assertEq(recipient.balance, 1);
@@ -313,11 +313,11 @@ contract TimelockExecutionStrategyTest is SpaceTest {
         transactions[0] = MetaTransaction(recipient, 1, "", Enum.Operation.Call);
         uint256 proposalId = _createProposal(
             author,
-            proposalMetadataUri,
+            proposalMetadataURI,
             IndexedStrategy(1, abi.encode(transactions)),
             userVotingStrategies
         );
-        _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataUri);
+        _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataURI);
         vm.warp(block.timestamp + space.maxVotingDuration());
 
         space.execute(proposalId, abi.encode(transactions));
@@ -333,7 +333,7 @@ contract TimelockExecutionStrategyTest is SpaceTest {
         emit ProposalVetoed(keccak256(abi.encode(transactions)));
         timelockExecutionStrategy.veto(keccak256(abi.encode(transactions)));
 
-        vm.warp(block.timestamp + timelockExecutionStrategy.TIMELOCK_DELAY());
+        vm.warp(block.timestamp + timelockExecutionStrategy.timelockDelay());
         vm.expectRevert(ProposalNotQueued.selector);
         timelockExecutionStrategy.executeQueuedProposal(abi.encode(transactions));
     }
@@ -343,11 +343,11 @@ contract TimelockExecutionStrategyTest is SpaceTest {
         transactions[0] = MetaTransaction(recipient, 1, "", Enum.Operation.Call);
         uint256 proposalId = _createProposal(
             author,
-            proposalMetadataUri,
+            proposalMetadataURI,
             IndexedStrategy(1, abi.encode(transactions)),
             userVotingStrategies
         );
-        _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataUri);
+        _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataURI);
         vm.warp(block.timestamp + space.maxVotingDuration());
 
         space.execute(proposalId, abi.encode(transactions));

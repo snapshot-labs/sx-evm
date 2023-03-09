@@ -26,7 +26,7 @@ contract TimelockExecutionStrategy is SpaceManager, SimpleQuorumExecutionStrateg
     event ProposalExecuted(bytes32 executionPayloadHash);
 
     /// @notice The delay in seconds between a proposal being queued and the execution of the proposal.
-    uint256 public immutable TIMELOCK_DELAY;
+    uint256 public immutable timelockDelay;
 
     /// @notice The time at which a proposal can be executed. Indexed by the hash of the proposal execution payload.
     mapping(bytes32 => uint256) public proposalExecutionTime;
@@ -42,7 +42,7 @@ contract TimelockExecutionStrategy is SpaceManager, SimpleQuorumExecutionStrateg
         __Ownable_init();
         transferOwnership(_owner);
         __SpaceManager_init(_spaces);
-        TIMELOCK_DELAY = _timelockDelay;
+        timelockDelay = _timelockDelay;
     }
 
     /// @notice Effectively a timelock queue function. Can only be called by approved spaces.
@@ -62,7 +62,7 @@ contract TimelockExecutionStrategy is SpaceManager, SimpleQuorumExecutionStrateg
 
         if (proposalExecutionTime[proposal.executionPayloadHash] != 0) revert DuplicateExecutionPayloadHash();
 
-        uint256 executionTime = block.timestamp + TIMELOCK_DELAY;
+        uint256 executionTime = block.timestamp + timelockDelay;
         proposalExecutionTime[proposal.executionPayloadHash] = executionTime;
 
         MetaTransaction[] memory transactions = abi.decode(payload, (MetaTransaction[]));
