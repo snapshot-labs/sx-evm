@@ -32,9 +32,11 @@ contract TimelockExecutionStrategyTest is SpaceTest {
 
         // Activate the execution strategy on the space
         Strategy[] memory executionStrategies = new Strategy[](1);
+        string[] memory executionStrategyMetadataURIs = new string[](1);
+        executionStrategyMetadataURIs[0] = "";
         executionStrategies[0] = Strategy(address(timelockExecutionStrategy), abi.encode(uint256(quorum)));
         // This strategy will reside at index 1 in the space's execution strategies array
-        space.addExecutionStrategies(executionStrategies);
+        space.addExecutionStrategies(executionStrategies, executionStrategyMetadataURIs);
     }
 
     function testQueueingFromUnauthorizedSpace() external {
