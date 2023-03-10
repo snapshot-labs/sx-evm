@@ -66,7 +66,7 @@ contract TimelockExecutionStrategy is SpaceManager, SimpleQuorumExecutionStrateg
         proposalExecutionTime[proposal.executionPayloadHash] = executionTime;
 
         MetaTransaction[] memory transactions = abi.decode(payload, (MetaTransaction[]));
-        for (uint i = 0; i < transactions.length; i++) {
+        for (uint256 i = 0; i < transactions.length; i++) {
             emit TransactionQueued(transactions[i], executionTime);
         }
         emit ProposalQueued(proposal.executionPayloadHash);
@@ -85,7 +85,7 @@ contract TimelockExecutionStrategy is SpaceManager, SimpleQuorumExecutionStrateg
         proposalExecutionTime[executionPayloadHash] = 0;
 
         MetaTransaction[] memory transactions = abi.decode(payload, (MetaTransaction[]));
-        for (uint i = 0; i < transactions.length; i++) {
+        for (uint256 i = 0; i < transactions.length; i++) {
             bool success;
             if (transactions[i].operation == Enum.Operation.DelegateCall) {
                 // solhint-disable-next-line avoid-low-level-calls
