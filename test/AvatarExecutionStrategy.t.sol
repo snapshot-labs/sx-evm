@@ -32,7 +32,7 @@ contract AvatarExecutionStrategyTest is SpaceTest {
         // Deploy and activate the execution strategy on the avatar
         address[] memory spaces = new address[](1);
         spaces[0] = address(space);
-        masterAvatarExecutionStrategy = new AvatarExecutionStrategy();
+        masterAvatarExecutionStrategy = new AvatarExecutionStrategy(address(0x1), address(0x1), new address[](0));
 
         // TODO: this is failing. Cant figure out why
         // masterAvatarExecutionStrategy.setUp(abi.encode(owner, address(avatar), spaces));
