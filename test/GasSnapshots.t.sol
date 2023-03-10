@@ -153,7 +153,7 @@ contract GasSnapshotsTest is SpaceTest, SigUtils {
         );
 
         (v, r, s) = vm.sign(
-            VOTER2_KEY,
+            key2,
             _getVoteDigest(
                 address(ethSigAuth),
                 address(space),
@@ -180,7 +180,7 @@ contract GasSnapshotsTest is SpaceTest, SigUtils {
         snapEnd();
 
         (v, r, s) = vm.sign(
-            VOTER3_KEY,
+            key3,
             _getVoteDigest(
                 address(ethSigAuth),
                 address(space),
