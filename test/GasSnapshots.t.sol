@@ -11,25 +11,25 @@ import { EthTxAuthenticator } from "../src/authenticators/EthTxAuthenticator.sol
 import { Choice, IndexedStrategy, Strategy } from "../src/types.sol";
 
 contract GasSnapshotsTest is SpaceTest, SigUtils {
-    CompVotingStrategy public compVotingStrategy;
-    CompToken public compToken;
+    CompVotingStrategy internal compVotingStrategy;
+    CompToken internal compToken;
 
-    string private constant NAME = "snapshot-x";
-    string private constant VERSION = "1";
+    string internal constant NAME = "snapshot-x";
+    string internal constant VERSION = "1";
 
-    EthSigAuthenticator public ethSigAuth;
-    EthTxAuthenticator public ethTxAuth;
+    EthSigAuthenticator internal ethSigAuth;
+    EthTxAuthenticator internal ethTxAuth;
 
-    uint256 VOTER2_KEY;
-    uint256 VOTER3_KEY;
-    uint256 VOTER4_KEY;
-    uint256 VOTER5_KEY;
-    uint256 VOTER6_KEY;
-    address voter2;
-    address voter3;
-    address voter4;
-    address voter5;
-    address voter6;
+    uint256 internal key2;
+    uint256 internal key3;
+    uint256 internal key4;
+    uint256 internal key5;
+    uint256 internal key6;
+    address internal voter2;
+    address internal voter3;
+    address internal voter4;
+    address internal voter5;
+    address internal voter6;
 
     // solhint-disable-next-line no-empty-blocks
     constructor() SigUtils(NAME, VERSION) {}
@@ -37,11 +37,11 @@ contract GasSnapshotsTest is SpaceTest, SigUtils {
     function setUp() public virtual override {
         super.setUp();
 
-        (voter2, VOTER2_KEY) = makeAddrAndKey("Voter 2 Key");
-        (voter3, VOTER3_KEY) = makeAddrAndKey("Voter 3 Key");
-        (voter4, VOTER4_KEY) = makeAddrAndKey("Voter 4 Key");
-        (voter5, VOTER5_KEY) = makeAddrAndKey("Voter 5 Key");
-        (voter6, VOTER6_KEY) = makeAddrAndKey("Voter 6 Key");
+        (voter2, key2) = makeAddrAndKey("Voter 2 Key");
+        (voter3, key3) = makeAddrAndKey("Voter 3 Key");
+        (voter4, key4) = makeAddrAndKey("Voter 4 Key");
+        (voter5, key5) = makeAddrAndKey("Voter 5 Key");
+        (voter6, key6) = makeAddrAndKey("Voter 6 Key");
 
         Strategy[] memory newVotingStrategies = new Strategy[](1);
         compVotingStrategy = new CompVotingStrategy();
