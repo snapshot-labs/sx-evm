@@ -79,6 +79,27 @@ abstract contract SpaceTest is Test, GasSnapshot, ISpaceEvents, ISpaceErrors, IE
         executionStrategies.push(Strategy(address(vanillaExecutionStrategy), abi.encode(uint256(quorum))));
         userVotingStrategies.push(IndexedStrategy(0, new bytes(0)));
         executionStrategy = IndexedStrategy(0, new bytes(0));
+
+        // initializing the master space to be unusable
+        Strategy[] memory emptyStrategyArray = new Strategy[](1);
+        emptyStrategyArray[0] = Strategy(address(0x1), new bytes(0));
+        string[] memory emptyStringArray = new string[](1);
+        emptyStringArray[0] = "";
+        address[] memory emptyAddressArray = new address[](1);
+        emptyAddressArray[0] = address(0x1);
+        masterSpace.initialize(
+            address(0x1),
+            1,
+            1,
+            1,
+            1,
+            "",
+            emptyStrategyArray,
+            emptyStringArray,
+            emptyAddressArray,
+            emptyStrategyArray
+        );
+
         space = Space(
             address(
                 new ERC1967Proxy(
