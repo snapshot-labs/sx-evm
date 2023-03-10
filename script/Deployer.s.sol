@@ -13,6 +13,7 @@ import { EthTxAuthenticator } from "../src/authenticators/EthTxAuthenticator.sol
 import { CompVotingStrategy } from "../src/voting-strategies/CompVotingStrategy.sol";
 import { WhitelistStrategy } from "../src/voting-strategies/WhitelistStrategy.sol";
 import { ProxyFactory } from "../src/ProxyFactory.sol";
+import { Strategy } from "../src/types.sol";
 
 interface SingletonFactory {
     function deploy(bytes memory _initCode, bytes32 salt) external returns (address payable);
@@ -37,50 +38,71 @@ contract Deployer is Script {
         deployer = vm.rememberKey(pvk);
 
         string memory network = vm.envString("NETWORK");
-        uint32 chainId = getChainId(network);
 
         deploymentsPath = string.concat(string.concat("./deployments/", network), ".json");
 
         vm.startBroadcast(deployer);
 
-        string memory json = "deploymentArtifact";
         (address vanillaExecutionStrategy, ) = noRedeploy(type(VanillaExecutionStrategy).creationCode);
-        json.serialize("VanillaExecutionStrategy", vanillaExecutionStrategy);
+        deployments.serialize("VanillaExecutionStrategy", vanillaExecutionStrategy);
 
-        (address avatarExecutionStrategy, ) = noRedeploy(type(AvatarExecutionStrategy).creationCode);
-        // TODO: initialize avatar implementation
-        // AvatarExecutionStrategy(avatarExecutionStrategy).
-        // setUp(abi.encode(address(0x1), address(0x1), new address[](0)));
-        json.serialize("AvatarExecutionStrategyImplementation", avatarExecutionStrategy);
+        (address avatarExecutionStrategy, ) = noRedeploy(
+            abi.encodePacked(
+                type(AvatarExecutionStrategy).creationCode,
+                abi.encode(address(0x1), address(0x1), new address[](0))
+            )
+        );
+
+        deployments.serialize("AvatarExecutionStrategyImplementation", avatarExecutionStrategy);
 
         (address compVotingStrategy, ) = noRedeploy(type(CompVotingStrategy).creationCode);
-        json.serialize("CompVotingStrategy", compVotingStrategy);
+        deployments.serialize("CompVotingStrategy", compVotingStrategy);
 
         (address vanillaAuthenticator, ) = noRedeploy(type(VanillaAuthenticator).creationCode);
-        json.serialize("VanillaAuthenticator", vanillaAuthenticator);
+        deployments.serialize("VanillaAuthenticator", vanillaAuthenticator);
 
         (address ethTxAuthenticator, ) = noRedeploy(type(EthTxAuthenticator).creationCode);
-        json.serialize("EthTxAuthenticator", ethTxAuthenticator);
+        deployments.serialize("EthTxAuthenticator", ethTxAuthenticator);
 
         (address ethSigAuthenticator, ) = noRedeploy(
             abi.encodePacked(type(EthSigAuthenticator).creationCode, abi.encode(name, version))
         );
-        json.serialize("EthSigAuthenticator", ethSigAuthenticator);
+        deployments.serialize("EthSigAuthenticator", ethSigAuthenticator);
 
         (address vanillaVotingStrategy, ) = noRedeploy(type(VanillaVotingStrategy).creationCode);
-        json.serialize("VanillaVotingStrategy", vanillaVotingStrategy);
+        deployments.serialize("VanillaVotingStrategy", vanillaVotingStrategy);
 
         (address whitelistStrategy, ) = noRedeploy(type(WhitelistStrategy).creationCode);
-        json.serialize("WhitelistStrategy", whitelistStrategy);
+        deployments.serialize("WhitelistStrategy", whitelistStrategy);
 
         (address proxyFactory, ) = noRedeploy(type(ProxyFactory).creationCode);
-        json.serialize("ProxyFactory", proxyFactory);
+        deployments.serialize("ProxyFactory", proxyFactory);
 
-        (address space, ) = noRedeploy(abi.encodePacked(type(Space).creationCode, abi.encode(name, version, chainId)));
-        // TODO: initialize space implementation
-        json = json.serialize("SpaceImplementation", space);
+        (address space, ) = noRedeploy(type(Space).creationCode);
 
-        json.write(deploymentsPath);
+        // initializing the master space to be unusable
+        Strategy[] memory emptyStrategyArray = new Strategy[](1);
+        emptyStrategyArray[0] = Strategy(address(0x1), new bytes(0));
+        string[] memory emptyStringArray = new string[](1);
+        emptyStringArray[0] = "";
+        address[] memory emptyAddressArray = new address[](1);
+        emptyAddressArray[0] = address(0x1);
+        Space(space).initialize(
+            address(0x1),
+            1,
+            1,
+            1,
+            1,
+            "",
+            emptyStrategyArray,
+            emptyStringArray,
+            emptyAddressArray,
+            emptyStrategyArray
+        );
+
+        deployments = deployments.serialize("SpaceImplementation", space);
+
+        deployments.write(deploymentsPath);
 
         vm.stopBroadcast();
     }
