@@ -107,11 +107,6 @@ contract Deployer is Script {
         vm.stopBroadcast();
     }
 
-    function getChainId(string memory network) internal view returns (uint32) {
-        string memory json = vm.readFile("./deployments/chains.json");
-        return abi.decode(vm.parseJson(json, string.concat(network, ".id")), (uint32));
-    }
-
     // Deploys contract if it doesn't exist, otherwise returns the create2 address
     function noRedeploy(bytes memory _initCode) internal returns (address, bool) {
         address addy = computeCreate2Address(salt, keccak256(_initCode), address(singletonFactory));
@@ -122,10 +117,5 @@ contract Deployer is Script {
         } else {
             return (addy, false);
         }
-    }
-
-    function labelAndRecord(address addy, string memory contractName) internal {
-        vm.label(addy, contractName);
-        vm.writeJson(vm.serializeAddress(deployments, contractName, addy), deploymentsPath);
     }
 }
