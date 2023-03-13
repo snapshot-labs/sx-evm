@@ -12,11 +12,9 @@ contract ExecuteTest is SpaceTest {
         _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataURI);
         vm.warp(block.timestamp + space.maxVotingDuration());
 
-        // vm.expectEmit(true, true, true, true);
-        // emit ProposalExecuted(proposalId);
-        snapStart("Execute");
+        vm.expectEmit(true, true, true, true);
+        emit ProposalExecuted(proposalId);
         space.execute(proposalId, executionStrategy.params);
-        snapEnd();
 
         assertEq(uint8(space.getProposalStatus(proposalId)), uint8(ProposalStatus.Executed));
     }
@@ -97,9 +95,11 @@ contract ExecuteTest is SpaceTest {
 
         Strategy[] memory newExecutionStrategies = new Strategy[](1);
         newExecutionStrategies[0] = Strategy(address(_vanilla), abi.encode(uint256(quorum)));
+        string[] memory newExecutionStrategyMetadataURIs = new string[](1);
+        newExecutionStrategyMetadataURIs[0] = "bafkreihnggomfnqri7y2dzolhebfsyon36bcbl3taehnabr35pd5zddwyu";
 
         // Add the strategy, which will be assigned the index `1`.
-        space.addExecutionStrategies(newExecutionStrategies);
+        space.addExecutionStrategies(newExecutionStrategies, newExecutionStrategyMetadataURIs);
 
         uint256 proposalId = _createProposal(
             author,
