@@ -2,26 +2,29 @@
 pragma solidity ^0.8.18;
 
 import { Script } from "forge-std/Script.sol";
+import { stdJson } from "forge-std/StdJson.sol";
 import { ProxyFactory } from "../src/ProxyFactory.sol";
 import { Space } from "../src/Space.sol";
-import { VanillaAuthenticator } from "../src/authenticators/VanillaAuthenticator.sol";
-import { VanillaVotingStrategy } from "../src/voting-strategies/VanillaVotingStrategy.sol";
-import { VanillaExecutionStrategy } from "../src/execution-strategies/VanillaExecutionStrategy.sol";
 import { Strategy } from "../src/types.sol";
 
 // solhint-disable-next-line max-states-count
 contract SpaceSetup is Script {
+    using stdJson for string;
+
+    ProxyFactory public proxyFactory;
+    address public spaceImplementation;
+    address public vanillaVotingStrategy;
+    address public compVotingStrategy;
+    address public whitelistStrategy;
+    address public vanillaAuthenticator;
+    address public ethSigAuthenticator;
+    address public ethTxAuthenticator;
+    address public avatarExecutionStrategyImplementation;
+    address public vanillaExecutionStrategy;
+
     Space public space;
-    address internal masterSpace = address(0x1234);
-    ProxyFactory public spaceFactory = ProxyFactory(0xcae03d02f6840D865ccDD6668f1C2FDCA47F2240);
-    address public vanillaVotingStrategy = address(0x395eD61716b48DC904140b515e9F682E33330154);
-    address public compVotingStrategy = address(0xbBD17346378F76c1c94032594b57C93c24857B19);
-    address public whitelistStrategy = address(0xC89a0C93Af823F794F96F7b2B63Fc2a1f1AE9427);
-    address public vanillaAuthenticator = address(0x86bfa0726CBA0FeBEeE457F04b705AB74B54D01c);
-    address public ethSigAuthenticator = address(0x328c6F186639f1981Dc25eD4517E8Ed2aDd85569);
-    address public ethTxAuthenticator = address(0x37315Ce75920B653f0f13734c709e199876455C9);
-    address public vanillaExecutionStrategy = address(0xb1001Fdf62C020761039A750b27e73C512fDaa5E);
-    address public controller = address(0x2842c82E20ab600F443646e1BC8550B44a513D82);
+
+    address public controller;
     uint32 public votingDelay;
     uint32 public minVotingDuration;
     uint32 public maxVotingDuration;
@@ -30,6 +33,23 @@ contract SpaceSetup is Script {
     string internal metadataURI = "SX Test Space";
 
     function run() public {
+        uint256 pvk = vm.envUint("PRIVATE_KEY");
+        controller = vm.rememberKey(pvk);
+
+        string memory network = vm.envString("NETWORK");
+        string memory deployments = vm.readFile(string.concat(string.concat("./deployments/", network), ".json"));
+
+        proxyFactory = ProxyFactory(deployments.readAddress("ProxyFactory"));
+        spaceImplementation = deployments.readAddress("SpaceImplementation");
+        vanillaVotingStrategy = deployments.readAddress("VanillaVotingStrategy");
+        avatarExecutionStrategyImplementation = deployments.readAddress("AvatarExecutionStrategyImplementation");
+        compVotingStrategy = deployments.readAddress("CompVotingStrategy");
+        whitelistStrategy = deployments.readAddress("WhitelistStrategy");
+        vanillaAuthenticator = deployments.readAddress("VanillaAuthenticator");
+        ethSigAuthenticator = deployments.readAddress("EthSigAuthenticator");
+        ethTxAuthenticator = deployments.readAddress("EthTxAuthenticator");
+        vanillaExecutionStrategy = deployments.readAddress("VanillaExecutionStrategy");
+
         Strategy[] memory votingStrategies = new Strategy[](2);
         bytes[] memory votingStrategyMetadata = new bytes[](2);
         votingStrategies[0] = Strategy(vanillaVotingStrategy, new bytes(0));
@@ -49,10 +69,10 @@ contract SpaceSetup is Script {
         maxVotingDuration = 1000;
         proposalThreshold = 1;
         quorum = 1;
-        uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
-        vm.startBroadcast(deployerPrivateKey);
-        spaceFactory.deployProxy(
-            masterSpace,
+
+        vm.startBroadcast(controller);
+        proxyFactory.deployProxy(
+            spaceImplementation,
             abi.encodeWithSelector(
                 Space.initialize.selector,
                 controller,
