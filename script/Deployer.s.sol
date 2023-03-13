@@ -87,18 +87,23 @@ contract Deployer is Script {
         emptyStringArray[0] = "";
         address[] memory emptyAddressArray = new address[](1);
         emptyAddressArray[0] = address(0x1);
-        Space(space).initialize(
-            address(0x1),
-            1,
-            1,
-            1,
-            1,
-            "",
-            emptyStrategyArray,
-            emptyStringArray,
-            emptyAddressArray,
-            emptyStrategyArray,
-            emptyStringArray
+        // fails if the master space is already initialized
+        // solhint-disable-next-line avoid-low-level-calls
+        space.call(
+            abi.encodeWithSelector(
+                Space.initialize.selector,
+                address(0x1),
+                1,
+                1,
+                1,
+                1,
+                "",
+                emptyStrategyArray,
+                emptyStringArray,
+                emptyAddressArray,
+                emptyStrategyArray,
+                emptyStringArray
+            )
         );
 
         deployments = deployments.serialize("SpaceImplementation", space);
