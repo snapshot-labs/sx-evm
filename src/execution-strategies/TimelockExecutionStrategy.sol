@@ -26,7 +26,7 @@ contract TimelockExecutionStrategy is SpaceManager, SimpleQuorumExecutionStrateg
     event ProposalExecuted(bytes32 executionPayloadHash);
 
     /// @notice The delay in seconds between a proposal being queued and the execution of the proposal.
-    uint256 public immutable timelockDelay;
+    uint256 public timelockDelay;
 
     /// @notice The time at which a proposal can be executed. Indexed by the hash of the proposal execution payload.
     mapping(bytes32 => uint256) public proposalExecutionTime;
@@ -38,7 +38,15 @@ contract TimelockExecutionStrategy is SpaceManager, SimpleQuorumExecutionStrateg
     /// @param _owner Address of the owner of this contract.
     /// @param _spaces Array of whitelisted space contracts.
     /// @param _timelockDelay The timelock delay in seconds.
-    constructor(address _owner, address[] memory _spaces, uint256 _timelockDelay) initializer {
+    constructor(address _owner, address[] memory _spaces, uint256 _timelockDelay) {
+        setUp(abi.encode(_owner, _spaces, _timelockDelay));
+    }
+
+    function setUp(bytes memory initializeParams) public initializer {
+        (address _owner, address[] memory _spaces, uint256 _timelockDelay) = abi.decode(
+            initializeParams,
+            (address, address[], uint256)
+        );
         __Ownable_init();
         transferOwnership(_owner);
         __SpaceManager_init(_spaces);
