@@ -98,7 +98,8 @@ abstract contract SpaceTest is Test, GasSnapshot, ISpaceEvents, ISpaceErrors, IE
             emptyStrategyArray,
             emptyStringArray,
             emptyAddressArray,
-            emptyStrategyArray
+            emptyStrategyArray,
+            emptyStringArray
         );
 
         space = Space(

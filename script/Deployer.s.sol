@@ -97,7 +97,8 @@ contract Deployer is Script {
             emptyStrategyArray,
             emptyStringArray,
             emptyAddressArray,
-            emptyStrategyArray
+            emptyStrategyArray,
+            emptyStringArray
         );
 
         deployments = deployments.serialize("SpaceImplementation", space);
