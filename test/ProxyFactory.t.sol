@@ -38,7 +38,7 @@ contract SpaceFactoryTest is Test, IProxyFactoryEvents, IProxyFactoryErrors {
         factory = new ProxyFactory();
         vanillaVotingStrategy = new VanillaVotingStrategy();
         vanillaAuthenticator = new VanillaAuthenticator();
-        vanillaExecutionStrategy = new VanillaExecutionStrategy();
+        vanillaExecutionStrategy = new VanillaExecutionStrategy(quorum);
         controller = address(1);
         votingDelay = 0;
         minVotingDuration = 0;
@@ -153,9 +153,7 @@ contract SpaceFactoryTest is Test, IProxyFactoryEvents, IProxyFactoryErrors {
             metadataURI,
             votingStrategies,
             votingStrategyMetadataURIs,
-            authenticators,
-            executionStrategies,
-            executionStrategyMetadataURIs
+            authenticators
         );
     }
 

@@ -4,6 +4,7 @@ pragma solidity ^0.8.18;
 import { SpaceTest } from "./utils/Space.t.sol";
 import { FinalizationStatus, IndexedStrategy, Proposal, Strategy } from "../src/types.sol";
 import { VanillaVotingStrategy } from "../src/voting-strategies/VanillaVotingStrategy.sol";
+import { IExecutionStrategy } from "src/interfaces/IExecutionStrategy.sol";
 
 contract ProposeTest is SpaceTest {
     function testPropose() public {
@@ -22,7 +23,7 @@ contract ProposeTest is SpaceTest {
             minEndTimestamp,
             maxEndTimestamp,
             executionHash,
-            executionStrategies[0],
+            IExecutionStrategy(executionStrategy.addy),
             author,
             FinalizationStatus.Pending,
             votingStrategies
@@ -44,16 +45,6 @@ contract ProposeTest is SpaceTest {
         //  Using this contract as an authenticator, which is not whitelisted
         vm.expectRevert(abi.encodeWithSelector(AuthenticatorNotWhitelisted.selector, address(this)));
         space.propose(author, proposalMetadataURI, executionStrategy, userVotingStrategies);
-    }
-
-    function testProposeInvalidExecutionStrategy() public {
-        IndexedStrategy[] memory invalidExecutionStrategies = new IndexedStrategy[](1);
-        invalidExecutionStrategies[0] = IndexedStrategy(42, new bytes(0));
-        vm.expectRevert(
-            abi.encodeWithSelector(InvalidExecutionStrategyIndex.selector, invalidExecutionStrategies[0].index)
-        );
-
-        _createProposal(author, proposalMetadataURI, invalidExecutionStrategies[0], userVotingStrategies);
     }
 
     function testProposeInvalidUserVotingStrategy() public {

@@ -23,7 +23,12 @@ contract AvatarExecutionStrategy is SpaceManager, SimpleQuorumExecutionStrategy 
     /// @param _owner Address of the owner of this contract.
     /// @param _target Address of the avatar that this module will pass transactions to.
     /// @param _spaces Array of whitelisted space contracts.
-    constructor(address _owner, address _target, address[] memory _spaces) {
+    constructor(
+        address _owner,
+        uint256 _quorum,
+        address _target,
+        address[] memory _spaces
+    ) SimpleQuorumExecutionStrategy(_quorum) {
         bytes memory initParams = abi.encode(_owner, _target, _spaces);
         setUp(initParams);
     }

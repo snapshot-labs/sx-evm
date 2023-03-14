@@ -3,11 +3,11 @@
 pragma solidity ^0.8.18;
 
 import { SpaceTest } from "./utils/Space.t.sol";
-import { Choice, IndexedStrategy } from "../src/types.sol";
+import { Choice, IndexedStrategy, Strategy } from "../src/types.sol";
 
 contract UpdateProposalTest is SpaceTest {
     string internal newMetadataURI = "Testing123";
-    IndexedStrategy internal newStrategy = IndexedStrategy(0, new bytes(0));
+    Strategy internal newStrategy = Strategy(address(0), new bytes(0));
 
     function setUp() public virtual override {
         super.setUp();
@@ -20,7 +20,7 @@ contract UpdateProposalTest is SpaceTest {
     function _updateProposal(
         address _author,
         uint256 _proposalId,
-        IndexedStrategy memory _executionStrategy,
+        Strategy memory _executionStrategy,
         string memory _metadataURI
     ) public {
         vanillaAuthenticator.authenticate(
@@ -66,14 +66,5 @@ contract UpdateProposalTest is SpaceTest {
 
         vm.expectRevert(abi.encodeWithSelector(AuthenticatorNotWhitelisted.selector, address(this)));
         space.updateProposal(author, proposalId, newStrategy, newMetadataURI);
-    }
-
-    function testUpdateProposalInvalidStrategy() public {
-        IndexedStrategy memory invalidStrategy = IndexedStrategy(42, new bytes(0));
-
-        uint256 proposalId = _createProposal(author, proposalMetadataURI, executionStrategy, userVotingStrategies);
-
-        vm.expectRevert(abi.encodeWithSelector(AuthenticatorNotWhitelisted.selector, address(this)));
-        space.updateProposal(author, proposalId, invalidStrategy, newMetadataURI);
     }
 }

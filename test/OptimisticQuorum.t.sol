@@ -8,6 +8,8 @@ import { Choice, IndexedStrategy, Proposal, ProposalStatus, Strategy } from "../
 
 // Dummy implementation of the optimistic quorum
 contract OptimisticExec is OptimisticQuorumExecutionStrategy {
+    constructor(uint256 _quorum) OptimisticQuorumExecutionStrategy(_quorum) {}
+
     uint256 internal numExecuted;
 
     function execute(
@@ -37,22 +39,11 @@ contract OptimisticTest is SpaceTest {
     function setUp() public virtual override {
         super.setUp();
 
-        optimisticQuorumStrategy = new OptimisticExec();
         // Update Quorum. Will need 2 `NO` votes in order to be rejected.
         quorum = 2;
-        Strategy[] memory newExecutionStrategies = new Strategy[](1);
-        newExecutionStrategies[0] = Strategy(address(optimisticQuorumStrategy), abi.encode(quorum));
-        string[] memory newExecutionStrategyMetadataURIs = new string[](1);
-        newExecutionStrategyMetadataURIs[0] = "bafkreihnggomfnqri7y2dzolhebfsyon36bcbl3taehnabr35pd5zddwyu";
+        optimisticQuorumStrategy = new OptimisticExec(quorum);
 
-        executionStrategy = IndexedStrategy(1, new bytes(0));
-        // Add the optimistic quorum execution strategy
-        space.addExecutionStrategies(newExecutionStrategies, newExecutionStrategyMetadataURIs);
-
-        uint8[] memory toRemove = new uint8[](1);
-        toRemove[0] = 0;
-        // Remove the old execution strategy
-        space.removeExecutionStrategies(toRemove);
+        executionStrategy = Strategy(address(optimisticQuorumStrategy), new bytes(0));
     }
 
     function testOptimisticQuorumNoVotes() public {
@@ -134,19 +125,8 @@ contract OptimisticTest is SpaceTest {
         // SET A QUORUM OF 100
         {
             quorum = 100;
-            Strategy[] memory newExecutionStrategies = new Strategy[](1);
-            newExecutionStrategies[0] = Strategy(address(optimisticQuorumStrategy), abi.encode(quorum));
-            string[] memory newExecutionStrategyMetadataURIs = new string[](1);
-            newExecutionStrategyMetadataURIs[0] = "bafkreihnggomfnqri7y2dzolhebfsyon36bcbl3taehnabr35pd5zddwyu";
-
-            executionStrategy = IndexedStrategy(2, new bytes(0));
-            // Add the optimistic quorum execution strategy
-            space.addExecutionStrategies(newExecutionStrategies, newExecutionStrategyMetadataURIs);
-
-            uint8[] memory toRemove = new uint8[](1);
-            toRemove[0] = 1;
-            // Remove the old execution strategy
-            space.removeExecutionStrategies(toRemove);
+            address optimisticQuorumStrategy2 = address(new OptimisticExec(quorum));
+            executionStrategy = Strategy(optimisticQuorumStrategy2, new bytes(0));
         }
 
         uint256 proposalId = _createProposal(author, proposalMetadataURI, executionStrategy, userVotingStrategies);

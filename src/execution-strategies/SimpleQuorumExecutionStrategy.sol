@@ -6,8 +6,11 @@ import { IExecutionStrategy } from "../interfaces/IExecutionStrategy.sol";
 import { FinalizationStatus, Proposal, ProposalStatus } from "../types.sol";
 
 abstract contract SimpleQuorumExecutionStrategy is IExecutionStrategy {
-    /// @notice Returned if transaction execution fails.
-    error TransactionsFailed();
+    uint256 public immutable quorum;
+
+    constructor(uint256 _quorum) {
+        quorum = _quorum;
+    }
 
     function execute(
         Proposal memory proposal,
@@ -23,8 +26,6 @@ abstract contract SimpleQuorumExecutionStrategy is IExecutionStrategy {
         uint256 votesAgainst,
         uint256 votesAbstain
     ) public view override returns (ProposalStatus) {
-        // Decode the quorum parameter from the execution strategy's params
-        uint256 quorum = abi.decode(proposal.executionStrategy.params, (uint256));
         bool accepted = _quorumReached(quorum, votesFor, votesAgainst, votesAbstain) &&
             _supported(votesFor, votesAgainst);
         if (proposal.finalizationStatus == FinalizationStatus.Cancelled) {
