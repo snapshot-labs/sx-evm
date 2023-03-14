@@ -1,12 +1,13 @@
 {
-  "SpaceImplementation": "0x076B61FCF2772eD4353F3913FEFcA958E4e326f8",
-  "VanillaVotingStrategy": "0xEBA53160c146CbF77A150e9a218d4C2dE5DB6B51",
-  "WhitelistStrategy": "0xF50Bf15e9fE61e27625a4eCDfc23211297E8bE85",
+  "OZVotesVotingStrategy": "0x4aAa33b4367dc5657854bD40738201651eC0cC7B",
   "ProxyFactory": "0x12A1FfFFfd70677939D61d641eA043bc9060c718",
+  "SpaceImplementation": "0x076B61FCF2772eD4353F3913FEFcA958E4e326f8",
   "CompVotingStrategy": "0x343Baf4b44F7f79b14301CFA8068E3F8BE7470De",
-  "VanillaExecutionStrategy": "0xE02c9d267b58b20E18c652ab8F95c718f590F7FF",
-  "EthTxAuthenticator": "0x008BfAA08319a0FD1F6D26990684a63Aac628655",
-  "AvatarExecutionStrategyImplementation": "0x82B63F3F7c30883f0b25F2C299bCa162cdFfac36",
+  "VanillaAuthenticator": "0x6896120fDf2d791E4DC1c673D8BEcd54B14Dd607",
   "EthSigAuthenticator": "0x1d05d4A7de1cB60a02F04378Da7D2E3925013133",
-  "VanillaAuthenticator": "0x6896120fDf2d791E4DC1c673D8BEcd54B14Dd607"
+  "VanillaExecutionStrategy": "0xE02c9d267b58b20E18c652ab8F95c718f590F7FF",
+  "AvatarExecutionStrategyImplementation": "0x82B63F3F7c30883f0b25F2C299bCa162cdFfac36",
+  "EthTxAuthenticator": "0x008BfAA08319a0FD1F6D26990684a63Aac628655",
+  "VanillaVotingStrategy": "0xEBA53160c146CbF77A150e9a218d4C2dE5DB6B51",
+  "WhitelistVotingStrategy": "0xF50Bf15e9fE61e27625a4eCDfc23211297E8bE85"
 }

@@ -11,6 +11,7 @@ import { AvatarExecutionStrategy } from "../src/execution-strategies/AvatarExecu
 import { EthSigAuthenticator } from "../src/authenticators/EthSigAuthenticator.sol";
 import { EthTxAuthenticator } from "../src/authenticators/EthTxAuthenticator.sol";
 import { CompVotingStrategy } from "../src/voting-strategies/CompVotingStrategy.sol";
+import { OZVotesVotingStrategy } from "../src/voting-strategies/OZVotesVotingStrategy.sol";
 import { WhitelistStrategy } from "../src/voting-strategies/WhitelistStrategy.sol";
 import { ProxyFactory } from "../src/ProxyFactory.sol";
 import { Strategy } from "../src/types.sol";
@@ -43,6 +44,8 @@ contract Deployer is Script {
 
         vm.startBroadcast(deployer);
 
+        // ------- Execution Strategies -------
+
         (address vanillaExecutionStrategy, ) = noRedeploy(type(VanillaExecutionStrategy).creationCode);
         deployments.serialize("VanillaExecutionStrategy", vanillaExecutionStrategy);
 
@@ -55,8 +58,7 @@ contract Deployer is Script {
 
         deployments.serialize("AvatarExecutionStrategyImplementation", avatarExecutionStrategy);
 
-        (address compVotingStrategy, ) = noRedeploy(type(CompVotingStrategy).creationCode);
-        deployments.serialize("CompVotingStrategy", compVotingStrategy);
+        // ------- AUTHENTICATORS -------
 
         (address vanillaAuthenticator, ) = noRedeploy(type(VanillaAuthenticator).creationCode);
         deployments.serialize("VanillaAuthenticator", vanillaAuthenticator);
@@ -69,29 +71,40 @@ contract Deployer is Script {
         );
         deployments.serialize("EthSigAuthenticator", ethSigAuthenticator);
 
+        // ------- VOTING STRATEGIES -------
+
         (address vanillaVotingStrategy, ) = noRedeploy(type(VanillaVotingStrategy).creationCode);
         deployments.serialize("VanillaVotingStrategy", vanillaVotingStrategy);
 
         (address whitelistStrategy, ) = noRedeploy(type(WhitelistStrategy).creationCode);
-        deployments.serialize("WhitelistStrategy", whitelistStrategy);
+        deployments.serialize("WhitelistVotingStrategy", whitelistStrategy);
+
+        (address compVotingStrategy, ) = noRedeploy(type(CompVotingStrategy).creationCode);
+        deployments.serialize("CompVotingStrategy", compVotingStrategy);
+
+        (address ozVotesVotingStrategy, ) = noRedeploy(type(OZVotesVotingStrategy).creationCode);
+        vm.label(ozVotesVotingStrategy, "OZVotesVotingStrategy");
+        deployments.serialize("OZVotesVotingStrategy", ozVotesVotingStrategy);
+
+        // ------- Factory -------
 
         (address proxyFactory, ) = noRedeploy(type(ProxyFactory).creationCode);
         deployments.serialize("ProxyFactory", proxyFactory);
 
+        // ------- SPACE -------
+
         (address space, ) = noRedeploy(type(Space).creationCode);
 
         // initializing the master space to be unusable
-        Strategy[] memory emptyStrategyArray = new Strategy[](1);
-        emptyStrategyArray[0] = Strategy(address(0x1), new bytes(0));
-        string[] memory emptyStringArray = new string[](1);
-        emptyStringArray[0] = "";
-        address[] memory emptyAddressArray = new address[](1);
-        emptyAddressArray[0] = address(0x1);
-        // fails if the master space is already initialized
-        // solhint-disable-next-line avoid-low-level-calls
-        space.call(
-            abi.encodeWithSelector(
-                Space.initialize.selector,
+        // if the space is not initialized, initialize it
+        if (Space(space).owner() == address(0x0)) {
+            Strategy[] memory emptyStrategyArray = new Strategy[](1);
+            emptyStrategyArray[0] = Strategy(address(0x1), new bytes(0));
+            string[] memory emptyStringArray = new string[](1);
+            emptyStringArray[0] = "";
+            address[] memory emptyAddressArray = new address[](1);
+            emptyAddressArray[0] = address(0x1);
+            Space(space).initialize(
                 address(0x1),
                 1,
                 1,
@@ -103,8 +116,8 @@ contract Deployer is Script {
                 emptyAddressArray,
                 emptyStrategyArray,
                 emptyStringArray
-            )
-        );
+            );
+        }
 
         deployments = deployments.serialize("SpaceImplementation", space);
 
