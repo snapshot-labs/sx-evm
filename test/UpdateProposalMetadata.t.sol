@@ -3,14 +3,17 @@
 pragma solidity ^0.8.18;
 
 import { SpaceTest } from "./utils/Space.t.sol";
+import { VanillaExecutionStrategy } from "../src/execution-strategies/VanillaExecutionStrategy.sol";
 import { Choice, IndexedStrategy, Strategy } from "../src/types.sol";
 
 contract UpdateProposalTest is SpaceTest {
     string internal newMetadataURI = "Testing123";
-    Strategy internal newStrategy = Strategy(address(0), new bytes(0));
+    Strategy internal newStrategy;
 
     function setUp() public virtual override {
         super.setUp();
+
+        newStrategy = Strategy(address(new VanillaExecutionStrategy(quorum)), new bytes(0));
 
         // Set the votingDelay to 10.
         votingDelay = 10;

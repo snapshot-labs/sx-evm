@@ -20,6 +20,7 @@ abstract contract SigUtils {
             "Propose(address space,address author,string metadataURI,Strategy executionStrategy,"
             "IndexedStrategy[] userVotingStrategies,uint256 salt)"
             "Strategy(address addy,bytes params)"
+            "IndexedStrategy(uint8 index,bytes params)"
         );
     bytes32 private constant VOTE_TYPEHASH =
         keccak256(
