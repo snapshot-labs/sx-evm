@@ -30,8 +30,9 @@ contract SpaceFactoryTest is Test, IProxyFactoryEvents, IProxyFactoryErrors {
     uint256 public proposalThreshold;
     Strategy public proposalValidationStrategy;
     uint32 public quorum;
-    string public metadataUri = "SX-EVM";
-    bytes[] public votingStrategyMetadata;
+    string public metadataURI = "SX-EVM";
+    string[] public votingStrategyMetadataURIs;
+    string[] public executionStrategyMetadataURIs;
 
     function setUp() public {
         masterSpace = new Space();
@@ -66,11 +67,12 @@ contract SpaceFactoryTest is Test, IProxyFactoryEvents, IProxyFactoryErrors {
                 minVotingDuration,
                 maxVotingDuration,
                 proposalThreshold,
-                metadataUri,
+                metadataURI,
                 votingStrategies,
-                votingStrategyMetadata,
+                votingStrategyMetadataURIs,
                 authenticators,
-                executionStrategies
+                executionStrategies,
+                executionStrategyMetadataURIs
             ),
             salt
         );
@@ -87,11 +89,12 @@ contract SpaceFactoryTest is Test, IProxyFactoryEvents, IProxyFactoryErrors {
                 minVotingDuration,
                 maxVotingDuration,
                 proposalThreshold,
-                metadataUri,
+                metadataURI,
                 votingStrategies,
-                votingStrategyMetadata,
+                votingStrategyMetadataURIs,
                 authenticators,
-                executionStrategies
+                executionStrategies,
+                executionStrategyMetadataURIs
             ),
             salt
         );
@@ -107,11 +110,12 @@ contract SpaceFactoryTest is Test, IProxyFactoryEvents, IProxyFactoryErrors {
                 minVotingDuration,
                 maxVotingDuration,
                 proposalThreshold,
-                metadataUri,
+                metadataURI,
                 votingStrategies,
-                votingStrategyMetadata,
+                votingStrategyMetadataURIs,
                 authenticators,
-                executionStrategies
+                executionStrategies,
+                executionStrategyMetadataURIs
             ),
             salt
         );
@@ -128,11 +132,12 @@ contract SpaceFactoryTest is Test, IProxyFactoryEvents, IProxyFactoryErrors {
                 minVotingDuration,
                 maxVotingDuration,
                 proposalThreshold,
-                metadataUri,
+                metadataURI,
                 votingStrategies,
-                votingStrategyMetadata,
+                votingStrategyMetadataURIs,
                 authenticators,
-                executionStrategies
+                executionStrategies,
+                executionStrategyMetadataURIs
             ),
             salt
         );
@@ -146,11 +151,12 @@ contract SpaceFactoryTest is Test, IProxyFactoryEvents, IProxyFactoryErrors {
             minVotingDuration,
             maxVotingDuration,
             proposalValidationStrategy,
-            metadataUri,
+            metadataURI,
             votingStrategies,
-            votingStrategyMetadata,
+            votingStrategyMetadataURIs,
             authenticators,
-            executionStrategies
+            executionStrategies,
+            executionStrategyMetadataURIs
         );
     }
 

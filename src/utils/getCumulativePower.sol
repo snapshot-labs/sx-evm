@@ -47,8 +47,8 @@ function getCumulativePower(
     // Ensure there are no duplicates to avoid an attack where people double count a strategy
     _assertNoDuplicateIndices(userStrategies);
 
-    uint256 totalVotingPower = 0;
-    for (uint256 i = 0; i < userStrategies.length; i++) {
+    uint256 totalVotingPower;
+    for (uint256 i = 0; i < userStrategies.length; ++i) {
         uint256 strategyIndex = userStrategies[i].index;
         if (strategyIndex >= allowedStrategies.length) revert InvalidStrategyIndex(strategyIndex);
         Strategy memory strategy = allowedStrategies[strategyIndex];

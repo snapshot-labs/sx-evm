@@ -36,7 +36,7 @@ abstract contract SpaceTest is Test, GasSnapshot, ISpaceEvents, ISpaceErrors, IE
     uint256 public constant VOTER_KEY = 5678;
     uint256 public constant UNAUTHORIZED_KEY = 4321;
 
-    string internal voteMetadataUri = "Hi";
+    string internal voteMetadataURI = "Hi";
 
     // Address of the meta transaction relayer (mana)
     address public relayer = address(this);
@@ -62,12 +62,11 @@ abstract contract SpaceTest is Test, GasSnapshot, ISpaceEvents, ISpaceErrors, IE
     IndexedStrategy[] public userVotingStrategies;
     IndexedStrategy public executionStrategy;
 
-    // TODO: emit in the space factory event - (once we have a factory)
-    string public spaceMetadataUri = "SOC Test Space";
-
-    string public proposalMetadataUri = "SOC Test Proposal";
-
-    bytes[] public votingStrategyMetadata;
+    // Dummy metadata URIs
+    string public spaceMetadataURI = "SOC Test Space";
+    string public proposalMetadataURI = "SOC Test Proposal";
+    string[] public votingStrategyMetadataURIs;
+    string[] public executionStrategyMetadataURIs;
 
     function setUp() public virtual {
         masterSpace = new Space();
@@ -102,11 +101,12 @@ abstract contract SpaceTest is Test, GasSnapshot, ISpaceEvents, ISpaceErrors, IE
                         minVotingDuration,
                         maxVotingDuration,
                         votingPowerProposalValidationStrategy,
-                        spaceMetadataUri,
+                        spaceMetadataURI,
                         votingStrategies,
-                        votingStrategyMetadata,
+                        votingStrategyMetadataURIs,
                         authenticators,
-                        executionStrategies
+                        executionStrategies,
+                        executionStrategyMetadataURIs
                     )
                 )
             )
@@ -115,14 +115,14 @@ abstract contract SpaceTest is Test, GasSnapshot, ISpaceEvents, ISpaceErrors, IE
 
     function _createProposal(
         address _author,
-        string memory _metadataUri,
+        string memory _metadataURI,
         IndexedStrategy memory _executionStrategy,
         IndexedStrategy[] memory _userVotingStrategies
     ) internal returns (uint256) {
         vanillaAuthenticator.authenticate(
             address(space),
             PROPOSE_SELECTOR,
-            abi.encode(_author, _metadataUri, _executionStrategy, abi.encode(_userVotingStrategies))
+            abi.encode(_author, _metadataURI, _executionStrategy, abi.encode(_userVotingStrategies))
         );
 
         return space.nextProposalId() - 1;
@@ -133,12 +133,12 @@ abstract contract SpaceTest is Test, GasSnapshot, ISpaceEvents, ISpaceErrors, IE
         uint256 _proposalId,
         Choice _choice,
         IndexedStrategy[] memory _userVotingStrategies,
-        string memory _voteMetadataUri
+        string memory _voteMetadataURI
     ) internal {
         vanillaAuthenticator.authenticate(
             address(space),
             VOTE_SELECTOR,
-            abi.encode(_author, _proposalId, _choice, _userVotingStrategies, _voteMetadataUri)
+            abi.encode(_author, _proposalId, _choice, _userVotingStrategies, _voteMetadataURI)
         );
     }
 }

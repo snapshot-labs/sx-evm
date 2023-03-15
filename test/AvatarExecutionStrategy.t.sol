@@ -36,8 +36,10 @@ contract AvatarExecutionStrategyTest is SpaceTest {
         // Activate the execution strategy on the space
         Strategy[] memory executionStrategies = new Strategy[](1);
         executionStrategies[0] = Strategy(address(avatarExecutionStrategy), abi.encode(uint256(quorum)));
+        string[] memory executionStrategyMetadataURIs = new string[](1);
+        executionStrategyMetadataURIs[0] = "bafkreihnggomfnqri7y2dzolhebfsyon36bcbl3taehnabr35pd5zddwyu";
         // This strategy will reside at index 1 in the space's execution strategies array
-        space.addExecutionStrategies(executionStrategies);
+        space.addExecutionStrategies(executionStrategies, executionStrategyMetadataURIs);
     }
 
     function testExecution() public {
@@ -45,11 +47,11 @@ contract AvatarExecutionStrategyTest is SpaceTest {
         transactions[0] = MetaTransaction(recipient, 1, "", Enum.Operation.Call);
         uint256 proposalId = _createProposal(
             author,
-            proposalMetadataUri,
+            proposalMetadataURI,
             IndexedStrategy(1, abi.encode(transactions)),
             userVotingStrategies
         );
-        _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataUri);
+        _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataURI);
         vm.warp(block.timestamp + space.maxVotingDuration());
 
         vm.expectEmit(true, true, true, true);
@@ -67,11 +69,11 @@ contract AvatarExecutionStrategyTest is SpaceTest {
         transactions[0] = MetaTransaction(address(owner), 1001, "", Enum.Operation.Call);
         uint256 proposalId = _createProposal(
             author,
-            proposalMetadataUri,
+            proposalMetadataURI,
             IndexedStrategy(1, abi.encode(transactions)),
             userVotingStrategies
         );
-        _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataUri);
+        _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataURI);
         vm.warp(block.timestamp + space.maxVotingDuration());
 
         vm.expectRevert(ExecutionFailed.selector);
@@ -90,11 +92,11 @@ contract AvatarExecutionStrategyTest is SpaceTest {
         );
         uint256 proposalId = _createProposal(
             author,
-            proposalMetadataUri,
+            proposalMetadataURI,
             IndexedStrategy(1, abi.encode(transactions)),
             userVotingStrategies
         );
-        _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataUri);
+        _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataURI);
         vm.warp(block.timestamp + space.maxVotingDuration());
 
         assertEq(recipient.balance, 0); // sanity check
@@ -116,11 +118,11 @@ contract AvatarExecutionStrategyTest is SpaceTest {
         transactions[1] = MetaTransaction(address(owner), 1001, "", Enum.Operation.Call);
         uint256 proposalId = _createProposal(
             author,
-            proposalMetadataUri,
+            proposalMetadataURI,
             IndexedStrategy(1, abi.encode(transactions)),
             userVotingStrategies
         );
-        _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataUri);
+        _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataURI);
         vm.warp(block.timestamp + space.maxVotingDuration());
 
         vm.expectRevert(ExecutionFailed.selector);
@@ -209,11 +211,11 @@ contract AvatarExecutionStrategyTest is SpaceTest {
         transactions[0] = MetaTransaction(recipient, 1, "", Enum.Operation.Call);
         uint256 proposalId = _createProposal(
             author,
-            proposalMetadataUri,
+            proposalMetadataURI,
             IndexedStrategy(1, abi.encode(transactions)),
             userVotingStrategies
         );
-        _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataUri);
+        _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataURI);
         vm.warp(block.timestamp + space.maxVotingDuration());
 
         vm.expectRevert(InvalidSpace.selector);
