@@ -8,8 +8,8 @@ import { Strategy } from "../types.sol";
 contract VanillaProposalValidationStrategy is IProposalValidationStrategy {
     function validate(
         address, // author,
-        bytes calldata, // userParams,
-        bytes calldata // params
+        bytes calldata, // params,
+        bytes calldata // userParams
     ) external override returns (bool) {
         return true;
     }

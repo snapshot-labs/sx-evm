@@ -8,5 +8,5 @@ import {
 import { Strategy } from "../types.sol";
 
 interface IProposalValidationStrategy is IProposalValidationStrategyErrors {
-    function validate(address author, bytes calldata userParams, bytes calldata params) external returns (bool);
+    function validate(address author, bytes calldata params, bytes calldata userParams) external returns (bool);
 }

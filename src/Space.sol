@@ -367,8 +367,8 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         if (
             IProposalValidationStrategy(proposalValidationStrategy.addy).validate(
                 author,
-                userParams,
-                proposalValidationStrategy.params
+                proposalValidationStrategy.params,
+                userParams
             ) == false
         ) revert FailedToPassProposalValidation();
 
