@@ -10,7 +10,7 @@ interface ISpaceEvents {
         uint32 votingDelay,
         uint32 minVotingDuration,
         uint32 maxVotingDuration,
-        uint256 proposalThreshold,
+        Strategy proposalThreshold,
         string metadataUri,
         Strategy[] votingStrategies,
         bytes[] votingStrategyMetadata,
@@ -32,7 +32,7 @@ interface ISpaceEvents {
     event MaxVotingDurationUpdated(uint32 newMaxVotingDuration);
     event MinVotingDurationUpdated(uint32 newMinVotingDuration);
     event MetadataUriUpdated(string newMetadataUri);
-    event ProposalThresholdUpdated(uint256 newProposalThreshold);
+    event ProposalValidationStrategyUpdated(Strategy newProposalValidationStrategy);
     event QuorumUpdated(uint256 newQuorum);
     event VotingDelayUpdated(uint256 newVotingDelay);
     event ProposalUpdated(uint256 proposalId, IndexedStrategy newStrategy, string newMetadataUri);

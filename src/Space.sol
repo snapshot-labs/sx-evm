@@ -8,8 +8,9 @@ import { ReentrancyGuard } from "@openzeppelin/contracts/security/ReentrancyGuar
 
 import { ISpace } from "src/interfaces/ISpace.sol";
 import { Choice, FinalizationStatus, IndexedStrategy, Proposal, ProposalStatus, Strategy, Vote } from "src/types.sol";
-import { IVotingStrategy } from "src/interfaces/IVotingStrategy.sol";
 import { IExecutionStrategy } from "src/interfaces/IExecutionStrategy.sol";
+import { IProposalValidationStrategy } from "src/interfaces/IProposalValidationStrategy.sol";
+import { getCumulativePower } from "./utils/getCumulativePower.sol";
 
 /**
  * @author  SnapshotLabs
@@ -31,7 +32,10 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
     // Array of available voting strategies that users can use to determine their voting power.
     /// @dev This needs to be an array because a mapping would limit a space to only one use per
     ///      voting strategy contract.
-    Strategy[] private votingStrategies;
+    Strategy[] public votingStrategies;
+
+    // The proposal validation contract.
+    Strategy public proposalValidationStrategy;
 
     // Array of available execution strategies that proposal authors can use to determine how to execute a proposal.
     Strategy[] private executionStrategies;
@@ -56,7 +60,7 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         uint32 _votingDelay,
         uint32 _minVotingDuration,
         uint32 _maxVotingDuration,
-        uint256 _proposalThreshold,
+        Strategy memory _proposalValidationStrategy,
         string memory _metadataUri,
         Strategy[] memory _votingStrategies,
         bytes[] memory _votingStrategyMetadata,
@@ -67,7 +71,7 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         transferOwnership(_controller);
         _setMaxVotingDuration(_maxVotingDuration);
         _setMinVotingDuration(_minVotingDuration);
-        _setProposalThreshold(_proposalThreshold);
+        _setProposalValidationStrategy(_proposalValidationStrategy);
         _setVotingDelay(_votingDelay);
         _addVotingStrategies(_votingStrategies);
         _addAuthenticators(_authenticators);
@@ -81,7 +85,7 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
             _votingDelay,
             _minVotingDuration,
             _maxVotingDuration,
-            _proposalThreshold,
+            _proposalValidationStrategy,
             _metadataUri,
             _votingStrategies,
             _votingStrategyMetadata,
@@ -113,8 +117,8 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         minVotingDuration = _minVotingDuration;
     }
 
-    function _setProposalThreshold(uint256 _proposalThreshold) internal {
-        proposalThreshold = _proposalThreshold;
+    function _setProposalValidationStrategy(Strategy memory _proposalValidationStrategy) internal {
+        proposalValidationStrategy = _proposalValidationStrategy;
     }
 
     function _setVotingDelay(uint32 _votingDelay) internal {
@@ -227,107 +231,6 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         if (proposal.startTimestamp == 0) revert InvalidProposal();
     }
 
-    /**
-     * @notice  Internal function to ensure there are no duplicates in an array of `UserVotingStrategy`.
-     * @dev     We create a bitmap of those indices by using a `u256`. We try to set the bit at index `i`, stopping it
-     * @dev     it has already been set. Time complexity is O(n).
-     * @param   strats  Array to check for duplicates.
-     */
-    function _assertNoDuplicateIndices(IndexedStrategy[] memory strats) internal pure {
-        if (strats.length < 2) {
-            return;
-        }
-
-        uint256 bitMap;
-        for (uint256 i = 0; i < strats.length; ++i) {
-            // Check that bit at index `strats[i].index` is not set
-            uint256 s = 1 << strats[i].index;
-            if (bitMap & s != 0) revert DuplicateFound(strats[i].index);
-            // Update aforementioned bit.
-            bitMap |= s;
-        }
-    }
-
-    /**
-     * @notice  Internal function that will loop over the used voting strategies and
-                return the cumulative voting power of a user when creating a proposal.
-     * @dev     
-     * @param   timestamp  Timestamp of the snapshot.
-     * @param   userAddress  Address for which to compute the voting power.
-     * @param   userVotingStrategies The desired voting strategies to check.
-     * @return  uint256  The total voting power of a user (over those specified voting strategies).
-     */
-    function _getCumulativeProposingPower(
-        uint32 timestamp,
-        address userAddress,
-        IndexedStrategy[] calldata userVotingStrategies
-    ) internal returns (uint256) {
-        // Ensure there are no duplicates to avoid an attack where people double count a voting strategy
-        _assertNoDuplicateIndices(userVotingStrategies);
-
-        uint256 totalVotingPower = 0;
-        for (uint256 i = 0; i < userVotingStrategies.length; i++) {
-            uint256 votingStrategyIndex = userVotingStrategies[i].index;
-            if (votingStrategyIndex >= votingStrategies.length) revert InvalidVotingStrategyIndex(votingStrategyIndex);
-            Strategy memory votingStrategy = votingStrategies[votingStrategyIndex];
-            // A strategyAddress set to 0 indicates that this address has already been removed and is
-            // no longer a valid voting strategy. See `_removeVotingStrategies`.
-            if (votingStrategy.addy == address(0)) revert InvalidVotingStrategyIndex(votingStrategyIndex);
-            IVotingStrategy strategy = IVotingStrategy(votingStrategy.addy);
-
-            // With solc 0.8, this will revert in case of overflow.
-            totalVotingPower += strategy.getVotingPower(
-                timestamp,
-                userAddress,
-                votingStrategy.params,
-                userVotingStrategies[i].params
-            );
-        }
-        return totalVotingPower;
-    }
-
-    /**
-     * @notice  Internal function that will loop over the used voting strategies and
-                return the cumulative voting power of a user when voting. 
-     * @dev     
-     * @param   timestamp  Timestamp of the snapshot.
-     * @param   userAddress  Address for which to compute the voting power.
-     * @param   userVotingStrategies The desired voting strategies to check.
-     * @param   _votingStrategies The array of voting strategies that are used for this proposal.
-                We cannot use the `votingStrategies` state variable because it might have updated 
-                since the proposal was created.
-     * @return  uint256  The total voting power of a user (over those specified voting strategies).
-     */
-    function _getCumulativeVotingPower(
-        uint32 timestamp,
-        address userAddress,
-        IndexedStrategy[] calldata userVotingStrategies,
-        Strategy[] memory _votingStrategies
-    ) internal returns (uint256) {
-        // Ensure there are no duplicates to avoid an attack where people double count a voting strategy
-        _assertNoDuplicateIndices(userVotingStrategies);
-
-        uint256 totalVotingPower = 0;
-        for (uint256 i = 0; i < userVotingStrategies.length; i++) {
-            uint256 votingStrategyIndex = userVotingStrategies[i].index;
-            if (votingStrategyIndex >= _votingStrategies.length) revert InvalidVotingStrategyIndex(votingStrategyIndex);
-            Strategy memory votingStrategy = _votingStrategies[votingStrategyIndex];
-            // A strategyAddress set to 0 indicates that this address has already been removed and is
-            // no longer a valid voting strategy. See `_removeVotingStrategies`.
-            if (votingStrategy.addy == address(0)) revert InvalidVotingStrategyIndex(votingStrategyIndex);
-            IVotingStrategy strategy = IVotingStrategy(votingStrategy.addy);
-
-            // With solc 0.8, this will revert in case of overflow.
-            totalVotingPower += strategy.getVotingPower(
-                timestamp,
-                userAddress,
-                votingStrategy.params,
-                userVotingStrategies[i].params
-            );
-        }
-        return totalVotingPower;
-    }
-
     // ------------------------------------
     // |                                  |
     // |             SETTERS              |
@@ -353,9 +256,9 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         emit MetadataUriUpdated(_metadataUri);
     }
 
-    function setProposalThreshold(uint256 _proposalThreshold) external override onlyOwner {
-        _setProposalThreshold(_proposalThreshold);
-        emit ProposalThresholdUpdated(_proposalThreshold);
+    function setProposalValidationStrategy(Strategy calldata _proposalValidationStrategy) external override onlyOwner {
+        _setProposalValidationStrategy(_proposalValidationStrategy);
+        emit ProposalValidationStrategyUpdated(_proposalValidationStrategy);
     }
 
     function setVotingDelay(uint32 _votingDelay) external override onlyOwner {
@@ -442,23 +345,27 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
      * @param   author  The address of the proposal creator.
      * @param   metadataUri  The metadata URI for the proposal.
      * @param   executionStrategy  The execution strategy index and associated execution payload to use in the proposal.
-     * @param   userVotingStrategies  The voting strategies indexes to use and the associated parameters for each.
+     * @param   userParams  The user provided parameters for proposal validation.
      */
     function propose(
         address author,
         string calldata metadataUri,
         IndexedStrategy calldata executionStrategy,
-        IndexedStrategy[] calldata userVotingStrategies
+        bytes calldata userParams
     ) external override {
         _assertValidAuthenticator();
         _assertValidExecutionStrategy(executionStrategy.index);
-        _assertValidProposalValidationStrategy(proposalValidationStrategy);
 
         // Casting to `uint32` is fine because this gives us until year ~2106.
         uint32 snapshotTimestamp = uint32(block.timestamp);
 
-        uint256 votingPower = _getCumulativeProposingPower(snapshotTimestamp, author, userVotingStrategies);
-        if (votingPower < proposalThreshold) revert ProposalThresholdNotReached(votingPower);
+        if (
+            IProposalValidationStrategy(proposalValidationStrategy.addy).validate(
+                author,
+                userParams,
+                proposalValidationStrategy.params
+            ) == false
+        ) revert FailedToPassProposalValidation();
 
         uint32 startTimestamp = snapshotTimestamp + votingDelay;
         uint32 minEndTimestamp = startTimestamp + minVotingDuration;
@@ -511,7 +418,7 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         if (proposal.finalizationStatus != FinalizationStatus.Pending) revert ProposalFinalized();
         if (voteRegistry[proposalId][voterAddress] == true) revert UserHasAlreadyVoted();
 
-        uint256 votingPower = _getCumulativeVotingPower(
+        uint256 votingPower = getCumulativePower(
             proposal.snapshotTimestamp,
             voterAddress,
             userVotingStrategies,
@@ -533,7 +440,7 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
      * @param   proposalId  The proposal id.
      * @param   executionPayload  The execution payload, as described in `propose()`.
      */
-    function execute(uint256 proposalId, bytes calldata executionPayload) external nonReentrant {
+    function execute(uint256 proposalId, bytes calldata executionPayload) external override nonReentrant {
         Proposal storage proposal = proposalRegistry[proposalId];
         _assertProposalExists(proposal);
 
@@ -577,7 +484,7 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         uint256 proposalId,
         IndexedStrategy calldata executionStrategy,
         string calldata metadataUri
-    ) external {
+    ) external override {
         _assertValidAuthenticator();
         _assertValidExecutionStrategy(executionStrategy.index);
 

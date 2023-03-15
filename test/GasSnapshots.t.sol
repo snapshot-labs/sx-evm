@@ -35,10 +35,15 @@ contract GasSnapshotsTest is SpaceTest, SigUtils {
         // Update contract's voting strategies.
         space.addVotingStrategies(newStrategies, newData);
 
-        // Mint tokens for the user
+        uint8[] memory toRemove = new uint8[](1);
+        toRemove[0] = 0;
+        // Remove the vanilla voting strategy.
+        space.removeVotingStrategies(toRemove);
+
+        // Mint tokens for the author
         compToken.mint(user, 10000);
         // Must delegate to self to activate checkpoints
-        compToken.delegate(user);
+        compToken.delegate(author);
 
         // Adding the eth sig authenticator to the space
         ethSigAuth = new EthSigAuthenticator(NAME, VERSION);
@@ -50,9 +55,20 @@ contract GasSnapshotsTest is SpaceTest, SigUtils {
         space.removeAuthenticators(authenticators);
 
         // Delete strategy [0] because it's the vanilla one.
-        delete userVotingStrategies[0];
+        userVotingStrategies[0] = IndexedStrategy(1, newStrategies[0].params);
         // Add the new comp voting strategy which should be at index 1.
-        userVotingStrategies.push(IndexedStrategy(1, new bytes(0)));
+        // userVotingStrategies.push(IndexedStrategy(1, new bytes(0)));
+
+        Strategy[] memory currentVotingStrategies = new Strategy[](2);
+        (address addy0, bytes memory params0) = space.votingStrategies(0);
+        currentVotingStrategies[0] = Strategy(addy0, params0);
+        (address addy1, bytes memory params1) = space.votingStrategies(1);
+        currentVotingStrategies[1] = Strategy(addy1, params1);
+
+        // Udpdate the proposal validation params
+        space.setProposalValidationStrategy(
+            Strategy(address(votingPowerProposalValidationContract), abi.encode(10000, currentVotingStrategies))
+        );
     }
 
     function testSnapshots() public {
@@ -68,7 +84,7 @@ contract GasSnapshotsTest is SpaceTest, SigUtils {
                 address(author),
                 proposalMetadataUri,
                 executionStrategy,
-                userVotingStrategies,
+                abi.encode(userVotingStrategies),
                 salt
             );
             (uint8 v, bytes32 r, bytes32 s) = vm.sign(AUTHOR_KEY, digest);
@@ -81,7 +97,7 @@ contract GasSnapshotsTest is SpaceTest, SigUtils {
                 salt,
                 address(space),
                 PROPOSE_SELECTOR,
-                abi.encode(author, proposalMetadataUri, executionStrategy, userVotingStrategies)
+                abi.encode(author, proposalMetadataUri, executionStrategy, abi.encode(userVotingStrategies))
             );
             snapEnd();
         }
@@ -92,13 +108,13 @@ contract GasSnapshotsTest is SpaceTest, SigUtils {
             bytes32 digest = _getVoteDigest(
                 address(ethSigAuth),
                 address(space),
-                voter,
+                author,
                 proposalId,
                 Choice.For,
                 userVotingStrategies,
                 voteMetadataUri
             );
-            (uint8 v, bytes32 r, bytes32 s) = vm.sign(VOTER_KEY, digest);
+            (uint8 v, bytes32 r, bytes32 s) = vm.sign(AUTHOR_KEY, digest);
 
             snapStart("VoteSigComp");
             ethSigAuth.authenticate(
@@ -108,7 +124,7 @@ contract GasSnapshotsTest is SpaceTest, SigUtils {
                 0,
                 address(space),
                 VOTE_SELECTOR,
-                abi.encode(voter, proposalId, Choice.For, userVotingStrategies, voteMetadataUri)
+                abi.encode(author, proposalId, Choice.For, userVotingStrategies, voteMetadataUri)
             );
             snapEnd();
         }
