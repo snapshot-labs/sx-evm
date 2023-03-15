@@ -29,39 +29,41 @@ function _assertNoDuplicateIndices(IndexedStrategy[] memory strats) pure {
     }
 }
 
-/**
- * @notice  Loop over the strategies and return the cumulative power.
- * @dev
- * @param   timestamp  Timestamp of the snapshot.
- * @param   userAddress  Address for which to compute the voting power.
- * @param   userStrategies The desired voting strategies to check.
- * @param   allowedStrategies The array of strategies that are used for this proposal.
- * @return  uint256  The total voting power of a user (over those specified voting strategies).
- */
-function getCumulativePower(
-    uint32 timestamp,
-    address userAddress,
-    IndexedStrategy[] memory userStrategies,
-    Strategy[] memory allowedStrategies
-) returns (uint256) {
-    // Ensure there are no duplicates to avoid an attack where people double count a strategy
-    _assertNoDuplicateIndices(userStrategies);
+library GetCumulativePower {
+    /**
+     * @notice  Loop over the strategies and return the cumulative power.
+     * @dev
+     * @param   timestamp  Timestamp of the snapshot.
+     * @param   userAddress  Address for which to compute the voting power.
+     * @param   userStrategies The desired voting strategies to check.
+     * @param   allowedStrategies The array of strategies that are used for this proposal.
+     * @return  uint256  The total voting power of a user (over those specified voting strategies).
+     */
+    function getCumulativePower(
+        address userAddress,
+        uint32 timestamp,
+        IndexedStrategy[] memory userStrategies,
+        Strategy[] memory allowedStrategies
+    ) internal returns (uint256) {
+        // Ensure there are no duplicates to avoid an attack where people double count a strategy
+        _assertNoDuplicateIndices(userStrategies);
 
-    uint256 totalVotingPower;
-    for (uint256 i = 0; i < userStrategies.length; ++i) {
-        uint256 strategyIndex = userStrategies[i].index;
-        if (strategyIndex >= allowedStrategies.length) revert InvalidStrategyIndex(strategyIndex);
-        Strategy memory strategy = allowedStrategies[strategyIndex];
-        // A strategy address set to 0 indicates that this address has already been removed and is
-        // no longer a valid voting strategy. See `_removeVotingStrategies`.
-        if (strategy.addy == address(0)) revert InvalidStrategyIndex(strategyIndex);
+        uint256 totalVotingPower;
+        for (uint256 i = 0; i < userStrategies.length; ++i) {
+            uint256 strategyIndex = userStrategies[i].index;
+            if (strategyIndex >= allowedStrategies.length) revert InvalidStrategyIndex(strategyIndex);
+            Strategy memory strategy = allowedStrategies[strategyIndex];
+            // A strategy address set to 0 indicates that this address has already been removed and is
+            // no longer a valid voting strategy. See `_removeVotingStrategies`.
+            if (strategy.addy == address(0)) revert InvalidStrategyIndex(strategyIndex);
 
-        totalVotingPower += IVotingStrategy(strategy.addy).getVotingPower(
-            timestamp,
-            userAddress,
-            strategy.params,
-            userStrategies[i].params
-        );
+            totalVotingPower += IVotingStrategy(strategy.addy).getVotingPower(
+                timestamp,
+                userAddress,
+                strategy.params,
+                userStrategies[i].params
+            );
+        }
+        return totalVotingPower;
     }
-    return totalVotingPower;
 }

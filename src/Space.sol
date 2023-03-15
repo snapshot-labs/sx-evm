@@ -10,7 +10,7 @@ import { ISpace } from "src/interfaces/ISpace.sol";
 import { Choice, FinalizationStatus, IndexedStrategy, Proposal, ProposalStatus, Strategy } from "src/types.sol";
 import { IExecutionStrategy } from "src/interfaces/IExecutionStrategy.sol";
 import { IProposalValidationStrategy } from "src/interfaces/IProposalValidationStrategy.sol";
-import { getCumulativePower } from "./utils/getCumulativePower.sol";
+import { GetCumulativePower } from "./utils/GetCumulativePower.sol";
 
 /**
  * @author  SnapshotLabs
@@ -18,6 +18,8 @@ import { getCumulativePower } from "./utils/getCumulativePower.sol";
  * @notice  Logic and bookkeeping contract.
  */
 contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, ReentrancyGuard {
+    using GetCumulativePower for address;
+
     // Maximum duration a proposal can last.
     uint32 public maxVotingDuration;
     // Minimum duration a proposal can last.
@@ -421,9 +423,8 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         if (proposal.finalizationStatus != FinalizationStatus.Pending) revert ProposalFinalized();
         if (voteRegistry[proposalId][voterAddress]) revert UserHasAlreadyVoted();
 
-        uint256 votingPower = getCumulativePower(
+        uint256 votingPower = voterAddress.getCumulativePower(
             proposal.snapshotTimestamp,
-            voterAddress,
             userVotingStrategies,
             proposal.votingStrategies
         );

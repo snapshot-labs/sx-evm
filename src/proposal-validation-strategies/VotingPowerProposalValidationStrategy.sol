@@ -5,9 +5,11 @@ pragma solidity ^0.8.18;
 import { IProposalValidationStrategy } from "../interfaces/IProposalValidationStrategy.sol";
 import { IndexedStrategy, Strategy } from "../types.sol";
 import { ISpace } from "../interfaces/ISpace.sol";
-import { getCumulativePower } from "../utils/getCumulativePower.sol";
+import { GetCumulativePower } from "../utils/GetCumulativePower.sol";
 
 contract VotingPowerProposalValidationStrategy is IProposalValidationStrategy {
+    using GetCumulativePower for address;
+
     /**
      * @notice  Validates a proposal using the voting strategies to compute the proposal power.
      * @param   author  Author of the proposal
@@ -23,7 +25,7 @@ contract VotingPowerProposalValidationStrategy is IProposalValidationStrategy {
         (uint256 proposalThreshold, Strategy[] memory allowedStrategies) = abi.decode(params, (uint256, Strategy[]));
         IndexedStrategy[] memory userStrategies = abi.decode(userParams, (IndexedStrategy[]));
 
-        uint256 votingPower = getCumulativePower(uint32(block.timestamp), author, userStrategies, allowedStrategies);
+        uint256 votingPower = author.getCumulativePower(uint32(block.timestamp), userStrategies, allowedStrategies);
 
         return (votingPower >= proposalThreshold);
     }
