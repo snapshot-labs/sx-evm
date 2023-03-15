@@ -41,7 +41,7 @@ contract EmergencyQuorumTest is SpaceTest {
         emergency = new EmergencyQuorumExec();
         Strategy[] memory toAdd = new Strategy[](1);
         toAdd[0] = Strategy(address(emergency), abi.encode(quorum, emergencyQuorum));
-        space.addExecutionStrategies(toAdd);
+        space.addExecutionStrategies(toAdd, executionStrategyMetadataURIs);
 
         emergencyStrategy = IndexedStrategy(1, new bytes(0));
 
@@ -54,9 +54,9 @@ contract EmergencyQuorumTest is SpaceTest {
     }
 
     function testEmergencyQuorum() public {
-        uint256 proposalId = _createProposal(author, proposalMetadataUri, emergencyStrategy, userVotingStrategies);
-        _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataUri); // 1
-        _vote(address(42), proposalId, Choice.For, userVotingStrategies, voteMetadataUri); // 2
+        uint256 proposalId = _createProposal(author, proposalMetadataURI, emergencyStrategy, userVotingStrategies);
+        _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataURI); // 1
+        _vote(address(42), proposalId, Choice.For, userVotingStrategies, voteMetadataURI); // 2
 
         vm.expectEmit(true, true, true, true);
         emit ProposalExecuted(proposalId);
@@ -66,16 +66,16 @@ contract EmergencyQuorumTest is SpaceTest {
     }
 
     function testEmergencyQuorumNotReached() public {
-        uint256 proposalId = _createProposal(author, proposalMetadataUri, emergencyStrategy, userVotingStrategies);
-        _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataUri); // 1
+        uint256 proposalId = _createProposal(author, proposalMetadataURI, emergencyStrategy, userVotingStrategies);
+        _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataURI); // 1
 
         vm.expectRevert(abi.encodeWithSelector(InvalidProposalStatus.selector, uint8(ProposalStatus.VotingPeriod)));
         space.execute(proposalId, emergencyStrategy.params);
     }
 
     function testEmergencyQuorumAfterMinDuration() public {
-        uint256 proposalId = _createProposal(author, proposalMetadataUri, emergencyStrategy, userVotingStrategies);
-        _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataUri); // 1
+        uint256 proposalId = _createProposal(author, proposalMetadataURI, emergencyStrategy, userVotingStrategies);
+        _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataURI); // 1
 
         vm.warp(block.timestamp + minVotingDuration);
 
@@ -85,8 +85,8 @@ contract EmergencyQuorumTest is SpaceTest {
     }
 
     function testEmergencyQuorumAfterMaxDuration() public {
-        uint256 proposalId = _createProposal(author, proposalMetadataUri, emergencyStrategy, userVotingStrategies);
-        _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataUri); // 1
+        uint256 proposalId = _createProposal(author, proposalMetadataURI, emergencyStrategy, userVotingStrategies);
+        _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataURI); // 1
 
         vm.warp(block.timestamp + maxVotingDuration);
 
@@ -96,9 +96,9 @@ contract EmergencyQuorumTest is SpaceTest {
     }
 
     function testEmergencyQuorumReachedButRejected() public {
-        uint256 proposalId = _createProposal(author, proposalMetadataUri, emergencyStrategy, userVotingStrategies);
-        _vote(author, proposalId, Choice.Against, userVotingStrategies, voteMetadataUri); // 1
-        _vote(address(42), proposalId, Choice.Against, userVotingStrategies, voteMetadataUri); // 2
+        uint256 proposalId = _createProposal(author, proposalMetadataURI, emergencyStrategy, userVotingStrategies);
+        _vote(author, proposalId, Choice.Against, userVotingStrategies, voteMetadataURI); // 1
+        _vote(address(42), proposalId, Choice.Against, userVotingStrategies, voteMetadataURI); // 2
 
         vm.expectRevert(abi.encodeWithSelector(InvalidProposalStatus.selector, uint8(ProposalStatus.Rejected)));
         space.execute(proposalId, emergencyStrategy.params);
@@ -109,7 +109,7 @@ contract EmergencyQuorumTest is SpaceTest {
         Strategy[] memory toAdd = new Strategy[](1);
         toAdd[0] = Strategy(address(emergency), abi.encode(quorum + 1, quorum));
 
-        space.addExecutionStrategies(toAdd);
+        space.addExecutionStrategies(toAdd, executionStrategyMetadataURIs);
 
         emergencyStrategy = IndexedStrategy(2, new bytes(0));
         uint8[] memory toRemove = new uint8[](1);
@@ -117,8 +117,8 @@ contract EmergencyQuorumTest is SpaceTest {
         space.removeExecutionStrategies(toRemove);
 
         // Create proposal and vote
-        uint256 proposalId = _createProposal(author, proposalMetadataUri, emergencyStrategy, userVotingStrategies);
-        _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataUri); // emergencyQuorum reached
+        uint256 proposalId = _createProposal(author, proposalMetadataURI, emergencyStrategy, userVotingStrategies);
+        _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataURI); // emergencyQuorum reached
         vm.warp(block.timestamp + maxVotingDuration);
 
         vm.expectEmit(true, true, true, true);

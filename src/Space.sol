@@ -7,7 +7,7 @@ import { UUPSUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/utils
 import { ReentrancyGuard } from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
 import { ISpace } from "src/interfaces/ISpace.sol";
-import { Choice, FinalizationStatus, IndexedStrategy, Proposal, ProposalStatus, Strategy, Vote } from "src/types.sol";
+import { Choice, FinalizationStatus, IndexedStrategy, Proposal, ProposalStatus, Strategy } from "src/types.sol";
 import { IVotingStrategy } from "src/interfaces/IVotingStrategy.sol";
 import { IExecutionStrategy } from "src/interfaces/IExecutionStrategy.sol";
 
@@ -57,11 +57,12 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         uint32 _minVotingDuration,
         uint32 _maxVotingDuration,
         uint256 _proposalThreshold,
-        string memory _metadataUri,
+        string memory _metadataURI,
         Strategy[] memory _votingStrategies,
-        bytes[] memory _votingStrategyMetadata,
+        string[] memory _votingStrategyMetadataURIs,
         address[] memory _authenticators,
-        Strategy[] memory _executionStrategies
+        Strategy[] memory _executionStrategies,
+        string[] memory _executionStrategyMetadataURIs
     ) public initializer {
         __Ownable_init();
         transferOwnership(_controller);
@@ -82,11 +83,12 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
             _minVotingDuration,
             _maxVotingDuration,
             _proposalThreshold,
-            _metadataUri,
+            _metadataURI,
             _votingStrategies,
-            _votingStrategyMetadata,
+            _votingStrategyMetadataURIs,
             _authenticators,
-            _executionStrategies
+            _executionStrategies,
+            _executionStrategyMetadataURIs
         );
     }
 
@@ -233,7 +235,7 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
      * @dev     it has already been set. Time complexity is O(n).
      * @param   strats  Array to check for duplicates.
      */
-    function _assertNoDuplicateIndices(IndexedStrategy[] memory strats) internal pure {
+    function _assertNoDuplicateIndices(IndexedStrategy[] calldata strats) internal pure {
         if (strats.length < 2) {
             return;
         }
@@ -265,18 +267,16 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         // Ensure there are no duplicates to avoid an attack where people double count a voting strategy
         _assertNoDuplicateIndices(userVotingStrategies);
 
-        uint256 totalVotingPower = 0;
-        for (uint256 i = 0; i < userVotingStrategies.length; i++) {
+        uint256 totalVotingPower;
+        for (uint256 i = 0; i < userVotingStrategies.length; ++i) {
             uint256 votingStrategyIndex = userVotingStrategies[i].index;
             if (votingStrategyIndex >= votingStrategies.length) revert InvalidVotingStrategyIndex(votingStrategyIndex);
             Strategy memory votingStrategy = votingStrategies[votingStrategyIndex];
             // A strategyAddress set to 0 indicates that this address has already been removed and is
             // no longer a valid voting strategy. See `_removeVotingStrategies`.
             if (votingStrategy.addy == address(0)) revert InvalidVotingStrategyIndex(votingStrategyIndex);
-            IVotingStrategy strategy = IVotingStrategy(votingStrategy.addy);
 
-            // With solc 0.8, this will revert in case of overflow.
-            totalVotingPower += strategy.getVotingPower(
+            totalVotingPower += IVotingStrategy(votingStrategy.addy).getVotingPower(
                 timestamp,
                 userAddress,
                 votingStrategy.params,
@@ -307,18 +307,16 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         // Ensure there are no duplicates to avoid an attack where people double count a voting strategy
         _assertNoDuplicateIndices(userVotingStrategies);
 
-        uint256 totalVotingPower = 0;
-        for (uint256 i = 0; i < userVotingStrategies.length; i++) {
+        uint256 totalVotingPower;
+        for (uint256 i = 0; i < userVotingStrategies.length; ++i) {
             uint256 votingStrategyIndex = userVotingStrategies[i].index;
             if (votingStrategyIndex >= _votingStrategies.length) revert InvalidVotingStrategyIndex(votingStrategyIndex);
             Strategy memory votingStrategy = _votingStrategies[votingStrategyIndex];
             // A strategyAddress set to 0 indicates that this address has already been removed and is
             // no longer a valid voting strategy. See `_removeVotingStrategies`.
             if (votingStrategy.addy == address(0)) revert InvalidVotingStrategyIndex(votingStrategyIndex);
-            IVotingStrategy strategy = IVotingStrategy(votingStrategy.addy);
 
-            // With solc 0.8, this will revert in case of overflow.
-            totalVotingPower += strategy.getVotingPower(
+            totalVotingPower += IVotingStrategy(votingStrategy.addy).getVotingPower(
                 timestamp,
                 userAddress,
                 votingStrategy.params,
@@ -349,8 +347,8 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         emit MinVotingDurationUpdated(_minVotingDuration);
     }
 
-    function setMetadataUri(string calldata _metadataUri) external override onlyOwner {
-        emit MetadataUriUpdated(_metadataUri);
+    function setMetadataURI(string calldata _metadataURI) external override onlyOwner {
+        emit MetadataURIUpdated(_metadataURI);
     }
 
     function setProposalThreshold(uint256 _proposalThreshold) external override onlyOwner {
@@ -365,10 +363,10 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
 
     function addVotingStrategies(
         Strategy[] calldata _votingStrategies,
-        bytes[] calldata votingStrategyMetadata
+        string[] calldata votingStrategyMetadataURIs
     ) external override onlyOwner {
         _addVotingStrategies(_votingStrategies);
-        emit VotingStrategiesAdded(_votingStrategies, votingStrategyMetadata);
+        emit VotingStrategiesAdded(_votingStrategies, votingStrategyMetadataURIs);
     }
 
     function removeVotingStrategies(uint8[] calldata _votingStrategyIndices) external override onlyOwner {
@@ -386,9 +384,12 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         emit AuthenticatorsRemoved(_authenticators);
     }
 
-    function addExecutionStrategies(Strategy[] calldata _executionStrategies) external override onlyOwner {
+    function addExecutionStrategies(
+        Strategy[] calldata _executionStrategies,
+        string[] memory executionStrategyMetadataURIs
+    ) external override onlyOwner {
         _addExecutionStrategies(_executionStrategies);
-        emit ExecutionStrategiesAdded(_executionStrategies);
+        emit ExecutionStrategiesAdded(_executionStrategies, executionStrategyMetadataURIs);
     }
 
     function removeExecutionStrategies(uint8[] calldata _executionStrategies) external override onlyOwner {
@@ -440,13 +441,13 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
     /**
      * @notice  Create a proposal.
      * @param   author  The address of the proposal creator.
-     * @param   metadataUri  The metadata URI for the proposal.
+     * @param   metadataURI  The metadata URI for the proposal.
      * @param   executionStrategy  The execution strategy index and associated execution payload to use in the proposal.
      * @param   userVotingStrategies  The voting strategies indexes to use and the associated parameters for each.
      */
     function propose(
         address author,
-        string calldata metadataUri,
+        string calldata metadataURI,
         IndexedStrategy calldata executionStrategy,
         IndexedStrategy[] calldata userVotingStrategies
     ) external override {
@@ -479,7 +480,7 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         );
 
         proposalRegistry[nextProposalId] = proposal;
-        emit ProposalCreated(nextProposalId, author, proposal, metadataUri, executionStrategy.params);
+        emit ProposalCreated(nextProposalId, author, proposal, metadataURI, executionStrategy.params);
 
         nextProposalId++;
     }
@@ -490,25 +491,23 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
      * @param   proposalId  Proposal id.
      * @param   choice  Choice can be `For`, `Against` or `Abstain`.
      * @param   userVotingStrategies  Strategies to use to compute the voter's voting power.
-     * @param   voteMetadataUri  An optional metadata to give information about the vote.
+     * @param   metadataUri  An optional metadata to give information about the vote.
      */
     function vote(
         address voterAddress,
         uint256 proposalId,
         Choice choice,
         IndexedStrategy[] calldata userVotingStrategies,
-        string calldata voteMetadataUri
+        string calldata metadataUri
     ) external override {
         _assertValidAuthenticator();
 
         Proposal memory proposal = proposalRegistry[proposalId];
         _assertProposalExists(proposal);
-
-        uint32 currentTimestamp = uint32(block.timestamp);
-        if (currentTimestamp >= proposal.maxEndTimestamp) revert VotingPeriodHasEnded();
-        if (currentTimestamp < proposal.startTimestamp) revert VotingPeriodHasNotStarted();
+        if (block.timestamp >= proposal.maxEndTimestamp) revert VotingPeriodHasEnded();
+        if (block.timestamp < proposal.startTimestamp) revert VotingPeriodHasNotStarted();
         if (proposal.finalizationStatus != FinalizationStatus.Pending) revert ProposalFinalized();
-        if (voteRegistry[proposalId][voterAddress] == true) revert UserHasAlreadyVoted();
+        if (voteRegistry[proposalId][voterAddress]) revert UserHasAlreadyVoted();
 
         uint256 votingPower = _getCumulativeVotingPower(
             proposal.snapshotTimestamp,
@@ -516,15 +515,15 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
             userVotingStrategies,
             proposal.votingStrategies
         );
-
         if (votingPower == 0) revert UserHasNoVotingPower();
-        uint256 previousVotingPower = votePower[proposalId][choice];
-        uint256 newVotingPower = previousVotingPower + votingPower;
-        votePower[proposalId][choice] = newVotingPower;
-
+        votePower[proposalId][choice] += votingPower;
         voteRegistry[proposalId][voterAddress] = true;
 
-        emit VoteCreated(proposalId, voterAddress, Vote(choice, votingPower), voteMetadataUri);
+        if (bytes(metadataUri).length == 0) {
+            emit VoteCast(proposalId, voterAddress, choice, votingPower);
+        } else {
+            emit VoteCastWithMetadata(proposalId, voterAddress, choice, votingPower, metadataUri);
+        }
     }
 
     /**
@@ -569,13 +568,13 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
                 not started yet, i.e `voting_delay` has not elapsed yet.
      * @param   proposalId          The id of the proposal to edit
      * @param   executionStrategy   The new strategy to use
-     * @param   metadataUri         The new metadata
+     * @param   metadataURI         The new metadata
      */
     function updateProposal(
         address author,
         uint256 proposalId,
         IndexedStrategy calldata executionStrategy,
-        string calldata metadataUri
+        string calldata metadataURI
     ) external {
         _assertValidAuthenticator();
         _assertValidExecutionStrategy(executionStrategy.index);
@@ -587,6 +586,6 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         proposal.executionPayloadHash = keccak256(executionStrategy.params);
         proposal.executionStrategy = executionStrategies[executionStrategy.index];
 
-        emit ProposalUpdated(proposalId, executionStrategy, metadataUri);
+        emit ProposalUpdated(proposalId, executionStrategy, metadataURI);
     }
 }
