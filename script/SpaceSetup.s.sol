@@ -23,7 +23,7 @@ contract SpaceSetup is Script {
     address public vanillaExecutionStrategy = address(0xb1001Fdf62C020761039A750b27e73C512fDaa5E);
     address public votingPowerProposalValidationContract = address(42); // TODO: update
     Strategy public votingPowerProposalValidationStrategy;
-    address public controller = address(0x2842c82E20ab600F443646e1BC8550B44a513D82);
+    address public owner = address(0x2842c82E20ab600F443646e1BC8550B44a513D82);
     uint32 public votingDelay;
     uint32 public minVotingDuration;
     uint32 public maxVotingDuration;
@@ -61,7 +61,7 @@ contract SpaceSetup is Script {
             masterSpace,
             abi.encodeWithSelector(
                 Space.initialize.selector,
-                controller,
+                owner,
                 votingDelay,
                 minVotingDuration,
                 maxVotingDuration,
