@@ -367,11 +367,11 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         uint32 snapshotTimestamp = uint32(block.timestamp);
 
         if (
-            IProposalValidationStrategy(proposalValidationStrategy.addy).validate(
+            !IProposalValidationStrategy(proposalValidationStrategy.addy).validate(
                 author,
                 proposalValidationStrategy.params,
                 userParams
-            ) == false
+            )
         ) revert FailedToPassProposalValidation();
 
         uint32 startTimestamp = snapshotTimestamp + votingDelay;
