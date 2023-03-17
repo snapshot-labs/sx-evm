@@ -97,4 +97,18 @@ contract ExecuteTest is SpaceTest {
         vm.expectRevert(abi.encodeWithSelector(InvalidPayload.selector));
         space.execute(proposalId, new bytes(4242));
     }
+
+    function testExecuteInvalidExecutionStrategy() public {
+        uint256 proposalId = _createProposal(
+            author,
+            proposalMetadataURI,
+            Strategy(address(space), ""),
+            userVotingStrategies
+        );
+        _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataURI);
+        vm.warp(block.timestamp + space.maxVotingDuration());
+
+        vm.expectRevert();
+        space.execute(proposalId, executionStrategy.params);
+    }
 }
