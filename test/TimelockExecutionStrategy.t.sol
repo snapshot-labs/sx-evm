@@ -35,7 +35,7 @@ contract TimelockExecutionStrategyTest is SpaceTest {
         timelockExecutionStrategy.disableSpace(address(space));
 
         MetaTransaction[] memory transactions = new MetaTransaction[](1);
-        transactions[0] = MetaTransaction(recipient, 1, "", Enum.Operation.Call);
+        transactions[0] = MetaTransaction(recipient, 1, "", Enum.Operation.Call, 0);
         uint256 proposalId = _createProposal(
             author,
             proposalMetadataURI,
@@ -51,7 +51,7 @@ contract TimelockExecutionStrategyTest is SpaceTest {
 
     function testQueueing() external {
         MetaTransaction[] memory transactions = new MetaTransaction[](1);
-        transactions[0] = MetaTransaction(recipient, 1, "", Enum.Operation.Call);
+        transactions[0] = MetaTransaction(recipient, 1, "", Enum.Operation.Call, 0);
         uint256 proposalId = _createProposal(
             author,
             proposalMetadataURI,
@@ -68,7 +68,7 @@ contract TimelockExecutionStrategyTest is SpaceTest {
 
     function testQueueingFailedProposal() external {
         MetaTransaction[] memory transactions = new MetaTransaction[](1);
-        transactions[0] = MetaTransaction(recipient, 1, "", Enum.Operation.Call);
+        transactions[0] = MetaTransaction(recipient, 1, "", Enum.Operation.Call, 0);
         uint256 proposalId = _createProposal(
             author,
             proposalMetadataURI,
@@ -83,7 +83,7 @@ contract TimelockExecutionStrategyTest is SpaceTest {
 
     function testQueueingDoubleQueue() external {
         MetaTransaction[] memory transactions = new MetaTransaction[](1);
-        transactions[0] = MetaTransaction(recipient, 1, "", Enum.Operation.Call);
+        transactions[0] = MetaTransaction(recipient, 1, "", Enum.Operation.Call, 0);
         uint256 proposalId = _createProposal(
             author,
             proposalMetadataURI,
@@ -103,7 +103,7 @@ contract TimelockExecutionStrategyTest is SpaceTest {
 
     function testQueueingQueueDuplicate() external {
         MetaTransaction[] memory transactions = new MetaTransaction[](1);
-        transactions[0] = MetaTransaction(recipient, 1, "", Enum.Operation.Call);
+        transactions[0] = MetaTransaction(recipient, 1, "", Enum.Operation.Call, 0);
         uint256 proposalId = _createProposal(
             author,
             proposalMetadataURI,
@@ -127,9 +127,36 @@ contract TimelockExecutionStrategyTest is SpaceTest {
         space.execute(proposalId2, abi.encode(transactions));
     }
 
+    function testQueueingQueueDuplicateUniqueSalt() external {
+        MetaTransaction[] memory transactions = new MetaTransaction[](1);
+        transactions[0] = MetaTransaction(recipient, 1, "", Enum.Operation.Call, 0);
+        // Same transaction, but different salt
+        MetaTransaction[] memory transactions2 = new MetaTransaction[](1);
+        transactions2[0] = MetaTransaction(recipient, 1, "", Enum.Operation.Call, 1);
+        uint256 proposalId = _createProposal(
+            author,
+            proposalMetadataURI,
+            IndexedStrategy(1, abi.encode(transactions)),
+            userVotingStrategies
+        );
+        uint256 proposalId2 = _createProposal(
+            author,
+            proposalMetadataURI,
+            IndexedStrategy(1, abi.encode(transactions2)),
+            userVotingStrategies
+        );
+        _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataURI);
+        _vote(author, proposalId2, Choice.For, userVotingStrategies, voteMetadataURI);
+        vm.warp(block.timestamp + space.maxVotingDuration());
+
+        space.execute(proposalId, abi.encode(transactions));
+
+        space.execute(proposalId2, abi.encode(transactions2));
+    }
+
     function testQueueingInvalidPayload() external {
         MetaTransaction[] memory transactions = new MetaTransaction[](1);
-        transactions[0] = MetaTransaction(recipient, 1, "", Enum.Operation.Call);
+        transactions[0] = MetaTransaction(recipient, 1, "", Enum.Operation.Call, 0);
         uint256 proposalId = _createProposal(
             author,
             proposalMetadataURI,
@@ -139,7 +166,7 @@ contract TimelockExecutionStrategyTest is SpaceTest {
         _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataURI);
         vm.warp(block.timestamp + space.maxVotingDuration());
 
-        transactions[0] = MetaTransaction(recipient, 2, "", Enum.Operation.Call);
+        transactions[0] = MetaTransaction(recipient, 2, "", Enum.Operation.Call, 0);
 
         vm.expectRevert(InvalidPayload.selector);
         space.execute(proposalId, abi.encode(transactions));
@@ -147,7 +174,7 @@ contract TimelockExecutionStrategyTest is SpaceTest {
 
     function testExecute() external {
         MetaTransaction[] memory transactions = new MetaTransaction[](1);
-        transactions[0] = MetaTransaction(recipient, 1, "", Enum.Operation.Call);
+        transactions[0] = MetaTransaction(recipient, 1, "", Enum.Operation.Call, 0);
         uint256 proposalId = _createProposal(
             author,
             proposalMetadataURI,
@@ -171,7 +198,7 @@ contract TimelockExecutionStrategyTest is SpaceTest {
 
     function testExecuteTransactionFailed() external {
         MetaTransaction[] memory transactions = new MetaTransaction[](1);
-        transactions[0] = MetaTransaction(recipient, 1001, "", Enum.Operation.Call);
+        transactions[0] = MetaTransaction(recipient, 1001, "", Enum.Operation.Call, 0);
         uint256 proposalId = _createProposal(
             author,
             proposalMetadataURI,
@@ -191,7 +218,7 @@ contract TimelockExecutionStrategyTest is SpaceTest {
 
     function testExecuteInvalidPayload() external {
         MetaTransaction[] memory transactions = new MetaTransaction[](1);
-        transactions[0] = MetaTransaction(recipient, 1, "", Enum.Operation.Call);
+        transactions[0] = MetaTransaction(recipient, 1, "", Enum.Operation.Call, 0);
         uint256 proposalId = _createProposal(
             author,
             proposalMetadataURI,
@@ -204,7 +231,7 @@ contract TimelockExecutionStrategyTest is SpaceTest {
         space.execute(proposalId, abi.encode(transactions));
 
         vm.warp(block.timestamp + timelockExecutionStrategy.timelockDelay());
-        transactions[0] = MetaTransaction(recipient, 2, "", Enum.Operation.Call);
+        transactions[0] = MetaTransaction(recipient, 2, "", Enum.Operation.Call, 0);
 
         vm.expectRevert(ProposalNotQueued.selector);
         timelockExecutionStrategy.executeQueuedProposal(abi.encode(transactions));
@@ -212,7 +239,7 @@ contract TimelockExecutionStrategyTest is SpaceTest {
 
     function testExecuteBeforeDelay() external {
         MetaTransaction[] memory transactions = new MetaTransaction[](1);
-        transactions[0] = MetaTransaction(recipient, 1, "", Enum.Operation.Call);
+        transactions[0] = MetaTransaction(recipient, 1, "", Enum.Operation.Call, 0);
         uint256 proposalId = _createProposal(
             author,
             proposalMetadataURI,
@@ -232,7 +259,7 @@ contract TimelockExecutionStrategyTest is SpaceTest {
 
     function testExecuteNotQueued() external {
         MetaTransaction[] memory transactions = new MetaTransaction[](1);
-        transactions[0] = MetaTransaction(recipient, 1, "", Enum.Operation.Call);
+        transactions[0] = MetaTransaction(recipient, 1, "", Enum.Operation.Call, 0);
         uint256 proposalId = _createProposal(
             author,
             proposalMetadataURI,
@@ -248,7 +275,7 @@ contract TimelockExecutionStrategyTest is SpaceTest {
 
     function testExecuteDoubleExecution() external {
         MetaTransaction[] memory transactions = new MetaTransaction[](1);
-        transactions[0] = MetaTransaction(recipient, 1, "", Enum.Operation.Call);
+        transactions[0] = MetaTransaction(recipient, 1, "", Enum.Operation.Call, 0);
         uint256 proposalId = _createProposal(
             author,
             proposalMetadataURI,
@@ -279,7 +306,8 @@ contract TimelockExecutionStrategyTest is SpaceTest {
             address(impl),
             0,
             abi.encodeWithSignature("transferEth(address,uint256)", recipient, 1),
-            Enum.Operation.DelegateCall
+            Enum.Operation.DelegateCall,
+            0
         );
         uint256 proposalId = _createProposal(
             author,
@@ -304,7 +332,7 @@ contract TimelockExecutionStrategyTest is SpaceTest {
 
     function testVetoProposal() external {
         MetaTransaction[] memory transactions = new MetaTransaction[](1);
-        transactions[0] = MetaTransaction(recipient, 1, "", Enum.Operation.Call);
+        transactions[0] = MetaTransaction(recipient, 1, "", Enum.Operation.Call, 0);
         uint256 proposalId = _createProposal(
             author,
             proposalMetadataURI,
@@ -334,7 +362,7 @@ contract TimelockExecutionStrategyTest is SpaceTest {
 
     function testVetoOnlyGuardian() external {
         MetaTransaction[] memory transactions = new MetaTransaction[](1);
-        transactions[0] = MetaTransaction(recipient, 1, "", Enum.Operation.Call);
+        transactions[0] = MetaTransaction(recipient, 1, "", Enum.Operation.Call, 0);
         uint256 proposalId = _createProposal(
             author,
             proposalMetadataURI,
