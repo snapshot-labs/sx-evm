@@ -159,8 +159,6 @@ contract TimelockExecutionStrategyTest is SpaceTest {
 
         space.execute(proposalId, abi.encode(transactions));
 
-        // // Will revert due to duplicate execution payload hash
-        // vm.expectRevert(DuplicateExecutionPayloadHash.selector);
         space.execute(proposalId2, abi.encode(transactions2));
     }
 
