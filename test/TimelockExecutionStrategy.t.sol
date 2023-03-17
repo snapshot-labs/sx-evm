@@ -136,13 +136,13 @@ contract TimelockExecutionStrategyTest is SpaceTest {
         uint256 proposalId = _createProposal(
             author,
             proposalMetadataURI,
-            IndexedStrategy(1, abi.encode(transactions)),
+            Strategy(address(timelockExecutionStrategy), abi.encode(transactions)),
             userVotingStrategies
         );
         uint256 proposalId2 = _createProposal(
             author,
             proposalMetadataURI,
-            IndexedStrategy(1, abi.encode(transactions2)),
+            Strategy(address(timelockExecutionStrategy), abi.encode(transactions2)),
             userVotingStrategies
         );
         _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataURI);
