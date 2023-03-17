@@ -38,7 +38,12 @@ contract TimelockExecutionStrategy is SpaceManager, SimpleQuorumExecutionStrateg
     /// @param _owner Address of the owner of this contract.
     /// @param _spaces Array of whitelisted space contracts.
     /// @param _timelockDelay The timelock delay in seconds.
-    constructor(address _owner, address[] memory _spaces, uint256 _timelockDelay) {
+    constructor(
+        address _owner,
+        uint256 _quorum,
+        address[] memory _spaces,
+        uint256 _timelockDelay
+    ) SimpleQuorumExecutionStrategy(_quorum) {
         setUp(abi.encode(_owner, _spaces, _timelockDelay));
     }
 
@@ -101,7 +106,7 @@ contract TimelockExecutionStrategy is SpaceManager, SimpleQuorumExecutionStrateg
             } else {
                 (success, ) = transactions[i].to.call{ value: transactions[i].value }(transactions[i].data);
             }
-            if (!success) revert TransactionsFailed();
+            if (!success) revert ExecutionFailed();
 
             emit TransactionExecuted(transactions[i]);
         }

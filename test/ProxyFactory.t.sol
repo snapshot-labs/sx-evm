@@ -23,11 +23,12 @@ contract SpaceFactoryTest is Test, IProxyFactoryEvents, IProxyFactoryErrors {
     address[] public authenticators;
     Strategy[] public executionStrategies;
 
-    address public controller;
+    address public owner;
     uint32 public votingDelay;
     uint32 public minVotingDuration;
     uint32 public maxVotingDuration;
     uint256 public proposalThreshold;
+    Strategy public proposalValidationStrategy;
     uint32 public quorum;
     string public metadataURI = "SX-EVM";
     string[] public votingStrategyMetadataURIs;
@@ -39,7 +40,7 @@ contract SpaceFactoryTest is Test, IProxyFactoryEvents, IProxyFactoryErrors {
         vanillaVotingStrategy = new VanillaVotingStrategy();
         vanillaAuthenticator = new VanillaAuthenticator();
         vanillaExecutionStrategy = new VanillaExecutionStrategy(quorum);
-        controller = address(1);
+        owner = address(1);
         votingDelay = 0;
         minVotingDuration = 0;
         maxVotingDuration = 1000;
@@ -61,7 +62,7 @@ contract SpaceFactoryTest is Test, IProxyFactoryEvents, IProxyFactoryErrors {
             address(masterSpace),
             abi.encodeWithSelector(
                 Space.initialize.selector,
-                controller,
+                owner,
                 votingDelay,
                 minVotingDuration,
                 maxVotingDuration,
@@ -83,7 +84,7 @@ contract SpaceFactoryTest is Test, IProxyFactoryEvents, IProxyFactoryErrors {
             address(masterSpace),
             abi.encodeWithSelector(
                 Space.initialize.selector,
-                controller,
+                owner,
                 votingDelay,
                 minVotingDuration,
                 maxVotingDuration,
@@ -104,7 +105,7 @@ contract SpaceFactoryTest is Test, IProxyFactoryEvents, IProxyFactoryErrors {
             address(masterSpace),
             abi.encodeWithSelector(
                 Space.initialize.selector,
-                controller,
+                owner,
                 votingDelay,
                 minVotingDuration,
                 maxVotingDuration,
@@ -126,7 +127,7 @@ contract SpaceFactoryTest is Test, IProxyFactoryEvents, IProxyFactoryErrors {
             address(masterSpace),
             abi.encodeWithSelector(
                 Space.initialize.selector,
-                controller,
+                owner,
                 votingDelay,
                 minVotingDuration,
                 maxVotingDuration,
@@ -145,11 +146,11 @@ contract SpaceFactoryTest is Test, IProxyFactoryEvents, IProxyFactoryErrors {
         // Initializing the space should revert as the space is already initialized
         vm.expectRevert("Initializable: contract is already initialized");
         Space(spaceProxy).initialize(
-            controller,
+            owner,
             votingDelay,
             minVotingDuration,
             maxVotingDuration,
-            proposalThreshold,
+            proposalValidationStrategy,
             metadataURI,
             votingStrategies,
             votingStrategyMetadataURIs,

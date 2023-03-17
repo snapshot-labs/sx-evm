@@ -9,7 +9,7 @@ interface ISpaceActions {
         address author,
         string calldata metadataURI,
         Strategy calldata executionStrategy,
-        IndexedStrategy[] calldata userVotingStrategies
+        bytes calldata userParams
     ) external;
 
     function vote(

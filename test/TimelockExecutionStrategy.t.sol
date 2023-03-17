@@ -8,7 +8,6 @@ import { TimelockExecutionStrategy } from "../src/execution-strategies/TimelockE
 import { MockImplementation } from "./mocks/MockImplementation.sol";
 
 contract TimelockExecutionStrategyTest is SpaceTest {
-    error TransactionsFailed();
     error TimelockDelayNotMet();
     error ProposalNotQueued();
     error DuplicateExecutionPayloadHash();
@@ -185,7 +184,7 @@ contract TimelockExecutionStrategyTest is SpaceTest {
 
         vm.warp(block.timestamp + timelockExecutionStrategy.timelockDelay());
 
-        vm.expectRevert(TransactionsFailed.selector);
+        vm.expectRevert(ExecutionFailed.selector);
         timelockExecutionStrategy.executeQueuedProposal(abi.encode(transactions));
     }
 

@@ -18,9 +18,8 @@ abstract contract SigUtils {
     bytes32 private constant PROPOSE_TYPEHASH =
         keccak256(
             "Propose(address space,address author,string metadataURI,Strategy executionStrategy,"
-            "IndexedStrategy[] userVotingStrategies,uint256 salt)"
+            "bytes userParams,uint256 salt)"
             "Strategy(address addy,bytes params)"
-            "IndexedStrategy(uint8 index,bytes params)"
         );
     bytes32 private constant VOTE_TYPEHASH =
         keccak256(
@@ -46,7 +45,7 @@ abstract contract SigUtils {
         address author,
         string memory metadataURI,
         Strategy memory executionStrategy,
-        IndexedStrategy[] memory usedVotingStrategies,
+        bytes memory userParams,
         uint256 salt
     ) internal view returns (bytes32) {
         bytes32 digest = keccak256(
@@ -68,7 +67,7 @@ abstract contract SigUtils {
                         author,
                         keccak256(bytes(metadataURI)),
                         executionStrategy.hash(),
-                        usedVotingStrategies.hash(),
+                        keccak256(userParams),
                         salt
                     )
                 )

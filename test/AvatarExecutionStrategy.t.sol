@@ -8,7 +8,6 @@ import { AvatarExecutionStrategy } from "../src/execution-strategies/AvatarExecu
 import { Choice, Enum, IndexedStrategy, MetaTransaction, ProposalStatus, Strategy } from "../src/types.sol";
 
 contract AvatarExecutionStrategyTest is SpaceTest {
-    error TransactionsFailed();
     error InvalidSpace();
 
     event AvatarExecutionStrategySetUp(address _owner, address _target, address[] _spaces);
