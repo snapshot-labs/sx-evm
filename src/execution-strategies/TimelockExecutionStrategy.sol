@@ -8,7 +8,7 @@ import { MetaTransaction, Proposal, ProposalStatus } from "../types.sol";
 import { Enum } from "@gnosis.pm/safe-contracts/contracts/common/Enum.sol";
 
 /// @title Timelock Execution Strategy - An Execution strategy that executes transactions according to a timelock delay.
-contract TimelockExecutionStrategy is SpaceManager, SimpleQuorumExecutionStrategy {
+contract TimelockExecutionStrategy is SimpleQuorumExecutionStrategy {
     /// @notice Thrown if timelock delay is in the future.
     error TimelockDelayNotMet();
     /// @notice Thrown if the proposal execution payload hash is not queued.
@@ -38,23 +38,19 @@ contract TimelockExecutionStrategy is SpaceManager, SimpleQuorumExecutionStrateg
     /// @param _owner Address of the owner of this contract.
     /// @param _spaces Array of whitelisted space contracts.
     /// @param _timelockDelay The timelock delay in seconds.
-    constructor(
-        address _owner,
-        uint256 _quorum,
-        address[] memory _spaces,
-        uint256 _timelockDelay
-    ) SimpleQuorumExecutionStrategy(_quorum) {
-        setUp(abi.encode(_owner, _spaces, _timelockDelay));
+    constructor(address _owner, uint256 _quorum, address[] memory _spaces, uint256 _timelockDelay) {
+        setUp(abi.encode(_owner, _spaces, _timelockDelay, _quorum));
     }
 
     function setUp(bytes memory initializeParams) public initializer {
-        (address _owner, address[] memory _spaces, uint256 _timelockDelay) = abi.decode(
+        (address _owner, address[] memory _spaces, uint256 _timelockDelay, uint256 _quorum) = abi.decode(
             initializeParams,
-            (address, address[], uint256)
+            (address, address[], uint256, uint256)
         );
         __Ownable_init();
         transferOwnership(_owner);
         __SpaceManager_init(_spaces);
+        __SimpleQuorumExecutionStrategy_init(_quorum);
         timelockDelay = _timelockDelay;
     }
 

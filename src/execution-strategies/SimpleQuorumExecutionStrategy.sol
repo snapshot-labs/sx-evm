@@ -4,11 +4,12 @@ pragma solidity ^0.8.18;
 
 import { IExecutionStrategy } from "../interfaces/IExecutionStrategy.sol";
 import { FinalizationStatus, Proposal, ProposalStatus } from "../types.sol";
+import { SpaceManager } from "../utils/SpaceManager.sol";
 
-abstract contract SimpleQuorumExecutionStrategy is IExecutionStrategy {
-    uint256 public immutable quorum;
+abstract contract SimpleQuorumExecutionStrategy is IExecutionStrategy, SpaceManager {
+    uint256 public quorum;
 
-    constructor(uint256 _quorum) {
+    function __SimpleQuorumExecutionStrategy_init(uint256 _quorum) internal initializer {
         quorum = _quorum;
     }
 
