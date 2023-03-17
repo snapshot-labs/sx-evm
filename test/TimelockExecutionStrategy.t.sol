@@ -8,6 +8,7 @@ import { TimelockExecutionStrategy } from "../src/execution-strategies/TimelockE
 import { MockImplementation } from "./mocks/MockImplementation.sol";
 
 contract TimelockExecutionStrategyTest is SpaceTest {
+    error InvalidSpace();
     error TimelockDelayNotMet();
     error ProposalNotQueued();
     error DuplicateExecutionPayloadHash();
@@ -44,7 +45,7 @@ contract TimelockExecutionStrategyTest is SpaceTest {
         _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataURI);
         vm.warp(block.timestamp + space.maxVotingDuration());
 
-        vm.expectRevert();
+        vm.expectRevert(InvalidSpace.selector);
         space.execute(proposalId, abi.encode(transactions));
     }
 
@@ -266,7 +267,7 @@ contract TimelockExecutionStrategyTest is SpaceTest {
         vm.warp(block.timestamp + timelockExecutionStrategy.timelockDelay());
         timelockExecutionStrategy.executeQueuedProposal(abi.encode(transactions));
 
-        vm.expectRevert();
+        vm.expectRevert(ProposalNotQueued.selector);
         timelockExecutionStrategy.executeQueuedProposal(abi.encode(transactions));
     }
 
