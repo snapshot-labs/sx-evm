@@ -8,7 +8,9 @@ import { Choice, IndexedStrategy, Proposal, ProposalStatus, Strategy } from "../
 
 // Dummy implementation of the optimistic quorum
 contract OptimisticExec is OptimisticQuorumExecutionStrategy {
-    constructor(uint256 _quorum) OptimisticQuorumExecutionStrategy(_quorum) {}
+    constructor(uint256 _quorum) {
+        __OptimisticQuorumExecutionStrategy_init(_quorum);
+    }
 
     uint256 internal numExecuted;
 
