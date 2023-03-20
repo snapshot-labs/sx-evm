@@ -8,8 +8,9 @@ import { ReentrancyGuard } from "@openzeppelin/contracts/security/ReentrancyGuar
 
 import { ISpace } from "src/interfaces/ISpace.sol";
 import { Choice, FinalizationStatus, IndexedStrategy, Proposal, ProposalStatus, Strategy } from "src/types.sol";
-import { IVotingStrategy } from "src/interfaces/IVotingStrategy.sol";
 import { IExecutionStrategy } from "src/interfaces/IExecutionStrategy.sol";
+import { IProposalValidationStrategy } from "src/interfaces/IProposalValidationStrategy.sol";
+import { GetCumulativePower } from "./utils/GetCumulativePower.sol";
 
 /**
  * @author  SnapshotLabs
@@ -17,6 +18,8 @@ import { IExecutionStrategy } from "src/interfaces/IExecutionStrategy.sol";
  * @notice  Logic and bookkeeping contract.
  */
 contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, ReentrancyGuard {
+    using GetCumulativePower for address;
+
     // Maximum duration a proposal can last.
     uint32 public maxVotingDuration;
     // Minimum duration a proposal can last.
@@ -31,10 +34,10 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
     // Array of available voting strategies that users can use to determine their voting power.
     /// @dev This needs to be an array because a mapping would limit a space to only one use per
     ///      voting strategy contract.
-    Strategy[] private votingStrategies;
+    Strategy[] public votingStrategies;
 
-    // Array of available execution strategies that proposal authors can use to determine how to execute a proposal.
-    Strategy[] private executionStrategies;
+    // The proposal validation contract.
+    Strategy public proposalValidationStrategy;
 
     // Mapping of allowed authenticators.
     mapping(address auth => bool allowed) private authenticators;
@@ -52,43 +55,38 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
     // ------------------------------------
 
     function initialize(
-        address _controller,
+        address _owner,
         uint32 _votingDelay,
         uint32 _minVotingDuration,
         uint32 _maxVotingDuration,
-        uint256 _proposalThreshold,
+        Strategy memory _proposalValidationStrategy,
         string memory _metadataURI,
         Strategy[] memory _votingStrategies,
         string[] memory _votingStrategyMetadataURIs,
-        address[] memory _authenticators,
-        Strategy[] memory _executionStrategies,
-        string[] memory _executionStrategyMetadataURIs
+        address[] memory _authenticators
     ) public initializer {
         __Ownable_init();
-        transferOwnership(_controller);
+        transferOwnership(_owner);
         _setMaxVotingDuration(_maxVotingDuration);
         _setMinVotingDuration(_minVotingDuration);
-        _setProposalThreshold(_proposalThreshold);
+        _setProposalValidationStrategy(_proposalValidationStrategy);
         _setVotingDelay(_votingDelay);
         _addVotingStrategies(_votingStrategies);
         _addAuthenticators(_authenticators);
-        _addExecutionStrategies(_executionStrategies);
 
         nextProposalId = 1;
 
         emit SpaceCreated(
             address(this),
-            _controller,
+            _owner,
             _votingDelay,
             _minVotingDuration,
             _maxVotingDuration,
-            _proposalThreshold,
+            _proposalValidationStrategy,
             _metadataURI,
             _votingStrategies,
             _votingStrategyMetadataURIs,
-            _authenticators,
-            _executionStrategies,
-            _executionStrategyMetadataURIs
+            _authenticators
         );
     }
 
@@ -99,7 +97,7 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
     // ------------------------------------
 
     /**
-     * @notice Only the space controller can authorize an upgrade to this contract.
+     * @notice Only the space owner can authorize an upgrade to this contract.
      * @param newImplementation The address of the new implementation.
      */
     // solhint-disable-next-line no-empty-blocks
@@ -115,8 +113,8 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         minVotingDuration = _minVotingDuration;
     }
 
-    function _setProposalThreshold(uint256 _proposalThreshold) internal {
-        proposalThreshold = _proposalThreshold;
+    function _setProposalValidationStrategy(Strategy memory _proposalValidationStrategy) internal {
+        proposalValidationStrategy = _proposalValidationStrategy;
     }
 
     function _setVotingDelay(uint32 _votingDelay) internal {
@@ -177,45 +175,10 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
     }
 
     /**
-     * @notice  Internal function to add execution strategies.
-     * @param   _executionStrategies  Array of execution strategies to add.
-     */
-    function _addExecutionStrategies(Strategy[] memory _executionStrategies) internal {
-        if (_executionStrategies.length == 0) revert EmptyArray();
-        for (uint256 i = 0; i < _executionStrategies.length; i++) {
-            // A strategy set to 0 is used to indicate that the strategy is no longer active,
-            // so we need to prevent the user from adding a null invalid strategy address.
-            if (_executionStrategies[i].addy == address(0)) revert InvalidStrategyAddress();
-            executionStrategies.push(_executionStrategies[i]);
-        }
-    }
-
-    /**
-     * @notice  Internal function to remove execution strategies.
-     * @param   _executionStrategyIndices  Indices of the strategies to remove
-     */
-    function _removeExecutionStrategies(uint8[] memory _executionStrategyIndices) internal {
-        if (_executionStrategyIndices.length == 0) revert EmptyArray();
-        for (uint8 i = 0; i < _executionStrategyIndices.length; i++) {
-            executionStrategies[_executionStrategyIndices[i]] = Strategy(address(0), new bytes(0));
-        }
-    }
-
-    /**
      * @notice  Internal function to ensure `msg.sender` is in the list of allowed authenticators.
      */
     function _assertValidAuthenticator() internal view {
         if (authenticators[msg.sender] != true) revert AuthenticatorNotWhitelisted(msg.sender);
-    }
-
-    /**
-     * @notice  Internal function to ensure `executionStrategy` is in the array of whitelisted execution strategies.
-     * @param   executionStrategyIndex The execution strategy to check.
-     */
-    function _assertValidExecutionStrategy(uint8 executionStrategyIndex) internal view {
-        if (executionStrategyIndex >= executionStrategies.length)
-            revert InvalidExecutionStrategyIndex(executionStrategyIndex);
-        if (executionStrategies[executionStrategyIndex].addy == address(0)) revert ExecutionStrategyNotWhitelisted();
     }
 
     /**
@@ -229,113 +192,11 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         if (proposal.startTimestamp == 0) revert InvalidProposal();
     }
 
-    /**
-     * @notice  Internal function to ensure there are no duplicates in an array of `UserVotingStrategy`.
-     * @dev     We create a bitmap of those indices by using a `u256`. We try to set the bit at index `i`, stopping it
-     * @dev     it has already been set. Time complexity is O(n).
-     * @param   strats  Array to check for duplicates.
-     */
-    function _assertNoDuplicateIndices(IndexedStrategy[] calldata strats) internal pure {
-        if (strats.length < 2) {
-            return;
-        }
-
-        uint256 bitMap;
-        for (uint256 i = 0; i < strats.length; ++i) {
-            // Check that bit at index `strats[i].index` is not set
-            uint256 s = 1 << strats[i].index;
-            if (bitMap & s != 0) revert DuplicateFound(strats[i].index);
-            // Update aforementioned bit.
-            bitMap |= s;
-        }
-    }
-
-    /**
-     * @notice  Internal function that will loop over the used voting strategies and
-                return the cumulative voting power of a user when creating a proposal.
-     * @dev     
-     * @param   timestamp  Timestamp of the snapshot.
-     * @param   userAddress  Address for which to compute the voting power.
-     * @param   userVotingStrategies The desired voting strategies to check.
-     * @return  uint256  The total voting power of a user (over those specified voting strategies).
-     */
-    function _getCumulativeProposingPower(
-        uint32 timestamp,
-        address userAddress,
-        IndexedStrategy[] calldata userVotingStrategies
-    ) internal returns (uint256) {
-        // Ensure there are no duplicates to avoid an attack where people double count a voting strategy
-        _assertNoDuplicateIndices(userVotingStrategies);
-
-        uint256 totalVotingPower;
-        for (uint256 i = 0; i < userVotingStrategies.length; ++i) {
-            uint256 votingStrategyIndex = userVotingStrategies[i].index;
-            if (votingStrategyIndex >= votingStrategies.length) revert InvalidVotingStrategyIndex(votingStrategyIndex);
-            Strategy memory votingStrategy = votingStrategies[votingStrategyIndex];
-            // A strategyAddress set to 0 indicates that this address has already been removed and is
-            // no longer a valid voting strategy. See `_removeVotingStrategies`.
-            if (votingStrategy.addy == address(0)) revert InvalidVotingStrategyIndex(votingStrategyIndex);
-
-            totalVotingPower += IVotingStrategy(votingStrategy.addy).getVotingPower(
-                timestamp,
-                userAddress,
-                votingStrategy.params,
-                userVotingStrategies[i].params
-            );
-        }
-        return totalVotingPower;
-    }
-
-    /**
-     * @notice  Internal function that will loop over the used voting strategies and
-                return the cumulative voting power of a user when voting. 
-     * @dev     
-     * @param   timestamp  Timestamp of the snapshot.
-     * @param   userAddress  Address for which to compute the voting power.
-     * @param   userVotingStrategies The desired voting strategies to check.
-     * @param   _votingStrategies The array of voting strategies that are used for this proposal.
-                We cannot use the `votingStrategies` state variable because it might have updated 
-                since the proposal was created.
-     * @return  uint256  The total voting power of a user (over those specified voting strategies).
-     */
-    function _getCumulativeVotingPower(
-        uint32 timestamp,
-        address userAddress,
-        IndexedStrategy[] calldata userVotingStrategies,
-        Strategy[] memory _votingStrategies
-    ) internal returns (uint256) {
-        // Ensure there are no duplicates to avoid an attack where people double count a voting strategy
-        _assertNoDuplicateIndices(userVotingStrategies);
-
-        uint256 totalVotingPower;
-        for (uint256 i = 0; i < userVotingStrategies.length; ++i) {
-            uint256 votingStrategyIndex = userVotingStrategies[i].index;
-            if (votingStrategyIndex >= _votingStrategies.length) revert InvalidVotingStrategyIndex(votingStrategyIndex);
-            Strategy memory votingStrategy = _votingStrategies[votingStrategyIndex];
-            // A strategyAddress set to 0 indicates that this address has already been removed and is
-            // no longer a valid voting strategy. See `_removeVotingStrategies`.
-            if (votingStrategy.addy == address(0)) revert InvalidVotingStrategyIndex(votingStrategyIndex);
-
-            totalVotingPower += IVotingStrategy(votingStrategy.addy).getVotingPower(
-                timestamp,
-                userAddress,
-                votingStrategy.params,
-                userVotingStrategies[i].params
-            );
-        }
-        return totalVotingPower;
-    }
-
     // ------------------------------------
     // |                                  |
     // |             SETTERS              |
     // |                                  |
     // ------------------------------------
-
-    function setController(address _controller) external override onlyOwner {
-        transferOwnership(_controller);
-        emit ControllerUpdated(_controller);
-    }
 
     function setMaxVotingDuration(uint32 _maxVotingDuration) external override onlyOwner {
         _setMaxVotingDuration(_maxVotingDuration);
@@ -351,9 +212,9 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         emit MetadataURIUpdated(_metadataURI);
     }
 
-    function setProposalThreshold(uint256 _proposalThreshold) external override onlyOwner {
-        _setProposalThreshold(_proposalThreshold);
-        emit ProposalThresholdUpdated(_proposalThreshold);
+    function setProposalValidationStrategy(Strategy calldata _proposalValidationStrategy) external override onlyOwner {
+        _setProposalValidationStrategy(_proposalValidationStrategy);
+        emit ProposalValidationStrategyUpdated(_proposalValidationStrategy);
     }
 
     function setVotingDelay(uint32 _votingDelay) external override onlyOwner {
@@ -384,28 +245,11 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         emit AuthenticatorsRemoved(_authenticators);
     }
 
-    function addExecutionStrategies(
-        Strategy[] calldata _executionStrategies,
-        string[] memory executionStrategyMetadataURIs
-    ) external override onlyOwner {
-        _addExecutionStrategies(_executionStrategies);
-        emit ExecutionStrategiesAdded(_executionStrategies, executionStrategyMetadataURIs);
-    }
-
-    function removeExecutionStrategies(uint8[] calldata _executionStrategies) external override onlyOwner {
-        _removeExecutionStrategies(_executionStrategies);
-        emit ExecutionStrategiesRemoved(_executionStrategies);
-    }
-
     // ------------------------------------
     // |                                  |
     // |             GETTERS              |
     // |                                  |
     // ------------------------------------
-
-    function getController() external view override returns (address) {
-        return owner();
-    }
 
     function getProposal(uint256 proposalId) external view override returns (Proposal memory) {
         Proposal memory proposal = proposalRegistry[proposalId];
@@ -417,7 +261,7 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         Proposal memory proposal = proposalRegistry[proposalId];
         _assertProposalExists(proposal);
         return
-            IExecutionStrategy(proposal.executionStrategy.addy).getProposalStatus(
+            proposal.executionStrategy.getProposalStatus(
                 proposal,
                 votePower[proposalId][Choice.For],
                 votePower[proposalId][Choice.Against],
@@ -443,22 +287,26 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
      * @param   author  The address of the proposal creator.
      * @param   metadataURI  The metadata URI for the proposal.
      * @param   executionStrategy  The execution strategy index and associated execution payload to use in the proposal.
-     * @param   userVotingStrategies  The voting strategies indexes to use and the associated parameters for each.
+     * @param   userParams  The user provided parameters for proposal validation.
      */
     function propose(
         address author,
         string calldata metadataURI,
-        IndexedStrategy calldata executionStrategy,
-        IndexedStrategy[] calldata userVotingStrategies
+        Strategy calldata executionStrategy,
+        bytes calldata userParams
     ) external override {
         _assertValidAuthenticator();
-        _assertValidExecutionStrategy(executionStrategy.index);
 
         // Casting to `uint32` is fine because this gives us until year ~2106.
         uint32 snapshotTimestamp = uint32(block.timestamp);
 
-        uint256 votingPower = _getCumulativeProposingPower(snapshotTimestamp, author, userVotingStrategies);
-        if (votingPower < proposalThreshold) revert ProposalThresholdNotReached(votingPower);
+        if (
+            !IProposalValidationStrategy(proposalValidationStrategy.addy).validate(
+                author,
+                proposalValidationStrategy.params,
+                userParams
+            )
+        ) revert FailedToPassProposalValidation();
 
         uint32 startTimestamp = snapshotTimestamp + votingDelay;
         uint32 minEndTimestamp = startTimestamp + minVotingDuration;
@@ -473,7 +321,7 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
             minEndTimestamp,
             maxEndTimestamp,
             executionPayloadHash,
-            executionStrategies[executionStrategy.index],
+            IExecutionStrategy(executionStrategy.addy),
             author,
             FinalizationStatus.Pending,
             votingStrategies
@@ -509,9 +357,8 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         if (proposal.finalizationStatus != FinalizationStatus.Pending) revert ProposalFinalized();
         if (voteRegistry[proposalId][voterAddress]) revert UserHasAlreadyVoted();
 
-        uint256 votingPower = _getCumulativeVotingPower(
+        uint256 votingPower = voterAddress.getCumulativePower(
             proposal.snapshotTimestamp,
-            voterAddress,
             userVotingStrategies,
             proposal.votingStrategies
         );
@@ -531,14 +378,14 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
      * @param   proposalId  The proposal id.
      * @param   executionPayload  The execution payload, as described in `propose()`.
      */
-    function execute(uint256 proposalId, bytes calldata executionPayload) external nonReentrant {
+    function execute(uint256 proposalId, bytes calldata executionPayload) external override nonReentrant {
         Proposal storage proposal = proposalRegistry[proposalId];
         _assertProposalExists(proposal);
 
         // We add reentrancy protection here to prevent this function being re-entered by the execution strategy.
         // We cannot use the Checks-Effects-Interactions pattern because the proposal status is checked inside
         // the execution strategy (so essentially forced to do Checks-Interactions-Effects).
-        IExecutionStrategy(proposal.executionStrategy.addy).execute(
+        proposal.executionStrategy.execute(
             proposal,
             votePower[proposalId][Choice.For],
             votePower[proposalId][Choice.Against],
@@ -552,7 +399,7 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
     }
 
     /**
-     * @notice  Cancel a proposal. Only callable by the space controller.
+     * @notice  Cancel a proposal. Only callable by the space owner.
      * @param   proposalId  The proposal to cancel
      */
     function cancel(uint256 proposalId) external override onlyOwner {
@@ -573,18 +420,17 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
     function updateProposal(
         address author,
         uint256 proposalId,
-        IndexedStrategy calldata executionStrategy,
+        Strategy calldata executionStrategy,
         string calldata metadataURI
-    ) external {
+    ) external override {
         _assertValidAuthenticator();
-        _assertValidExecutionStrategy(executionStrategy.index);
 
         Proposal storage proposal = proposalRegistry[proposalId];
         if (author != proposal.author) revert InvalidCaller();
         if (block.timestamp >= proposal.startTimestamp) revert VotingDelayHasPassed();
 
         proposal.executionPayloadHash = keccak256(executionStrategy.params);
-        proposal.executionStrategy = executionStrategies[executionStrategy.index];
+        proposal.executionStrategy = IExecutionStrategy(executionStrategy.addy);
 
         emit ProposalUpdated(proposalId, executionStrategy, metadataURI);
     }

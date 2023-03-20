@@ -46,13 +46,10 @@ contract Deployer is Script {
 
         // ------- Execution Strategies -------
 
-        (address vanillaExecutionStrategy, ) = noRedeploy(type(VanillaExecutionStrategy).creationCode);
-        deployments.serialize("VanillaExecutionStrategy", vanillaExecutionStrategy);
-
         (address avatarExecutionStrategy, ) = noRedeploy(
             abi.encodePacked(
                 type(AvatarExecutionStrategy).creationCode,
-                abi.encode(address(0x1), address(0x1), new address[](0))
+                abi.encode(address(0x1), address(0x1), new address[](0), 0)
             )
         );
 
@@ -95,8 +92,7 @@ contract Deployer is Script {
 
         (address space, ) = noRedeploy(type(Space).creationCode);
 
-        // initializing the master space to be unusable
-        // if the space is not initialized, initialize it
+        // if the master space is not initialized, initialize it to be unusable
         if (Space(space).owner() == address(0x0)) {
             Strategy[] memory emptyStrategyArray = new Strategy[](1);
             emptyStrategyArray[0] = Strategy(address(0x1), new bytes(0));
@@ -109,13 +105,11 @@ contract Deployer is Script {
                 1,
                 1,
                 1,
-                1,
+                Strategy(address(0x1), new bytes(0)),
                 "",
                 emptyStrategyArray,
                 emptyStringArray,
-                emptyAddressArray,
-                emptyStrategyArray,
-                emptyStringArray
+                emptyAddressArray
             );
         }
 
