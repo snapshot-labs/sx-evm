@@ -13,6 +13,12 @@ import { EthTxAuthenticator } from "../src/authenticators/EthTxAuthenticator.sol
 import { CompVotingStrategy } from "../src/voting-strategies/CompVotingStrategy.sol";
 import { OZVotesVotingStrategy } from "../src/voting-strategies/OZVotesVotingStrategy.sol";
 import { WhitelistStrategy } from "../src/voting-strategies/WhitelistStrategy.sol";
+import {
+    VanillaProposalValidationStrategy
+} from "../src/proposal-validation-strategies/VanillaProposalValidationStrategy.sol";
+import {
+    VotingPowerProposalValidationStrategy
+} from "../src/proposal-validation-strategies/VotingPowerProposalValidationStrategy.sol";
 import { ProxyFactory } from "../src/ProxyFactory.sol";
 import { Strategy } from "../src/types.sol";
 
@@ -80,8 +86,19 @@ contract Deployer is Script {
         deployments.serialize("CompVotingStrategy", compVotingStrategy);
 
         (address ozVotesVotingStrategy, ) = noRedeploy(type(OZVotesVotingStrategy).creationCode);
-        vm.label(ozVotesVotingStrategy, "OZVotesVotingStrategy");
         deployments.serialize("OZVotesVotingStrategy", ozVotesVotingStrategy);
+
+        // ------- PROPOSAL VALIDATION STRATEGIES -------
+
+        (address vanillaProposalValidationStrategy, ) = noRedeploy(
+            type(VanillaProposalValidationStrategy).creationCode
+        );
+        deployments.serialize("VanillaProposalValidationStrategy", vanillaProposalValidationStrategy);
+
+        (address votingPowerProposalValidationStrategy, ) = noRedeploy(
+            type(VotingPowerProposalValidationStrategy).creationCode
+        );
+        deployments.serialize("VotingPowerProposalValidationStrategy", votingPowerProposalValidationStrategy);
 
         // ------- Factory -------
 
