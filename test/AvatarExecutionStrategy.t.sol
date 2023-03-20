@@ -29,7 +29,7 @@ contract AvatarExecutionStrategyTest is SpaceTest {
         // Deploy and activate the execution strategy on the avatar
         address[] memory spaces = new address[](1);
         spaces[0] = address(space);
-        avatarExecutionStrategy = new AvatarExecutionStrategy(owner, quorum, address(avatar), spaces);
+        avatarExecutionStrategy = new AvatarExecutionStrategy(owner, address(avatar), spaces, quorum);
         avatar.enableModule(address(avatarExecutionStrategy));
     }
 

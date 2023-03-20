@@ -27,7 +27,7 @@ contract TimelockExecutionStrategyTest is SpaceTest {
         address[] memory spaces = new address[](1);
         spaces[0] = address(space);
 
-        timelockExecutionStrategy = new TimelockExecutionStrategy(owner, quorum, spaces, 1000);
+        timelockExecutionStrategy = new TimelockExecutionStrategy(owner, spaces, 1000, quorum);
         vm.deal(address(timelockExecutionStrategy), 1000);
     }
 

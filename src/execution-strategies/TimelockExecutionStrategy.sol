@@ -38,7 +38,8 @@ contract TimelockExecutionStrategy is SimpleQuorumExecutionStrategy {
     /// @param _owner Address of the owner of this contract.
     /// @param _spaces Array of whitelisted space contracts.
     /// @param _timelockDelay The timelock delay in seconds.
-    constructor(address _owner, uint256 _quorum, address[] memory _spaces, uint256 _timelockDelay) {
+    /// @param _quorum The quorum required to execute a proposal.
+    constructor(address _owner, address[] memory _spaces, uint256 _timelockDelay, uint256 _quorum) {
         setUp(abi.encode(_owner, _spaces, _timelockDelay, _quorum));
     }
 
