@@ -9,7 +9,7 @@ import { SpaceManager } from "../utils/SpaceManager.sol";
 abstract contract OptimisticQuorumExecutionStrategy is IExecutionStrategy, SpaceManager {
     uint256 public quorum;
 
-    function __OptimisticQuorumExecutionStrategy_init(uint256 _quorum) internal initializer {
+    function __OptimisticQuorumExecutionStrategy_init(uint256 _quorum) internal onlyInitializing {
         quorum = _quorum;
     }
 

@@ -9,6 +9,11 @@ import { Choice, IndexedStrategy, Proposal, ProposalStatus, Strategy } from "../
 // Dummy implementation of the optimistic quorum
 contract OptimisticExec is OptimisticQuorumExecutionStrategy {
     constructor(uint256 _quorum) {
+        setUp(abi.encode(_quorum));
+    }
+
+    function setUp(bytes memory initParams) public initializer {
+        uint256 _quorum = abi.decode(initParams, (uint256));
         __OptimisticQuorumExecutionStrategy_init(_quorum);
     }
 
