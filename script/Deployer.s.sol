@@ -8,6 +8,7 @@ import { VanillaAuthenticator } from "../src/authenticators/VanillaAuthenticator
 import { VanillaVotingStrategy } from "../src/voting-strategies/VanillaVotingStrategy.sol";
 import { VanillaExecutionStrategy } from "../src/execution-strategies/VanillaExecutionStrategy.sol";
 import { AvatarExecutionStrategy } from "../src/execution-strategies/AvatarExecutionStrategy.sol";
+import { TimelockExecutionStrategy } from "../src/execution-strategies/TimelockExecutionStrategy.sol";
 import { EthSigAuthenticator } from "../src/authenticators/EthSigAuthenticator.sol";
 import { EthTxAuthenticator } from "../src/authenticators/EthTxAuthenticator.sol";
 import { CompVotingStrategy } from "../src/voting-strategies/CompVotingStrategy.sol";
@@ -60,6 +61,15 @@ contract Deployer is Script {
         );
 
         deployments.serialize("AvatarExecutionStrategyImplementation", avatarExecutionStrategy);
+
+        (address timelockExecutionStrategy, ) = noRedeploy(
+            abi.encodePacked(
+                type(TimelockExecutionStrategy).creationCode,
+                abi.encode(address(0x1), new address[](0), 0, 0)
+            )
+        );
+
+        deployments.serialize("TimelockExecutionStrategyImplementation", timelockExecutionStrategy);
 
         // ------- AUTHENTICATORS -------
 
