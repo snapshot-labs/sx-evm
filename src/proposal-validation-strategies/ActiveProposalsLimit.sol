@@ -2,11 +2,6 @@
 
 pragma solidity ^0.8.18;
 
-import { IProposalValidationStrategy } from "../interfaces/IProposalValidationStrategy.sol";
-import { IndexedStrategy, Strategy } from "../types.sol";
-import { ISpace } from "../interfaces/ISpace.sol";
-import { GetCumulativePower } from "../utils/GetCumulativePower.sol";
-
 /**
  * @author  Snapshot Labs
  * @title   Active Proposals Limit Proposal
