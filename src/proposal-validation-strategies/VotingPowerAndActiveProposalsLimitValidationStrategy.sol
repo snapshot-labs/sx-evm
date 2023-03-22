@@ -6,12 +6,14 @@ import { IProposalValidationStrategy } from "../interfaces/IProposalValidationSt
 import { IndexedStrategy, Strategy } from "../types.sol";
 import { ISpace } from "../interfaces/ISpace.sol";
 import { GetCumulativePower } from "../utils/GetCumulativePower.sol";
+import { ActiveProposalsLimit } from "./ActiveProposalsLimit.sol";
 
-contract VotingPowerProposalValidationStrategy is IProposalValidationStrategy {
+contract VotingPowerAndActiveProposalsLimitValidationStrategy is IProposalValidationStrategy, ActiveProposalsLimit {
     using GetCumulativePower for address;
 
     /**
-     * @notice  Validates a proposal using the voting strategies to compute the proposal power.
+     * @notice  Validates a proposal using the voting strategies to compute the proposal power, while also ensuring
+                that the author respects the active proposals limit.
      * @param   author  Author of the proposal
      * @param   userParams  User provided parameters for the voting strategies
      * @param   params  Bytes that should decode to proposalThreshold and allowedStrategies
@@ -22,6 +24,10 @@ contract VotingPowerProposalValidationStrategy is IProposalValidationStrategy {
         bytes calldata params,
         bytes calldata userParams
     ) external override returns (bool) {
+        if (!increaseActiveProposalCount(author)) {
+            return false;
+        }
+
         (uint256 proposalThreshold, Strategy[] memory allowedStrategies) = abi.decode(params, (uint256, Strategy[]));
         IndexedStrategy[] memory userStrategies = abi.decode(userParams, (IndexedStrategy[]));
 

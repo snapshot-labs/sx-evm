@@ -11,8 +11,8 @@ import { VanillaAuthenticator } from "../../src/authenticators/VanillaAuthentica
 import { VanillaVotingStrategy } from "../../src/voting-strategies/VanillaVotingStrategy.sol";
 import { VanillaExecutionStrategy } from "../../src/execution-strategies/VanillaExecutionStrategy.sol";
 import {
-    VotingPowerProposalValidationStrategy
-} from "../../src/proposal-validation-strategies/VotingPowerProposalValidationStrategy.sol";
+    VotingPowerAndActiveProposalsLimitValidationStrategy
+} from "../../src/proposal-validation-strategies/VotingPowerAndActiveProposalsLimitValidationStrategy.sol";
 import { ISpaceEvents } from "../../src/interfaces/space/ISpaceEvents.sol";
 import { ISpaceErrors } from "../../src/interfaces/space/ISpaceErrors.sol";
 import { IExecutionStrategyErrors } from "../../src/interfaces/execution-strategies/IExecutionStrategyErrors.sol";
@@ -30,7 +30,7 @@ abstract contract SpaceTest is Test, GasSnapshot, ISpaceEvents, ISpaceErrors, IE
     VanillaVotingStrategy internal vanillaVotingStrategy;
     VanillaAuthenticator internal vanillaAuthenticator;
     VanillaExecutionStrategy internal vanillaExecutionStrategy;
-    VotingPowerProposalValidationStrategy internal votingPowerProposalValidationContract;
+    VotingPowerAndActiveProposalsLimitValidationStrategy internal votingPowerAndActiveProposalsLimitValidationContract;
 
     uint256 public constant AUTHOR_KEY = 1234;
     uint256 public constant VOTER_KEY = 5678;
@@ -56,7 +56,7 @@ abstract contract SpaceTest is Test, GasSnapshot, ISpaceEvents, ISpaceErrors, IE
     uint32 public maxVotingDuration;
     uint256 public proposalThreshold;
     uint32 public quorum;
-    Strategy public votingPowerProposalValidationStrategy;
+    Strategy public votingPowerAndActiveProposalsLimitValidationStrategy;
 
     // Default voting and execution strategy setups
     IndexedStrategy[] public userVotingStrategies;
@@ -76,7 +76,11 @@ abstract contract SpaceTest is Test, GasSnapshot, ISpaceEvents, ISpaceErrors, IE
         vanillaVotingStrategy = new VanillaVotingStrategy();
         vanillaAuthenticator = new VanillaAuthenticator();
         vanillaExecutionStrategy = new VanillaExecutionStrategy(quorum);
-        votingPowerProposalValidationContract = new VotingPowerProposalValidationStrategy();
+
+        // For some reason prettier doesn't count `()` in its column count? idk but solhint will emit a warning
+        // because the line is 122 chars long...
+        // solhint-disable-next-line max-line-length
+        votingPowerAndActiveProposalsLimitValidationContract = new VotingPowerAndActiveProposalsLimitValidationStrategy();
 
         votingDelay = 0;
         minVotingDuration = 0;
@@ -87,8 +91,8 @@ abstract contract SpaceTest is Test, GasSnapshot, ISpaceEvents, ISpaceErrors, IE
         executionStrategies.push(Strategy(address(vanillaExecutionStrategy), abi.encode(uint256(quorum))));
         userVotingStrategies.push(IndexedStrategy(0, new bytes(0)));
         executionStrategy = Strategy(address(vanillaExecutionStrategy), new bytes(0));
-        votingPowerProposalValidationStrategy = Strategy(
-            address(votingPowerProposalValidationContract),
+        votingPowerAndActiveProposalsLimitValidationStrategy = Strategy(
+            address(votingPowerAndActiveProposalsLimitValidationContract),
             abi.encode(proposalThreshold, votingStrategies)
         );
         space = Space(
@@ -101,7 +105,7 @@ abstract contract SpaceTest is Test, GasSnapshot, ISpaceEvents, ISpaceErrors, IE
                         votingDelay,
                         minVotingDuration,
                         maxVotingDuration,
-                        votingPowerProposalValidationStrategy,
+                        votingPowerAndActiveProposalsLimitValidationStrategy,
                         spaceMetadataURI,
                         votingStrategies,
                         votingStrategyMetadataURIs,
