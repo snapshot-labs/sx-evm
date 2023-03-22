@@ -34,7 +34,7 @@ abstract contract ActiveProposalsLimit {
         uint256 activeProposals = packedData >> 32;
 
         if (lastTimestamp == 0) {
-            // First time the user votes, activeProposals is 1 no matter what
+            // First time the user proposes, activeProposals is 1 no matter what
             activeProposals = 1;
         } else if (block.timestamp >= lastTimestamp + COOLDOWN) {
             // Cooldown passed, reset counter
