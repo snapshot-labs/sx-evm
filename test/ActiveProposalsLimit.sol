@@ -3,17 +3,17 @@ pragma solidity ^0.8.18;
 
 import { SpaceTest } from "./utils/Space.t.sol";
 import { Strategy } from "../src/types.sol";
-import { ActiveProposalsLimitVanilla } from "./mocks/ActiveProposalsLimitVanilla.sol";
+import { ActiveProposalsLimiterVanilla } from "./mocks/ActiveProposalsLimiterVanilla.sol";
 
 contract ActiveProposalsVanilla is SpaceTest {
-    ActiveProposalsLimitVanilla internal spamProtec;
+    ActiveProposalsLimiterVanilla internal spamProtec;
     uint224 internal maxActive;
     uint32 internal cooldown;
 
     function setUp() public override {
         super.setUp();
 
-        spamProtec = new ActiveProposalsLimitVanilla();
+        spamProtec = new ActiveProposalsLimiterVanilla();
 
         maxActive = spamProtec.MAX_ACTIVE_PROPOSALS();
         cooldown = spamProtec.COOLDOWN();

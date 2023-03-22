@@ -6,9 +6,9 @@ import { IProposalValidationStrategy } from "../interfaces/IProposalValidationSt
 import { IndexedStrategy, Strategy } from "../types.sol";
 import { ISpace } from "../interfaces/ISpace.sol";
 import { GetCumulativePower } from "../utils/GetCumulativePower.sol";
-import { ActiveProposalsLimit } from "./ActiveProposalsLimit.sol";
+import { ActiveProposalsLimiter } from "./ActiveProposalsLimiter.sol";
 
-contract VotingPowerAndActiveProposalsLimitValidationStrategy is IProposalValidationStrategy, ActiveProposalsLimit {
+contract VotingPowerAndActiveProposalsLimiterValidationStrategy is IProposalValidationStrategy, ActiveProposalsLimiter {
     using GetCumulativePower for address;
 
     /**

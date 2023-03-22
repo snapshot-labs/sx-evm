@@ -106,7 +106,7 @@ contract GasSnapshotsTest is SpaceTest, SigUtils {
         // Udpdate the proposal validation params
         space.setProposalValidationStrategy(
             Strategy(
-                address(votingPowerAndActiveProposalsLimitValidationContract),
+                address(votingPowerAndActiveProposalsLimiterValidationContract),
                 abi.encode(TOKEN_AMOUNT, currentVotingStrategies)
             )
         );

@@ -10,7 +10,7 @@ pragma solidity ^0.8.18;
  *          The counter gets reset everytime `COOLDOWN` has passed.
  */
 
-abstract contract ActiveProposalsLimit {
+abstract contract ActiveProposalsLimiter {
     // Cooldown to wait before the counter gets reset
     uint32 public constant COOLDOWN = 1 weeks;
 

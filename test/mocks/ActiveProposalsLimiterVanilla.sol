@@ -3,10 +3,10 @@
 pragma solidity ^0.8.18;
 
 import { IProposalValidationStrategy } from "../../src/interfaces/IProposalValidationStrategy.sol";
-import { ActiveProposalsLimit } from "../../src/proposal-validation-strategies/ActiveProposalsLimit.sol";
+import { ActiveProposalsLimiter } from "../../src/proposal-validation-strategies/ActiveProposalsLimiter.sol";
 
 // Always returns false
-contract ActiveProposalsLimitVanilla is IProposalValidationStrategy, ActiveProposalsLimit {
+contract ActiveProposalsLimiterVanilla is IProposalValidationStrategy, ActiveProposalsLimiter {
     function validate(
         address author,
         bytes calldata, // params,
