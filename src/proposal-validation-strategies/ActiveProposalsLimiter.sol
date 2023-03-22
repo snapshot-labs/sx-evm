@@ -17,12 +17,16 @@ abstract contract ActiveProposalsLimiter {
     // Maximum number of active proposals per user. Must be != 0
     uint224 public constant MAX_ACTIVE_PROPOSALS = 5;
 
+    // Mapping that stores data for each user. Data is as follows:
+    //   [0..32] : 32 bits for the timestamp of the latest proposal made by the user
+    //   [32..256] : 224 bits for the number of currently active proposals for this user
     mapping(address => uint256) public usersPackedData;
 
-    function increaseActiveProposalCount(address user) internal returns (bool) {
+    function increaseActiveProposalCount(address user) internal returns (bool success) {
+        // See comments of `usersPackedData`
         uint256 packedData = usersPackedData[user];
 
-        // Effectively a uint32 (32 last bits of userInfo)
+        // Effectively a uint32 (32 last bits of packedData)
         uint256 lastTimestamp = uint32(packedData);
 
         // 256 - 32 == 224 bits
