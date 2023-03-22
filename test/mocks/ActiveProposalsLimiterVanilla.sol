@@ -7,6 +7,9 @@ import { ActiveProposalsLimiter } from "../../src/proposal-validation-strategies
 
 // Always returns false
 contract ActiveProposalsLimiterVanilla is IProposalValidationStrategy, ActiveProposalsLimiter {
+    // solhint-disable-next-line no-empty-blocks
+    constructor(uint32 _cooldown, uint224 _maxActiveProposals) ActiveProposalsLimiter(_cooldown, _maxActiveProposals) {}
+
     function validate(
         address author,
         bytes calldata, // params,

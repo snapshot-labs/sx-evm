@@ -11,6 +11,9 @@ import { ActiveProposalsLimiter } from "./ActiveProposalsLimiter.sol";
 contract VotingPowerAndActiveProposalsLimiterValidationStrategy is IProposalValidationStrategy, ActiveProposalsLimiter {
     using GetCumulativePower for address;
 
+    // solhint-disable-next-line no-empty-blocks
+    constructor(uint32 _cooldown, uint224 _maxActiveProposals) ActiveProposalsLimiter(_cooldown, _maxActiveProposals) {}
+
     /**
      * @notice  Validates a proposal using the voting strategies to compute the proposal power, while also ensuring
                 that the author respects the active proposals limit.

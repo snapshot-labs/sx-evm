@@ -81,7 +81,10 @@ abstract contract SpaceTest is Test, GasSnapshot, ISpaceEvents, ISpaceErrors, IE
         // For some reason prettier doesn't count `()` in its column count? idk but solhint will emit a warning
         // because the line is 122 chars long...
         // solhint-disable-next-line max-line-length
-        votingPowerAndActiveProposalsLimiterValidationContract = new VotingPowerAndActiveProposalsLimiterValidationStrategy();
+        votingPowerAndActiveProposalsLimiterValidationContract = new VotingPowerAndActiveProposalsLimiterValidationStrategy(
+            1 weeks,
+            5
+        );
 
         votingDelay = 0;
         minVotingDuration = 0;

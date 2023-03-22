@@ -13,10 +13,10 @@ contract ActiveProposalsVanilla is SpaceTest {
     function setUp() public override {
         super.setUp();
 
-        spamProtec = new ActiveProposalsLimiterVanilla();
+        maxActive = 5;
+        cooldown = 1 weeks;
 
-        maxActive = spamProtec.MAX_ACTIVE_PROPOSALS();
-        cooldown = spamProtec.COOLDOWN();
+        spamProtec = new ActiveProposalsLimiterVanilla(1 weeks, 5);
 
         space.setProposalValidationStrategy(Strategy(address(spamProtec), new bytes(0)));
     }
@@ -41,7 +41,7 @@ contract ActiveProposalsVanilla is SpaceTest {
     }
 
     function testSpamOverLongPeriod() public {
-        // max * 2 so we would revert if `COOLDOWN` is not respected
+        // max * 2 so we would revert if `cooldown` is not respected
         for (uint256 i = 0; i < maxActive * 2; i++) {
             _createProposal(author, proposalMetadataURI, executionStrategy, userVotingStrategies);
             vm.warp(block.timestamp + cooldown);
@@ -49,7 +49,7 @@ contract ActiveProposalsVanilla is SpaceTest {
     }
 
     function testSpamThenWaitThenSpam() public {
-        // max * 2 so we would revert if `COOLDOWN` is not respected
+        // max * 2 so we would revert if `cooldown` is not respected
         for (uint256 i = 0; i < maxActive; i++) {
             _createProposal(author, proposalMetadataURI, executionStrategy, userVotingStrategies);
         }
