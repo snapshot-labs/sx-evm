@@ -4,7 +4,7 @@ pragma solidity ^0.8.18;
 
 /**
  * @author  Snapshot Labs
- * @title   Active Proposals Limit Proposal
+ * @title   Active Proposals Limiter
  * @notice  Exposes a function `increaseActiveProposalCount` that will error if
  *          user has reached `maxActiveProposals` without waiting for `cooldown` to pass.
  *          The counter gets reset everytime `cooldown` has passed.
