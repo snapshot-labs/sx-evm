@@ -26,8 +26,6 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
     uint32 public minVotingDuration;
     // Next proposal nonce, increased by one every time a new proposal is created.
     uint256 public nextProposalId;
-    // Minimum voting power required by a user to create a new proposal (used to prevent proposal spamming).
-    uint256 public proposalThreshold;
     // Delay between when the proposal is created and when the voting period starts for this proposal.
     uint32 public votingDelay;
 
@@ -287,13 +285,13 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
      * @param   author  The address of the proposal creator.
      * @param   metadataURI  The metadata URI for the proposal.
      * @param   executionStrategy  The execution strategy index and associated execution payload to use in the proposal.
-     * @param   userParams  The user provided parameters for proposal validation.
+     * @param   userProposalValidationParams  The user provided parameters for proposal validation.
      */
     function propose(
         address author,
         string calldata metadataURI,
         Strategy calldata executionStrategy,
-        bytes calldata userParams
+        bytes calldata userProposalValidationParams
     ) external override {
         _assertValidAuthenticator();
 
@@ -304,7 +302,7 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
             !IProposalValidationStrategy(proposalValidationStrategy.addr).validate(
                 author,
                 proposalValidationStrategy.params,
-                userParams
+                userProposalValidationParams
             )
         ) revert FailedToPassProposalValidation();
 
@@ -335,14 +333,14 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
 
     /**
      * @notice  Cast a vote
-     * @param   voterAddress  Voter's address.
+     * @param   voter  Voter's address.
      * @param   proposalId  Proposal id.
      * @param   choice  Choice can be `For`, `Against` or `Abstain`.
      * @param   userVotingStrategies  Strategies to use to compute the voter's voting power.
      * @param   metadataUri  An optional metadata to give information about the vote.
      */
     function vote(
-        address voterAddress,
+        address voter,
         uint256 proposalId,
         Choice choice,
         IndexedStrategy[] calldata userVotingStrategies,
@@ -355,21 +353,21 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         if (block.timestamp >= proposal.maxEndTimestamp) revert VotingPeriodHasEnded();
         if (block.timestamp < proposal.startTimestamp) revert VotingPeriodHasNotStarted();
         if (proposal.finalizationStatus != FinalizationStatus.Pending) revert ProposalFinalized();
-        if (voteRegistry[proposalId][voterAddress]) revert UserHasAlreadyVoted();
+        if (voteRegistry[proposalId][voter]) revert UserHasAlreadyVoted();
 
-        uint256 votingPower = voterAddress.getCumulativePower(
+        uint256 votingPower = voter.getCumulativePower(
             proposal.snapshotTimestamp,
             userVotingStrategies,
             proposal.votingStrategies
         );
         if (votingPower == 0) revert UserHasNoVotingPower();
         votePower[proposalId][choice] += votingPower;
-        voteRegistry[proposalId][voterAddress] = true;
+        voteRegistry[proposalId][voter] = true;
 
         if (bytes(metadataUri).length == 0) {
-            emit VoteCast(proposalId, voterAddress, choice, votingPower);
+            emit VoteCast(proposalId, voter, choice, votingPower);
         } else {
-            emit VoteCastWithMetadata(proposalId, voterAddress, choice, votingPower, metadataUri);
+            emit VoteCastWithMetadata(proposalId, voter, choice, votingPower, metadataUri);
         }
     }
 
