@@ -129,7 +129,7 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         for (uint256 i = 0; i < _votingStrategies.length; i++) {
             // A voting strategy set to 0 is used to indicate that the voting strategy is no longer active,
             // so we need to prevent the user from adding a null invalid strategy address.
-            if (_votingStrategies[i].addy == address(0)) revert InvalidStrategyAddress();
+            if (_votingStrategies[i].addr == address(0)) revert InvalidStrategyAddress();
             votingStrategies.push(_votingStrategies[i]);
         }
     }
@@ -142,7 +142,7 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
     function _removeVotingStrategies(uint8[] memory _votingStrategyIndices) internal {
         if (_votingStrategyIndices.length == 0) revert EmptyArray();
         for (uint8 i = 0; i < _votingStrategyIndices.length; i++) {
-            votingStrategies[_votingStrategyIndices[i]].addy = address(0);
+            votingStrategies[_votingStrategyIndices[i]].addr = address(0);
             votingStrategies[_votingStrategyIndices[i]].params = new bytes(0);
         }
 
@@ -299,7 +299,7 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         uint32 snapshotTimestamp = uint32(block.timestamp);
 
         if (
-            !IProposalValidationStrategy(proposalValidationStrategy.addy).validate(
+            !IProposalValidationStrategy(proposalValidationStrategy.addr).validate(
                 author,
                 proposalValidationStrategy.params,
                 userParams
@@ -319,7 +319,7 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
             minEndTimestamp,
             maxEndTimestamp,
             executionPayloadHash,
-            IExecutionStrategy(executionStrategy.addy),
+            IExecutionStrategy(executionStrategy.addr),
             author,
             FinalizationStatus.Pending,
             votingStrategies
@@ -428,7 +428,7 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         if (block.timestamp >= proposal.startTimestamp) revert VotingDelayHasPassed();
 
         proposal.executionPayloadHash = keccak256(executionStrategy.params);
-        proposal.executionStrategy = IExecutionStrategy(executionStrategy.addy);
+        proposal.executionStrategy = IExecutionStrategy(executionStrategy.addr);
 
         emit ProposalUpdated(proposalId, executionStrategy, metadataURI);
     }
