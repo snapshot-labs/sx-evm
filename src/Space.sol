@@ -38,13 +38,13 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
     Strategy public proposalValidationStrategy;
 
     // Mapping of allowed authenticators.
-    mapping(address auth => bool allowed) private authenticators;
+    mapping(address auth => bool allowed) public authenticators;
     // Mapping of all `Proposal`s of this space (past and present).
     mapping(uint256 proposalId => Proposal proposal) private proposalRegistry;
     // Mapping used to know if a voter already voted on a specific proposal. Here to prevent double voting.
-    mapping(uint256 proposalId => mapping(address voter => bool hasVoted)) private voteRegistry;
+    mapping(uint256 proposalId => mapping(address voter => bool hasVoted)) public voteRegistry;
     // Mapping used to check the current voting power in favor of a `Choice` for a specific proposal.
-    mapping(uint256 proposalId => mapping(Choice choice => uint256 votePower)) private votePower;
+    mapping(uint256 proposalId => mapping(Choice choice => uint256 votePower)) public votePower;
 
     // ------------------------------------
     // |                                  |

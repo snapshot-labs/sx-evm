@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.18;
 
-import { Proposal, ProposalStatus } from "src/types.sol";
+import { Choice, Proposal, ProposalStatus, Strategy } from "src/types.sol";
 
 interface ISpaceState {
     function maxVotingDuration() external view returns (uint32);
@@ -12,6 +12,16 @@ interface ISpaceState {
     function nextProposalId() external view returns (uint256);
 
     function votingDelay() external view returns (uint32);
+
+    // Returns `Strategy` but can't override the default derived implementation
+    function votingStrategies(uint256 index) external view returns (address, bytes memory);
+
+    // Returns `Strategy` but can't override the default derived implementation
+    function proposalValidationStrategy() external view returns (address, bytes memory);
+
+    function voteRegistry(uint256 proposalId, address voter) external view returns (bool);
+
+    function votePower(uint256 proposalId, Choice choice) external view returns (uint256);
 
     function getProposal(uint256 proposalId) external view returns (Proposal memory);
 
