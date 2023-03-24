@@ -18,8 +18,8 @@ abstract contract SignatureVerifier is EIP712 {
     bytes32 private constant PROPOSE_TYPEHASH =
         keccak256(
             "Propose(address space,address author,string metadataURI,Strategy executionStrategy,"
-            "bytes userParams,uint256 salt)"
-            "Strategy(address addy,bytes params)"
+            "bytes userProposalValidationParams,uint256 salt)"
+            "Strategy(address addr,bytes params)"
         );
     bytes32 private constant VOTE_TYPEHASH =
         keccak256(
@@ -30,8 +30,8 @@ abstract contract SignatureVerifier is EIP712 {
     bytes32 private constant UPDATE_PROPOSAL_TYPEHASH =
         keccak256(
             "updateProposal(address space,address author,uint256 proposalId,"
-            "Strategy executionStrategy,string metadataURI)"
-            "Strategy(address addy,bytes params)"
+            "Strategy executionStrategy,string metadataURI,uint256 salt)"
+            "Strategy(address addr,bytes params)"
         );
 
     mapping(address author => mapping(uint256 salt => bool used)) private usedSalts;
@@ -40,8 +40,12 @@ abstract contract SignatureVerifier is EIP712 {
     constructor(string memory name, string memory version) EIP712(name, version) {}
 
     function _verifyProposeSig(uint8 v, bytes32 r, bytes32 s, uint256 salt, address space, bytes memory data) internal {
-        (address author, string memory metadataURI, Strategy memory executionStrategy, bytes memory userParams) = abi
-            .decode(data, (address, string, Strategy, bytes));
+        (
+            address author,
+            string memory metadataURI,
+            Strategy memory executionStrategy,
+            bytes memory userProposalValidationParams
+        ) = abi.decode(data, (address, string, Strategy, bytes));
 
         if (usedSalts[author][salt]) revert SaltAlreadyUsed();
 
@@ -54,7 +58,7 @@ abstract contract SignatureVerifier is EIP712 {
                         author,
                         keccak256(bytes(metadataURI)),
                         executionStrategy.hash(),
-                        keccak256(userParams),
+                        keccak256(userProposalValidationParams),
                         salt
                     )
                 )
@@ -101,11 +105,20 @@ abstract contract SignatureVerifier is EIP712 {
         if (recoveredAddress != voter) revert InvalidSignature();
     }
 
-    function _verifyUpdateProposalSig(uint8 v, bytes32 r, bytes32 s, address space, bytes memory data) internal view {
+    function _verifyUpdateProposalSig(
+        uint8 v,
+        bytes32 r,
+        bytes32 s,
+        uint256 salt,
+        address space,
+        bytes memory data
+    ) internal {
         (address author, uint256 proposalId, Strategy memory executionStrategy, string memory metadataURI) = abi.decode(
             data,
             (address, uint256, Strategy, string)
         );
+
+        if (usedSalts[author][salt]) revert SaltAlreadyUsed();
 
         address recoveredAddress = ECDSA.recover(
             _hashTypedDataV4(
@@ -116,7 +129,8 @@ abstract contract SignatureVerifier is EIP712 {
                         author,
                         proposalId,
                         executionStrategy.hash(),
-                        keccak256(bytes(metadataURI))
+                        keccak256(bytes(metadataURI)),
+                        salt
                     )
                 )
             ),
@@ -126,5 +140,8 @@ abstract contract SignatureVerifier is EIP712 {
         );
 
         if (recoveredAddress != author) revert InvalidSignature();
+
+        // Mark salt as used to prevent replay attacks
+        usedSalts[author][salt] = true;
     }
 }
