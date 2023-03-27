@@ -29,13 +29,10 @@ abstract contract EmergencyQuorumStrategy is IExecutionStrategy {
         uint256 votesAgainst,
         uint256 votesAbstain
     ) public view override returns (ProposalStatus) {
-        bool emergency = _quorumReached(emergencyQuorum, votesFor, votesAgainst, votesAbstain);
-        bool emergencyAccepted = emergency && _supported(votesFor, votesAgainst);
+        bool emergencyQuorumReached = _quorumReached(emergencyQuorum, votesFor, votesAgainst, votesAbstain);
 
-        // If emergencyAccepted is `true` then the proposal is necessarily `accepted`. This is an edge case where
-        // `emergencyQuorum < quorum`.
-        bool accepted = emergencyAccepted ||
-            (_quorumReached(quorum, votesFor, votesAgainst, votesAbstain) && _supported(votesFor, votesAgainst));
+        bool accepted = _quorumReached(quorum, votesFor, votesAgainst, votesAbstain) &&
+            _supported(votesFor, votesAgainst);
 
         if (proposal.finalizationStatus == FinalizationStatus.Cancelled) {
             return ProposalStatus.Cancelled;
@@ -43,26 +40,43 @@ abstract contract EmergencyQuorumStrategy is IExecutionStrategy {
             return ProposalStatus.Executed;
         } else if (block.timestamp < proposal.startTimestamp) {
             return ProposalStatus.VotingDelay;
-        } else if (block.timestamp < proposal.minEndTimestamp) {
-            // Emergency code is inserted here.
-            if (emergency) {
-                if (emergencyAccepted) {
+        } else if (emergencyQuorumReached) {
+            if (_supported(votesFor, votesAgainst)) {
+                // Proposal is supported
+                if (block.timestamp < proposal.maxEndTimestamp) {
+                    // New votes can still come in so return `VotingPeriodAccepted`.
                     return ProposalStatus.VotingPeriodAccepted;
                 } else {
-                    return ProposalStatus.Rejected;
+                    // No new votes can't come in, so it's definitely accepted.
+                    return ProposalStatus.Accepted;
                 }
             } else {
-                return ProposalStatus.VotingPeriod;
+                // Proposal is not supported
+                if (block.timestamp < proposal.maxEndTimestamp) {
+                    // New votes might still come in so return `VotingPeriod`.
+                    return ProposalStatus.VotingPeriod;
+                } else {
+                    // New votes can't come in, so it's definitely rejected.
+                    return ProposalStatus.Rejected;
+                }
             }
+        } else if (block.timestamp < proposal.minEndTimestamp) {
+            // Proposal has not reached minEndTimestamp yet.
+            return ProposalStatus.VotingPeriod;
         } else if (block.timestamp < proposal.maxEndTimestamp) {
+            // Timestamp is between minEndTimestamp and maxEndTimestamp
             if (accepted) {
                 return ProposalStatus.VotingPeriodAccepted;
             } else {
                 return ProposalStatus.VotingPeriod;
             }
         } else if (accepted) {
+            // Quorum reached and proposal supported: no new votes will come in so the proposal is
+            // definitely  accepted.
             return ProposalStatus.Accepted;
         } else {
+            // Quorum not reached reached or proposal supported: no new votes will come in so the proposal is
+            // definitely rejected.
             return ProposalStatus.Rejected;
         }
     }
