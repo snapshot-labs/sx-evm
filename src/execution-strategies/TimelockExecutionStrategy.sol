@@ -127,5 +127,6 @@ contract TimelockExecutionStrategy is SimpleQuorumExecutionStrategy {
         return "SimpleQuorumTimelock";
     }
 
+    // solhint-disable-next-line no-empty-blocks
     receive() external payable {}
 }
