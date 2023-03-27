@@ -28,7 +28,9 @@ contract TimelockExecutionStrategyTest is SpaceTest {
         spaces[0] = address(space);
 
         timelockExecutionStrategy = new TimelockExecutionStrategy(owner, spaces, 1000, quorum);
-        vm.deal(address(timelockExecutionStrategy), 1000);
+        vm.deal(owner, 1000);
+        vm.prank(owner);
+        payable(address(timelockExecutionStrategy)).transfer(900);
     }
 
     function testQueueingFromUnauthorizedSpace() external {
