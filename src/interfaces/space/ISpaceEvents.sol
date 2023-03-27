@@ -10,19 +10,17 @@ interface ISpaceEvents {
         uint32 votingDelay,
         uint32 minVotingDuration,
         uint32 maxVotingDuration,
-        uint256 proposalThreshold,
+        Strategy proposalValidationStrategy,
         string metadataURI,
         Strategy[] votingStrategies,
         string[] votingStrategyMetadataURIs,
-        address[] authenticators,
-        Strategy[] executionStrategies,
-        string[] executionStrategyMetadataURIs
+        address[] authenticators
     );
     event ProposalCreated(uint256 nextProposalId, address author, Proposal proposal, string metadataUri, bytes payload);
-    event VoteCast(uint256 proposalId, address voterAddress, Choice choice, uint256 votingPower);
+    event VoteCast(uint256 proposalId, address voter, Choice choice, uint256 votingPower);
     event VoteCastWithMetadata(
         uint256 proposalId,
-        address voterAddress,
+        address voter,
         Choice choice,
         uint256 votingPower,
         string metadataUri
@@ -35,12 +33,11 @@ interface ISpaceEvents {
     event ExecutionStrategiesRemoved(uint8[] executionStrategyIndices);
     event AuthenticatorsAdded(address[] newAuthenticators);
     event AuthenticatorsRemoved(address[] authenticators);
-    event ControllerUpdated(address newController);
     event MaxVotingDurationUpdated(uint32 newMaxVotingDuration);
     event MinVotingDurationUpdated(uint32 newMinVotingDuration);
     event MetadataURIUpdated(string newMetadataURI);
-    event ProposalThresholdUpdated(uint256 newProposalThreshold);
+    event ProposalValidationStrategyUpdated(Strategy newProposalValidationStrategy);
     event QuorumUpdated(uint256 newQuorum);
     event VotingDelayUpdated(uint256 newVotingDelay);
-    event ProposalUpdated(uint256 proposalId, IndexedStrategy newExecutionStrategy, string newMetadataURI);
+    event ProposalUpdated(uint256 proposalId, Strategy newExecutionStrategy, string newMetadataURI);
 }

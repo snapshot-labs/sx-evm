@@ -6,6 +6,14 @@ import { IExecutionStrategy } from "../interfaces/IExecutionStrategy.sol";
 import { FinalizationStatus, Proposal, ProposalStatus } from "../types.sol";
 
 abstract contract EmergencyQuorumStrategy is IExecutionStrategy {
+    uint256 public immutable quorum;
+    uint256 public immutable emergencyQuorum;
+
+    constructor(uint256 _quorum, uint256 _emergencyQuorum) {
+        quorum = _quorum;
+        emergencyQuorum = _emergencyQuorum;
+    }
+
     function execute(
         Proposal memory proposal,
         uint256 votesFor,
@@ -21,9 +29,6 @@ abstract contract EmergencyQuorumStrategy is IExecutionStrategy {
         uint256 votesAgainst,
         uint256 votesAbstain
     ) public view override returns (ProposalStatus) {
-        // Decode the quorum and emergencyQuorum from the execution strategy's params
-        (uint256 quorum, uint256 emergencyQuorum) = abi.decode(proposal.executionStrategy.params, (uint256, uint256));
-
         bool emergency = _quorumReached(emergencyQuorum, votesFor, votesAgainst, votesAbstain);
         bool emergencyAccepted = emergency && _supported(votesFor, votesAgainst);
 

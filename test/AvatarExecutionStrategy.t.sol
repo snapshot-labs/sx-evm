@@ -8,7 +8,6 @@ import { AvatarExecutionStrategy } from "../src/execution-strategies/AvatarExecu
 import { Choice, Enum, IndexedStrategy, MetaTransaction, ProposalStatus, Strategy } from "../src/types.sol";
 
 contract AvatarExecutionStrategyTest is SpaceTest {
-    error TransactionsFailed();
     error InvalidSpace();
 
     event AvatarExecutionStrategySetUp(address _owner, address _target, address[] _spaces);
@@ -30,25 +29,17 @@ contract AvatarExecutionStrategyTest is SpaceTest {
         // Deploy and activate the execution strategy on the avatar
         address[] memory spaces = new address[](1);
         spaces[0] = address(space);
-        avatarExecutionStrategy = new AvatarExecutionStrategy(owner, address(avatar), spaces);
+        avatarExecutionStrategy = new AvatarExecutionStrategy(owner, address(avatar), spaces, quorum);
         avatar.enableModule(address(avatarExecutionStrategy));
-
-        // Activate the execution strategy on the space
-        Strategy[] memory executionStrategies = new Strategy[](1);
-        executionStrategies[0] = Strategy(address(avatarExecutionStrategy), abi.encode(uint256(quorum)));
-        string[] memory executionStrategyMetadataURIs = new string[](1);
-        executionStrategyMetadataURIs[0] = "bafkreihnggomfnqri7y2dzolhebfsyon36bcbl3taehnabr35pd5zddwyu";
-        // This strategy will reside at index 1 in the space's execution strategies array
-        space.addExecutionStrategies(executionStrategies, executionStrategyMetadataURIs);
     }
 
     function testExecution() public {
         MetaTransaction[] memory transactions = new MetaTransaction[](1);
-        transactions[0] = MetaTransaction(recipient, 1, "", Enum.Operation.Call);
+        transactions[0] = MetaTransaction(recipient, 1, "", Enum.Operation.Call, 0);
         uint256 proposalId = _createProposal(
             author,
             proposalMetadataURI,
-            IndexedStrategy(1, abi.encode(transactions)),
+            Strategy(address(avatarExecutionStrategy), abi.encode(transactions)),
             userVotingStrategies
         );
         _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataURI);
@@ -66,11 +57,11 @@ contract AvatarExecutionStrategyTest is SpaceTest {
     function testInvalidTx() public {
         // This transaction will fail because the avatar does not have enough funds
         MetaTransaction[] memory transactions = new MetaTransaction[](1);
-        transactions[0] = MetaTransaction(address(owner), 1001, "", Enum.Operation.Call);
+        transactions[0] = MetaTransaction(address(owner), 1001, "", Enum.Operation.Call, 0);
         uint256 proposalId = _createProposal(
             author,
             proposalMetadataURI,
-            IndexedStrategy(1, abi.encode(transactions)),
+            Strategy(address(avatarExecutionStrategy), abi.encode(transactions)),
             userVotingStrategies
         );
         _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataURI);
@@ -82,18 +73,19 @@ contract AvatarExecutionStrategyTest is SpaceTest {
 
     function testMultiTx() public {
         MetaTransaction[] memory transactions = new MetaTransaction[](2);
-        transactions[0] = MetaTransaction(address(recipient), 1, "", Enum.Operation.Call);
+        transactions[0] = MetaTransaction(address(recipient), 1, "", Enum.Operation.Call, 0);
         // Creating a transaction that will enable a new dummy module on the avatar
         transactions[1] = MetaTransaction(
             address(avatar),
             0,
             abi.encodeWithSignature("enableModule(address)", address(0xbeef)),
-            Enum.Operation.Call
+            Enum.Operation.Call,
+            0
         );
         uint256 proposalId = _createProposal(
             author,
             proposalMetadataURI,
-            IndexedStrategy(1, abi.encode(transactions)),
+            Strategy(address(avatarExecutionStrategy), abi.encode(transactions)),
             userVotingStrategies
         );
         _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataURI);
@@ -112,14 +104,15 @@ contract AvatarExecutionStrategyTest is SpaceTest {
             address(avatar),
             0,
             abi.encodeWithSignature("enableModule(address)", address(0xbeef)),
-            Enum.Operation.Call
+            Enum.Operation.Call,
+            0
         );
         // invalid tx
-        transactions[1] = MetaTransaction(address(owner), 1001, "", Enum.Operation.Call);
+        transactions[1] = MetaTransaction(address(owner), 1001, "", Enum.Operation.Call, 0);
         uint256 proposalId = _createProposal(
             author,
             proposalMetadataURI,
-            IndexedStrategy(1, abi.encode(transactions)),
+            Strategy(address(avatarExecutionStrategy), abi.encode(transactions)),
             userVotingStrategies
         );
         _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataURI);
@@ -208,11 +201,11 @@ contract AvatarExecutionStrategyTest is SpaceTest {
 
         // Check that proposals from the disabled space can't be executed
         MetaTransaction[] memory transactions = new MetaTransaction[](1);
-        transactions[0] = MetaTransaction(recipient, 1, "", Enum.Operation.Call);
+        transactions[0] = MetaTransaction(recipient, 1, "", Enum.Operation.Call, 0);
         uint256 proposalId = _createProposal(
             author,
             proposalMetadataURI,
-            IndexedStrategy(1, abi.encode(transactions)),
+            Strategy(address(avatarExecutionStrategy), abi.encode(transactions)),
             userVotingStrategies
         );
         _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataURI);

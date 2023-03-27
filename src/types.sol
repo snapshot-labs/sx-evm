@@ -3,6 +3,7 @@
 pragma solidity ^0.8.18;
 
 import { Enum } from "@gnosis.pm/safe-contracts/contracts/common/Enum.sol";
+import { IExecutionStrategy } from "src/interfaces/IExecutionStrategy.sol";
 
 struct Proposal {
     // notice: `uint32::max` corresponds to year ~2106.
@@ -15,7 +16,7 @@ struct Proposal {
     // The hash of the execution payload. We do not store the payload itself to save gas.
     bytes32 executionPayloadHash;
     // Struct containing the execution strategy address and parameters required for the strategy.
-    Strategy executionStrategy;
+    IExecutionStrategy executionStrategy;
     address author;
     // An enum that stores whether a proposal is pending, executed, or cancelled.
     FinalizationStatus finalizationStatus;
@@ -24,7 +25,7 @@ struct Proposal {
 }
 
 struct Strategy {
-    address addy;
+    address addr;
     bytes params;
 }
 
@@ -62,4 +63,6 @@ struct MetaTransaction {
     uint256 value;
     bytes data;
     Enum.Operation operation;
+    // We require a salt so that the struct can always be unique and we can use its hash as a unique identifier.
+    uint256 salt;
 }

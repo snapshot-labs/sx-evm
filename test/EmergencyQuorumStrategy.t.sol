@@ -9,6 +9,8 @@ import { EmergencyQuorumStrategy } from "../src/execution-strategies/EmergencyQu
 contract EmergencyQuorumExec is EmergencyQuorumStrategy {
     uint256 internal numExecuted;
 
+    constructor(uint256 _quorum, uint256 _emergencyQuorum) EmergencyQuorumStrategy(_quorum, _emergencyQuorum) {}
+
     function execute(
         Proposal memory proposal,
         uint256 votesFor,
@@ -31,23 +33,15 @@ contract EmergencyQuorumExec is EmergencyQuorumStrategy {
 }
 
 contract EmergencyQuorumTest is SpaceTest {
-    IndexedStrategy internal emergencyStrategy;
+    Strategy internal emergencyStrategy;
     uint256 internal emergencyQuorum = 2;
     EmergencyQuorumExec internal emergency;
 
     function setUp() public override {
         super.setUp();
 
-        emergency = new EmergencyQuorumExec();
-        Strategy[] memory toAdd = new Strategy[](1);
-        toAdd[0] = Strategy(address(emergency), abi.encode(quorum, emergencyQuorum));
-        space.addExecutionStrategies(toAdd, executionStrategyMetadataURIs);
-
-        emergencyStrategy = IndexedStrategy(1, new bytes(0));
-
-        uint8[] memory toRemove = new uint8[](1);
-        toRemove[0] = 0;
-        space.removeExecutionStrategies(toRemove);
+        emergency = new EmergencyQuorumExec(quorum, emergencyQuorum);
+        emergencyStrategy = Strategy(address(emergency), new bytes(0));
 
         minVotingDuration = 100;
         space.setMinVotingDuration(minVotingDuration); // Min voting duration of 100
@@ -105,16 +99,9 @@ contract EmergencyQuorumTest is SpaceTest {
     }
 
     function testEmergencyLowerThanQuorum() public {
-        // Add a new execution strategy
-        Strategy[] memory toAdd = new Strategy[](1);
-        toAdd[0] = Strategy(address(emergency), abi.encode(quorum + 1, quorum));
+        EmergencyQuorumExec lowerThanQuorum = new EmergencyQuorumExec(quorum, quorum - 1);
 
-        space.addExecutionStrategies(toAdd, executionStrategyMetadataURIs);
-
-        emergencyStrategy = IndexedStrategy(2, new bytes(0));
-        uint8[] memory toRemove = new uint8[](1);
-        toRemove[0] = 1;
-        space.removeExecutionStrategies(toRemove);
+        emergencyStrategy = Strategy(address(lowerThanQuorum), new bytes(0));
 
         // Create proposal and vote
         uint256 proposalId = _createProposal(author, proposalMetadataURI, emergencyStrategy, userVotingStrategies);
