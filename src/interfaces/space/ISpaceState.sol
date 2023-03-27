@@ -14,10 +14,10 @@ interface ISpaceState {
     function votingDelay() external view returns (uint32);
 
     // Returns `Strategy` but can't override the default derived implementation
-    function votingStrategies(uint256 index) external view returns (address, bytes memory);
+    function votingStrategies(uint256 index) external view returns (address addr, bytes memory params);
 
     // Returns `Strategy` but can't override the default derived implementation
-    function proposalValidationStrategy() external view returns (address, bytes memory);
+    function proposalValidationStrategy() external view returns (address addr, bytes memory params);
 
     function voteRegistry(uint256 proposalId, address voter) external view returns (bool);
 
