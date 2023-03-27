@@ -83,7 +83,7 @@ contract TimelockExecutionStrategy is SimpleQuorumExecutionStrategy {
     }
 
     /// @notice Executes a queued proposal. Can be called by anyone with the execution payload.
-    function executeQueuedProposal(bytes memory payload) external {
+    function executeQueuedProposal(bytes memory payload) external payable {
         bytes32 executionPayloadHash = keccak256(payload);
 
         uint256 executionTime = proposalExecutionTime[executionPayloadHash];
@@ -126,4 +126,6 @@ contract TimelockExecutionStrategy is SimpleQuorumExecutionStrategy {
     function getStrategyType() external pure override returns (string memory) {
         return "SimpleQuorumTimelock";
     }
+
+    receive() external payable {}
 }
