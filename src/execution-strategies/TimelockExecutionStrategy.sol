@@ -131,15 +131,13 @@ contract TimelockExecutionStrategy is SimpleQuorumExecutionStrategy, IERC1155Rec
 
     /// Receive Functions:
 
-    /// @notice Receive function for ETH
+    // solhint-disable-next-line no-empty-blocks
     receive() external payable {}
 
-    /// @notice Receive ERC-1155 safe transfer
     function onERC1155Received(address, address, uint256, uint256, bytes calldata) external pure returns (bytes4) {
         return IERC1155Receiver.onERC1155Received.selector;
     }
 
-    /// @notice Receive ERC-1155 safe batch transfer
     function onERC1155BatchReceived(
         address,
         address,
@@ -150,7 +148,6 @@ contract TimelockExecutionStrategy is SimpleQuorumExecutionStrategy, IERC1155Rec
         return IERC1155Receiver.onERC1155BatchReceived.selector;
     }
 
-    /// @notice Receive ERC-721 safe transfer
     function onERC721Received(address, address, uint256, bytes calldata) external pure returns (bytes4) {
         return IERC721Receiver.onERC721Received.selector;
     }
