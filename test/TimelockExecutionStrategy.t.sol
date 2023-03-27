@@ -22,18 +22,6 @@ abstract contract TimelockExecutionStrategyTest is SpaceTest {
 
     address private recipient = address(0xc0ffee);
 
-    function setUp() public virtual override {
-        super.setUp();
-
-        address[] memory spaces = new address[](1);
-        spaces[0] = address(space);
-
-        timelockExecutionStrategy = new TimelockExecutionStrategy(owner, spaces, 1000, quorum);
-        vm.deal(owner, 1000);
-        vm.prank(owner);
-        payable(address(timelockExecutionStrategy)).transfer(900);
-    }
-
     function testQueueingFromUnauthorizedSpace() external {
         timelockExecutionStrategy.disableSpace(address(space));
 
