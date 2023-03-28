@@ -46,7 +46,6 @@ abstract contract SpaceTest is Test, GasSnapshot, ISpaceEvents, ISpaceErrors, IE
     address public unauthorized = vm.addr(UNAUTHORIZED_KEY);
 
     // Initial whitelisted modules set in the space
-    Strategy internal proposalValidationStrategy;
     Strategy[] internal votingStrategies;
     Strategy internal proposalValidationStrategy;
     address[] internal authenticators;
