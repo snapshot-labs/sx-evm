@@ -379,7 +379,7 @@ abstract contract TimelockExecutionStrategyTest is SpaceTest {
 
         vm.startPrank(author);
         erc721.mint(author, 1);
-        erc721.transferFrom(author, address(timelockExecutionStrategy), 1);
+        erc721.safeTransferFrom(author, address(timelockExecutionStrategy), 1);
 
         erc1155.mint(author, 1, 1);
         erc1155.safeTransferFrom(author, address(timelockExecutionStrategy), 1, 1, "");
