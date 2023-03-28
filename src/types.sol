@@ -21,7 +21,7 @@ struct Proposal {
     // An enum that stores whether a proposal is pending, executed, or cancelled.
     FinalizationStatus finalizationStatus;
     // Array of structs containing the voting strategy addresses and parameters required for each.
-    Strategy[] votingStrategies;
+    uint256 votingStrategies;
 }
 
 struct Strategy {
