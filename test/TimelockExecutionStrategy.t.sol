@@ -31,7 +31,7 @@ abstract contract TimelockExecutionStrategyTest is SpaceTest {
             author,
             proposalMetadataURI,
             Strategy(address(timelockExecutionStrategy), abi.encode(transactions)),
-            userVotingStrategies
+            new bytes(0)
         );
         _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataURI);
         vm.warp(block.timestamp + space.maxVotingDuration());
@@ -47,7 +47,7 @@ abstract contract TimelockExecutionStrategyTest is SpaceTest {
             author,
             proposalMetadataURI,
             Strategy(address(timelockExecutionStrategy), abi.encode(transactions)),
-            userVotingStrategies
+            new bytes(0)
         );
         _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataURI);
         vm.warp(block.timestamp + space.maxVotingDuration());
@@ -64,7 +64,7 @@ abstract contract TimelockExecutionStrategyTest is SpaceTest {
             author,
             proposalMetadataURI,
             Strategy(address(timelockExecutionStrategy), abi.encode(transactions)),
-            userVotingStrategies
+            new bytes(0)
         );
         vm.warp(block.timestamp + space.maxVotingDuration());
 
@@ -79,7 +79,7 @@ abstract contract TimelockExecutionStrategyTest is SpaceTest {
             author,
             proposalMetadataURI,
             Strategy(address(timelockExecutionStrategy), abi.encode(transactions)),
-            userVotingStrategies
+            new bytes(0)
         );
         _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataURI);
         vm.warp(block.timestamp + space.maxVotingDuration());
@@ -99,13 +99,13 @@ abstract contract TimelockExecutionStrategyTest is SpaceTest {
             author,
             proposalMetadataURI,
             Strategy(address(timelockExecutionStrategy), abi.encode(transactions)),
-            userVotingStrategies
+            new bytes(0)
         );
         uint256 proposalId2 = _createProposal(
             author,
             proposalMetadataURI,
             Strategy(address(timelockExecutionStrategy), abi.encode(transactions)),
-            userVotingStrategies
+            new bytes(0)
         );
         _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataURI);
         _vote(author, proposalId2, Choice.For, userVotingStrategies, voteMetadataURI);
@@ -128,13 +128,13 @@ abstract contract TimelockExecutionStrategyTest is SpaceTest {
             author,
             proposalMetadataURI,
             Strategy(address(timelockExecutionStrategy), abi.encode(transactions)),
-            userVotingStrategies
+            new bytes(0)
         );
         uint256 proposalId2 = _createProposal(
             author,
             proposalMetadataURI,
             Strategy(address(timelockExecutionStrategy), abi.encode(transactions2)),
-            userVotingStrategies
+            new bytes(0)
         );
         _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataURI);
         _vote(author, proposalId2, Choice.For, userVotingStrategies, voteMetadataURI);
@@ -152,7 +152,7 @@ abstract contract TimelockExecutionStrategyTest is SpaceTest {
             author,
             proposalMetadataURI,
             Strategy(address(timelockExecutionStrategy), abi.encode(transactions)),
-            userVotingStrategies
+            new bytes(0)
         );
         _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataURI);
         vm.warp(block.timestamp + space.maxVotingDuration());
@@ -170,7 +170,7 @@ abstract contract TimelockExecutionStrategyTest is SpaceTest {
             author,
             proposalMetadataURI,
             Strategy(address(timelockExecutionStrategy), abi.encode(transactions)),
-            userVotingStrategies
+            new bytes(0)
         );
         _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataURI);
         vm.warp(block.timestamp + space.maxVotingDuration());
@@ -194,7 +194,7 @@ abstract contract TimelockExecutionStrategyTest is SpaceTest {
             author,
             proposalMetadataURI,
             Strategy(address(timelockExecutionStrategy), abi.encode(transactions)),
-            userVotingStrategies
+            new bytes(0)
         );
         _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataURI);
         vm.warp(block.timestamp + space.maxVotingDuration());
@@ -214,7 +214,7 @@ abstract contract TimelockExecutionStrategyTest is SpaceTest {
             author,
             proposalMetadataURI,
             Strategy(address(timelockExecutionStrategy), abi.encode(transactions)),
-            userVotingStrategies
+            new bytes(0)
         );
         _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataURI);
         vm.warp(block.timestamp + space.maxVotingDuration());
@@ -235,7 +235,7 @@ abstract contract TimelockExecutionStrategyTest is SpaceTest {
             author,
             proposalMetadataURI,
             Strategy(address(timelockExecutionStrategy), abi.encode(transactions)),
-            userVotingStrategies
+            new bytes(0)
         );
         _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataURI);
         vm.warp(block.timestamp + space.maxVotingDuration());
@@ -255,7 +255,7 @@ abstract contract TimelockExecutionStrategyTest is SpaceTest {
             author,
             proposalMetadataURI,
             Strategy(address(timelockExecutionStrategy), abi.encode(transactions)),
-            userVotingStrategies
+            new bytes(0)
         );
         _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataURI);
         vm.warp(block.timestamp + space.maxVotingDuration());
@@ -271,7 +271,7 @@ abstract contract TimelockExecutionStrategyTest is SpaceTest {
             author,
             proposalMetadataURI,
             Strategy(address(timelockExecutionStrategy), abi.encode(transactions)),
-            userVotingStrategies
+            new bytes(0)
         );
         _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataURI);
         vm.warp(block.timestamp + space.maxVotingDuration());
@@ -304,7 +304,7 @@ abstract contract TimelockExecutionStrategyTest is SpaceTest {
             author,
             proposalMetadataURI,
             Strategy(address(timelockExecutionStrategy), abi.encode(transactions)),
-            userVotingStrategies
+            new bytes(0)
         );
         _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataURI);
         vm.warp(block.timestamp + space.maxVotingDuration());
@@ -328,7 +328,7 @@ abstract contract TimelockExecutionStrategyTest is SpaceTest {
             author,
             proposalMetadataURI,
             Strategy(address(timelockExecutionStrategy), abi.encode(transactions)),
-            userVotingStrategies
+            new bytes(0)
         );
         _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataURI);
         vm.warp(block.timestamp + space.maxVotingDuration());
@@ -358,7 +358,7 @@ abstract contract TimelockExecutionStrategyTest is SpaceTest {
             author,
             proposalMetadataURI,
             Strategy(address(timelockExecutionStrategy), abi.encode(transactions)),
-            userVotingStrategies
+            new bytes(0)
         );
         _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataURI);
         vm.warp(block.timestamp + space.maxVotingDuration());

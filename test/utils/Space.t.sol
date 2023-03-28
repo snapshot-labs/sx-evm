@@ -113,12 +113,12 @@ abstract contract SpaceTest is Test, GasSnapshot, ISpaceEvents, ISpaceErrors, IE
         address _author,
         string memory _metadataURI,
         Strategy memory _executionStrategy,
-        IndexedStrategy[] memory _userVotingStrategies
+        bytes memory userProposalValidationParams
     ) internal returns (uint256) {
         vanillaAuthenticator.authenticate(
             address(space),
             PROPOSE_SELECTOR,
-            abi.encode(_author, _metadataURI, _executionStrategy, abi.encode(""))
+            abi.encode(_author, _metadataURI, _executionStrategy, userProposalValidationParams)
         );
 
         return space.nextProposalId() - 1;

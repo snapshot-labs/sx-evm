@@ -36,7 +36,7 @@ contract ProposeTest is SpaceTest {
         vm.expectEmit(true, true, true, true);
         emit ProposalCreated(proposalId, author, proposal, proposalMetadataURI, executionStrategy.params);
 
-        _createProposal(author, proposalMetadataURI, executionStrategy, userVotingStrategies);
+        _createProposal(author, proposalMetadataURI, executionStrategy, new bytes(0));
 
         // Actual content of the proposal struct
         Proposal memory _proposal = space.getProposal(proposalId);
@@ -57,6 +57,6 @@ contract ProposeTest is SpaceTest {
         space.setProposalValidationStrategy(validationStrategy);
 
         vm.expectRevert(FailedToPassProposalValidation.selector);
-        _createProposal(author, proposalMetadataURI, executionStrategy, userVotingStrategies);
+        _createProposal(author, proposalMetadataURI, executionStrategy, new bytes(0));
     }
 }
