@@ -12,6 +12,8 @@ import { IExecutionStrategy } from "src/interfaces/IExecutionStrategy.sol";
 import { IProposalValidationStrategy } from "src/interfaces/IProposalValidationStrategy.sol";
 import { GetCumulativePower } from "./utils/GetCumulativePower.sol";
 
+import { BitPacker } from "./utils/BitPacker.sol";
+
 /**
  * @author  SnapshotLabs
  * @title   Space Contract.
@@ -32,7 +34,13 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
     // Array of available voting strategies that users can use to determine their voting power.
     /// @dev This needs to be an array because a mapping would limit a space to only one use per
     ///      voting strategy contract.
-    Strategy[] public votingStrategies;
+    // Strategy[] public votingStrategies;
+
+    uint256 public votingStrategies;
+
+    mapping(uint8 => Strategy) public votingStrategiesMap;
+
+    uint8 public votingStrategyCounter;
 
     // The proposal validation contract.
     Strategy public proposalValidationStrategy;
@@ -125,12 +133,18 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
      * @param   _votingStrategies  Array of voting strategies to add.
      */
     function _addVotingStrategies(Strategy[] memory _votingStrategies) internal {
+        if (_votingStrategies.length > 8) revert EmptyArray();
         if (_votingStrategies.length == 0) revert EmptyArray();
         for (uint256 i = 0; i < _votingStrategies.length; i++) {
             // A voting strategy set to 0 is used to indicate that the voting strategy is no longer active,
             // so we need to prevent the user from adding a null invalid strategy address.
             if (_votingStrategies[i].addr == address(0)) revert InvalidStrategyAddress();
-            votingStrategies.push(_votingStrategies[i]);
+
+            votingStrategies = BitPacker.setBit(votingStrategies, votingStrategyCounter, true);
+
+            votingStrategiesMap[votingStrategyCounter] = _votingStrategies[i];
+
+            votingStrategyCounter++;
         }
     }
 
@@ -142,8 +156,7 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
     function _removeVotingStrategies(uint8[] memory _votingStrategyIndices) internal {
         if (_votingStrategyIndices.length == 0) revert EmptyArray();
         for (uint8 i = 0; i < _votingStrategyIndices.length; i++) {
-            votingStrategies[_votingStrategyIndices[i]].addr = address(0);
-            votingStrategies[_votingStrategyIndices[i]].params = new bytes(0);
+            votingStrategies = BitPacker.setBit(votingStrategies, _votingStrategyIndices[i], false);
         }
 
         // TODO: should we check that there are still voting strategies left after this?
@@ -347,7 +360,6 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         string calldata metadataUri
     ) external override {
         _assertValidAuthenticator();
-
         Proposal memory proposal = proposalRegistry[proposalId];
         _assertProposalExists(proposal);
         if (block.timestamp >= proposal.maxEndTimestamp) revert VotingPeriodHasEnded();
@@ -358,7 +370,8 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         uint256 votingPower = voter.getCumulativePower(
             proposal.snapshotTimestamp,
             userVotingStrategies,
-            proposal.votingStrategies
+            proposal.votingStrategies,
+            votingStrategiesMap
         );
         if (votingPower == 0) revert UserHasNoVotingPower();
         votePower[proposalId][choice] += votingPower;
