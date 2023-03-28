@@ -55,7 +55,6 @@ abstract contract SpaceTest is Test, GasSnapshot, ISpaceEvents, ISpaceErrors, IE
     uint32 public votingDelay;
     uint32 public minVotingDuration;
     uint32 public maxVotingDuration;
-    uint256 public proposalThreshold;
     uint32 public quorum;
 
     // Default voting and execution strategy setups
@@ -81,7 +80,6 @@ abstract contract SpaceTest is Test, GasSnapshot, ISpaceEvents, ISpaceErrors, IE
         votingDelay = 0;
         minVotingDuration = 0;
         maxVotingDuration = 1000;
-        proposalThreshold = 1;
         votingStrategies.push(Strategy(address(vanillaVotingStrategy), new bytes(0)));
         authenticators.push(address(vanillaAuthenticator));
         executionStrategies.push(Strategy(address(vanillaExecutionStrategy), abi.encode(uint256(quorum))));
