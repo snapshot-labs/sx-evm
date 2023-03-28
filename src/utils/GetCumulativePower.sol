@@ -4,6 +4,7 @@ pragma solidity ^0.8.18;
 
 import { IndexedStrategy, Strategy } from "../types.sol";
 import { IVotingStrategy } from "src/interfaces/IVotingStrategy.sol";
+import { ISpaceState } from "src/interfaces/space/ISpaceState.sol";
 
 import { BitPacker } from "./BitPacker.sol";
 
@@ -69,6 +70,37 @@ library GetCumulativePower {
                 timestamp,
                 userAddress,
                 strategy.params,
+                userStrategies[i].params
+            );
+        }
+        return totalVotingPower;
+    }
+
+    function getCumulativePower(
+        address userAddress,
+        uint32 timestamp,
+        IndexedStrategy[] memory userStrategies,
+        uint256 allowedStrategies
+    ) internal returns (uint256) {
+        // Ensure there are no duplicates to avoid an attack where people double count a strategy
+        _assertNoDuplicateIndices(userStrategies);
+
+        uint256 totalVotingPower;
+        for (uint256 i = 0; i < userStrategies.length; ++i) {
+            uint8 strategyIndex = userStrategies[i].index;
+
+            // Check that the strategy is allowed for this proposal
+            if (!allowedStrategies.isBitSet(strategyIndex)) {
+                revert InvalidStrategyIndex(strategyIndex);
+            }
+
+            // The space contract resides at msg.sender
+            (address addr, bytes memory params) = ISpaceState(msg.sender).votingStrategiesMap(strategyIndex);
+
+            totalVotingPower += IVotingStrategy(addr).getVotingPower(
+                timestamp,
+                userAddress,
+                params,
                 userStrategies[i].params
             );
         }
