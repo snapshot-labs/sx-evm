@@ -21,6 +21,7 @@ import { BitPacker } from "./utils/BitPacker.sol";
  */
 contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, ReentrancyGuard {
     using GetCumulativePower for address;
+    using BitPacker for uint256;
 
     // Maximum duration a proposal can last.
     uint32 public maxVotingDuration;
@@ -31,15 +32,12 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
     // Delay between when the proposal is created and when the voting period starts for this proposal.
     uint32 public votingDelay;
 
-    // Array of available voting strategies that users can use to determine their voting power.
-    /// @dev This needs to be an array because a mapping would limit a space to only one use per
-    ///      voting strategy contract.
-    // Strategy[] public votingStrategies;
-
+    // Bit array where the index of each each bit corresponds to whether the voting strategy at that index is active
     uint256 public votingStrategies;
 
-    mapping(uint8 => Strategy) public votingStrategiesMap;
+    mapping(uint8 index => Strategy) public votingStrategiesMap;
 
+    // Counter for the number of voting strategies that have ever been added to the space. Cannot exceed 255
     uint8 public votingStrategyCounter;
 
     // The proposal validation contract.
@@ -140,7 +138,7 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
             // so we need to prevent the user from adding a null invalid strategy address.
             if (_votingStrategies[i].addr == address(0)) revert InvalidStrategyAddress();
 
-            votingStrategies = BitPacker.setBit(votingStrategies, votingStrategyCounter, true);
+            votingStrategies = votingStrategies.setBit(votingStrategyCounter, true);
 
             votingStrategiesMap[votingStrategyCounter] = _votingStrategies[i];
 
@@ -156,7 +154,7 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
     function _removeVotingStrategies(uint8[] memory _votingStrategyIndices) internal {
         if (_votingStrategyIndices.length == 0) revert EmptyArray();
         for (uint8 i = 0; i < _votingStrategyIndices.length; i++) {
-            votingStrategies = BitPacker.setBit(votingStrategies, _votingStrategyIndices[i], false);
+            votingStrategies = votingStrategies.setBit(_votingStrategyIndices[i], false);
         }
 
         // TODO: should we check that there are still voting strategies left after this?

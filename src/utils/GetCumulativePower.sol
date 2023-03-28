@@ -32,6 +32,8 @@ function _assertNoDuplicateIndices(IndexedStrategy[] memory strats) pure {
 }
 
 library GetCumulativePower {
+    using BitPacker for uint256;
+
     /**
      * @notice  Loop over the strategies and return the cumulative power.
      * @dev
@@ -56,7 +58,7 @@ library GetCumulativePower {
             uint8 strategyIndex = userStrategies[i].index;
 
             // Check that the strategy is allowed for this proposal
-            if (!BitPacker.isBitSet(allowedStrategies, strategyIndex)) {
+            if (!allowedStrategies.isBitSet(strategyIndex)) {
                 revert InvalidStrategyIndex(strategyIndex);
             }
 
