@@ -48,6 +48,7 @@ abstract contract SpaceTest is Test, GasSnapshot, ISpaceEvents, ISpaceErrors, IE
     // Initial whitelisted modules set in the space
     Strategy internal proposalValidationStrategy;
     Strategy[] internal votingStrategies;
+    Strategy internal proposalValidationStrategy;
     address[] internal authenticators;
     Strategy[] internal executionStrategies;
 
@@ -55,7 +56,6 @@ abstract contract SpaceTest is Test, GasSnapshot, ISpaceEvents, ISpaceErrors, IE
     uint32 public votingDelay;
     uint32 public minVotingDuration;
     uint32 public maxVotingDuration;
-    uint256 public proposalThreshold;
     uint32 public quorum;
 
     // Default voting and execution strategy setups
@@ -76,22 +76,17 @@ abstract contract SpaceTest is Test, GasSnapshot, ISpaceEvents, ISpaceErrors, IE
         vanillaVotingStrategy = new VanillaVotingStrategy();
         vanillaAuthenticator = new VanillaAuthenticator();
         vanillaExecutionStrategy = new VanillaExecutionStrategy(quorum);
-
         vanillaProposalValidationStrategy = new VanillaProposalValidationStrategy();
 
         votingDelay = 0;
         minVotingDuration = 0;
         maxVotingDuration = 1000;
-        proposalThreshold = 1;
         votingStrategies.push(Strategy(address(vanillaVotingStrategy), new bytes(0)));
         authenticators.push(address(vanillaAuthenticator));
         executionStrategies.push(Strategy(address(vanillaExecutionStrategy), abi.encode(uint256(quorum))));
         userVotingStrategies.push(IndexedStrategy(0, new bytes(0)));
         executionStrategy = Strategy(address(vanillaExecutionStrategy), new bytes(0));
-        proposalValidationStrategy = Strategy(
-            address(vanillaProposalValidationStrategy),
-            abi.encode(proposalThreshold, votingStrategies)
-        );
+        proposalValidationStrategy = Strategy(address(vanillaProposalValidationStrategy), new bytes(0));
         space = Space(
             address(
                 new ERC1967Proxy(
@@ -106,9 +101,7 @@ abstract contract SpaceTest is Test, GasSnapshot, ISpaceEvents, ISpaceErrors, IE
                         spaceMetadataURI,
                         votingStrategies,
                         votingStrategyMetadataURIs,
-                        authenticators,
-                        executionStrategies,
-                        executionStrategyMetadataURIs
+                        authenticators
                     )
                 )
             )
@@ -119,12 +112,12 @@ abstract contract SpaceTest is Test, GasSnapshot, ISpaceEvents, ISpaceErrors, IE
         address _author,
         string memory _metadataURI,
         Strategy memory _executionStrategy,
-        IndexedStrategy[] memory _userVotingStrategies
+        bytes memory userProposalValidationParams
     ) internal returns (uint256) {
         vanillaAuthenticator.authenticate(
             address(space),
             PROPOSE_SELECTOR,
-            abi.encode(_author, _metadataURI, _executionStrategy, abi.encode(""))
+            abi.encode(_author, _metadataURI, _executionStrategy, userProposalValidationParams)
         );
 
         return space.nextProposalId() - 1;
