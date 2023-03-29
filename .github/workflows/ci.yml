@@ -80,12 +80,10 @@ jobs:
       - name: "Install the Node.js dependencies"
         run: "yarn install --immutable"
 
-      - name: "Show the Foundry config"
-        run: "forge config"
-
       - name: "Run coverage"
         run: "yarn coverage"
 
-      - uses: codecov/codecov-action@v3
+      - name: "Upload coverage to Codecov"
+        uses: codecov/codecov-action@v3
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
