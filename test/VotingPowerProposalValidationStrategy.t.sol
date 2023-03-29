@@ -35,10 +35,9 @@ contract VotingPowerProposalValidationTest is SpaceTest {
         string[] memory metadataURIs = new string[](1);
         space.addVotingStrategies(powerStrategies, metadataURIs);
 
-        // The comp token strategy will reside at index 1, so we need to use and allowed strategy bit array of ...00010 = 2
         Strategy memory votingPowerProposalValidationStrategy = Strategy(
             address(new VotingPowerProposalValidationStrategy()),
-            abi.encode(proposalThreshold, 2)
+            abi.encode(proposalThreshold, space.activeVotingStrategies())
         );
         space.setProposalValidationStrategy(votingPowerProposalValidationStrategy);
 
@@ -97,10 +96,10 @@ contract VotingPowerProposalValidationTest is SpaceTest {
         string[] memory propositionPowerMetadataURIs = new string[](2);
         space.addVotingStrategies(propositionPowerStrategies, propositionPowerMetadataURIs);
 
-        // Using a proposal threshold of 2, ...001100 = 12
+        // Using a proposal threshold of 2
         Strategy memory votingPowerProposalValidationStrategy = Strategy(
             address(new VotingPowerProposalValidationStrategy()),
-            abi.encode(2, 12)
+            abi.encode(2, space.activeVotingStrategies())
         );
         space.setProposalValidationStrategy(votingPowerProposalValidationStrategy);
 

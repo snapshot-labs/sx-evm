@@ -19,21 +19,24 @@ contract ProposeTest is SpaceTest {
         uint32 minEndTimestamp = uint32(startTimestamp + minVotingDuration);
         uint32 maxEndTimestamp = uint32(startTimestamp + maxVotingDuration);
 
-        // Expected content of the proposal struct
-        // Proposal memory proposal = Proposal(
-        //     snapshotTimestamp,
-        //     startTimestamp,
-        //     minEndTimestamp,
-        //     maxEndTimestamp,
-        //     executionHash,
-        //     IExecutionStrategy(executionStrategy.addr),
-        //     author,
-        //     FinalizationStatus.Pending,
-        //     votingStrategies
-        // );
+        // There is only one voting strategy, so the `activeVotingStrategies` bit array should be ..001 = 1
+        uint256 activeVotingStrategies = 1;
 
-        // vm.expectEmit(true, true, true, true);
-        // emit ProposalCreated(proposalId, author, proposal, proposalMetadataURI, executionStrategy.params);
+        // Expected content of the proposal struct
+        Proposal memory proposal = Proposal(
+            snapshotTimestamp,
+            startTimestamp,
+            minEndTimestamp,
+            maxEndTimestamp,
+            executionHash,
+            IExecutionStrategy(executionStrategy.addr),
+            author,
+            FinalizationStatus.Pending,
+            activeVotingStrategies
+        );
+
+        vm.expectEmit(true, true, true, true);
+        emit ProposalCreated(proposalId, author, proposal, proposalMetadataURI, executionStrategy.params);
 
         _createProposal(author, proposalMetadataURI, executionStrategy, new bytes(0));
 
@@ -41,7 +44,7 @@ contract ProposeTest is SpaceTest {
         Proposal memory _proposal = space.getProposal(proposalId);
 
         // Checking expectations and actual values match
-        // assertEq(keccak256(abi.encode(_proposal)), keccak256(abi.encode(proposal)));
+        assertEq(keccak256(abi.encode(_proposal)), keccak256(abi.encode(proposal)));
     }
 
     function testProposeInvalidAuth() public {

@@ -33,9 +33,12 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
     uint32 public votingDelay;
 
     // Bit array where the index of each each bit corresponds to whether the voting strategy at that index is active
-    uint256 public votingStrategies;
+    uint256 public activeVotingStrategies;
 
-    mapping(uint8 index => Strategy) public votingStrategiesMap;
+    // Mapping storing all voting strategies. Both active and inactive.
+    // To see whether the strategy at a specific index is active,
+    // check the corresponding index of the`activeVotingStrategies` bit array.
+    mapping(uint8 strategyIndex => Strategy strategy) public votingStrategiesMap;
 
     // Counter for the number of voting strategies that have ever been added to the space. Cannot exceed 255
     uint8 public votingStrategyCounter;
@@ -127,34 +130,25 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
 
     /**
      * @notice  Internal function to add voting strategies.
-     * @dev     `_votingStrategies` should not be set to `0`.
      * @param   _votingStrategies  Array of voting strategies to add.
      */
     function _addVotingStrategies(Strategy[] memory _votingStrategies) internal {
-        if (_votingStrategies.length > 8) revert EmptyArray();
         if (_votingStrategies.length == 0) revert EmptyArray();
         for (uint256 i = 0; i < _votingStrategies.length; i++) {
-            // A voting strategy set to 0 is used to indicate that the voting strategy is no longer active,
-            // so we need to prevent the user from adding a null invalid strategy address.
-            if (_votingStrategies[i].addr == address(0)) revert InvalidStrategyAddress();
-
-            votingStrategies = votingStrategies.setBit(votingStrategyCounter, true);
-
+            activeVotingStrategies = activeVotingStrategies.setBit(votingStrategyCounter, true);
             votingStrategiesMap[votingStrategyCounter] = _votingStrategies[i];
-
             votingStrategyCounter++;
         }
     }
 
     /**
      * @notice  Internal function to remove voting strategies.
-     * @dev     Does not shrink the array but simply sets the values to 0.
      * @param   _votingStrategyIndices  Indices of the strategies to remove.
      */
     function _removeVotingStrategies(uint8[] memory _votingStrategyIndices) internal {
         if (_votingStrategyIndices.length == 0) revert EmptyArray();
         for (uint8 i = 0; i < _votingStrategyIndices.length; i++) {
-            votingStrategies = votingStrategies.setBit(_votingStrategyIndices[i], false);
+            activeVotingStrategies = activeVotingStrategies.setBit(_votingStrategyIndices[i], false);
         }
 
         // TODO: should we check that there are still voting strategies left after this?
@@ -207,7 +201,7 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
      * @param   timestamp  Timestamp of the snapshot.
      * @param   userAddress  Address for which to compute the voting power.
      * @param   userStrategies The desired voting strategies to check.
-     * @param   allowedStrategies The array of strategies that are used for this proposal.
+     * @param   allowedStrategies The array of strategies that were active at the time of the proposal snapshot.
      * @return  uint256  The total voting power of a user (over those specified voting strategies).
      */
     function _getCumulativePower(
@@ -373,7 +367,7 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
             IExecutionStrategy(executionStrategy.addr),
             author,
             FinalizationStatus.Pending,
-            votingStrategies
+            activeVotingStrategies
         );
 
         proposalRegistry[nextProposalId] = proposal;
@@ -409,7 +403,7 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
             voter,
             proposal.snapshotTimestamp,
             userVotingStrategies,
-            proposal.votingStrategies
+            proposal.activeVotingStrategies
         );
         if (votingPower == 0) revert UserHasNoVotingPower();
         votePower[proposalId][choice] += votingPower;

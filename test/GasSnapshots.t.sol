@@ -102,15 +102,17 @@ contract GasSnapshotsTest is SpaceTest, SigUtils {
         // Replace with comp voting strategy which should be at index 1.
         userVotingStrategies[0] = IndexedStrategy(1, newVotingStrategies[0].params);
 
-        // Set the proposal validation strategy to Comp token proposition power
+        // Set the proposal validation strategy to Comp token proposition power.
         votingPowerAndActiveProposalsLimiterValidationStrategy = new VotingPowerAndActiveProposalsLimiterValidationStrategy(
             864000,
             5
         );
-
-        // allowed strategies: 10 = 2
+        // Using the current active strategies in the space as the allowed strategies for proposal.
         space.setProposalValidationStrategy(
-            Strategy(address(votingPowerAndActiveProposalsLimiterValidationStrategy), abi.encode(TOKEN_AMOUNT, 2))
+            Strategy(
+                address(votingPowerAndActiveProposalsLimiterValidationStrategy),
+                abi.encode(TOKEN_AMOUNT, space.activeVotingStrategies())
+            )
         );
     }
 
