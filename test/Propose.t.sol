@@ -9,7 +9,6 @@ import { StupidProposalValidationStrategy } from "./mocks/StupidProposalValidati
 
 contract ProposeTest is SpaceTest {
     error DuplicateFound(uint8 index);
-    error InvalidStrategyIndex(uint256 index);
 
     function testPropose() public {
         uint256 proposalId = space.nextProposalId();

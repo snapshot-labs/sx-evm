@@ -7,7 +7,6 @@ import { Choice, IndexedStrategy, Strategy } from "../src/types.sol";
 import { VanillaExecutionStrategy } from "../src/execution-strategies/VanillaExecutionStrategy.sol";
 
 contract SpaceOwnerActionsTest is SpaceTest {
-    error InvalidStrategyIndex(uint256 index);
     event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
 
     // ------- Transfer Ownership -------

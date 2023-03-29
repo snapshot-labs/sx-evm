@@ -8,7 +8,6 @@ import { VanillaVotingStrategy } from "../src/voting-strategies/VanillaVotingStr
 
 contract VoteTest is SpaceTest {
     error DuplicateFound(uint8 index);
-    error InvalidStrategyIndex(uint256 index);
 
     function testVote() public {
         uint256 proposalId = _createProposal(author, proposalMetadataURI, executionStrategy, new bytes(0));
