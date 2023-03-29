@@ -102,12 +102,6 @@ contract GasSnapshotsTest is SpaceTest, SigUtils {
         // Replace with comp voting strategy which should be at index 1.
         userVotingStrategies[0] = IndexedStrategy(1, newVotingStrategies[0].params);
 
-        // Strategy[] memory currentVotingStrategies = new Strategy[](2);
-        // (address addr0, bytes memory params0) = space.votingStrategies(0);
-        // currentVotingStrategies[0] = Strategy(addr0, params0);
-        // (address addr1, bytes memory params1) = space.votingStrategies(1);
-        // currentVotingStrategies[1] = Strategy(addr1, params1);
-
         // Set the proposal validation strategy to Comp token proposition power
         votingPowerAndActiveProposalsLimiterValidationStrategy = new VotingPowerAndActiveProposalsLimiterValidationStrategy(
             864000,
@@ -160,7 +154,7 @@ contract GasSnapshotsTest is SpaceTest, SigUtils {
         );
         // We take the snapshot on the second proposal because the first proposal will write to new
         // storage making it not representative of average usage.
-        snapStart("ProposeSig");
+        snapStart("ProposeSigComp");
         ethSigAuth.authenticate(
             v,
             r,
