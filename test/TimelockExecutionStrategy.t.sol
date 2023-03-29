@@ -412,7 +412,7 @@ abstract contract TimelockExecutionStrategyTest is SpaceTest {
             author,
             proposalMetadataURI,
             Strategy(address(timelockExecutionStrategy), abi.encode(transactions)),
-            userVotingStrategies
+            new bytes(0)
         );
         _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataURI);
         vm.warp(block.timestamp + space.maxVotingDuration());
