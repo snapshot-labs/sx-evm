@@ -8,10 +8,10 @@ import { ReentrancyGuard } from "@openzeppelin/contracts/security/ReentrancyGuar
 
 import { ISpace } from "src/interfaces/ISpace.sol";
 import { Choice, FinalizationStatus, IndexedStrategy, Proposal, ProposalStatus, Strategy } from "src/types.sol";
+import { IVotingStrategy } from "src/interfaces/IVotingStrategy.sol";
 import { IExecutionStrategy } from "src/interfaces/IExecutionStrategy.sol";
 import { IProposalValidationStrategy } from "src/interfaces/IProposalValidationStrategy.sol";
-import { GetCumulativePower } from "./utils/GetCumulativePower.sol";
-
+import { IndexedStrategyUtils } from "./utils/IndexedStrategyUtils.sol";
 import { BitPacker } from "./utils/BitPacker.sol";
 
 /**
@@ -20,8 +20,8 @@ import { BitPacker } from "./utils/BitPacker.sol";
  * @notice  Logic and bookkeeping contract.
  */
 contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, ReentrancyGuard {
-    using GetCumulativePower for address;
     using BitPacker for uint256;
+    using IndexedStrategyUtils for IndexedStrategy[];
 
     // Maximum duration a proposal can last.
     uint32 public maxVotingDuration;
@@ -201,6 +201,46 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         if (proposal.startTimestamp == 0) revert InvalidProposal();
     }
 
+    /**
+     * @notice  Loop over the strategies and return the cumulative power.
+     * @dev
+     * @param   timestamp  Timestamp of the snapshot.
+     * @param   userAddress  Address for which to compute the voting power.
+     * @param   userStrategies The desired voting strategies to check.
+     * @param   allowedStrategies The array of strategies that are used for this proposal.
+     * @return  uint256  The total voting power of a user (over those specified voting strategies).
+     */
+    function _getCumulativePower(
+        address userAddress,
+        uint32 timestamp,
+        IndexedStrategy[] memory userStrategies,
+        uint256 allowedStrategies
+    ) internal returns (uint256) {
+        // Ensure there are no duplicates to avoid an attack where people double count a strategy
+        userStrategies.assertNoDuplicateIndices();
+
+        uint256 totalVotingPower;
+        for (uint256 i = 0; i < userStrategies.length; ++i) {
+            uint8 strategyIndex = userStrategies[i].index;
+
+            // Check that the strategy is allowed for this proposal
+            if (!allowedStrategies.isBitSet(strategyIndex)) {
+                revert InvalidStrategyIndex(strategyIndex);
+            }
+
+            // get the Strategy from StrategiesMap using the strategySelector
+            Strategy memory strategy = votingStrategiesMap[strategyIndex];
+
+            totalVotingPower += IVotingStrategy(strategy.addr).getVotingPower(
+                timestamp,
+                userAddress,
+                strategy.params,
+                userStrategies[i].params
+            );
+        }
+        return totalVotingPower;
+    }
+
     // ------------------------------------
     // |                                  |
     // |             SETTERS              |
@@ -365,11 +405,11 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         if (proposal.finalizationStatus != FinalizationStatus.Pending) revert ProposalFinalized();
         if (voteRegistry[proposalId][voter]) revert UserHasAlreadyVoted();
 
-        uint256 votingPower = voter.getCumulativePower(
+        uint256 votingPower = _getCumulativePower(
+            voter,
             proposal.snapshotTimestamp,
             userVotingStrategies,
-            proposal.votingStrategies,
-            votingStrategiesMap
+            proposal.votingStrategies
         );
         if (votingPower == 0) revert UserHasNoVotingPower();
         votePower[proposalId][choice] += votingPower;
