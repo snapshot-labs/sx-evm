@@ -160,7 +160,7 @@ contract GasSnapshotsTest is SpaceTest, SigUtils {
         );
         // We take the snapshot on the second proposal because the first proposal will write to new
         // storage making it not representative of average usage.
-        snapStart("ProposeSigComp");
+        snapStart("ProposeSig");
         ethSigAuth.authenticate(
             v,
             r,
