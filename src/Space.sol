@@ -38,7 +38,7 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
     // Mapping storing all voting strategies. Both active and inactive.
     // To see whether the strategy at a specific index is active,
     // check the corresponding index of the`activeVotingStrategies` bit array.
-    mapping(uint8 strategyIndex => Strategy strategy) public votingStrategiesMap;
+    mapping(uint8 strategyIndex => Strategy strategy) public votingStrategies;
 
     // Counter for the number of voting strategies that have ever been added to the space. Cannot exceed 255
     uint8 public votingStrategyCounter;
@@ -136,7 +136,7 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         if (_votingStrategies.length == 0) revert EmptyArray();
         for (uint256 i = 0; i < _votingStrategies.length; i++) {
             activeVotingStrategies = activeVotingStrategies.setBit(votingStrategyCounter, true);
-            votingStrategiesMap[votingStrategyCounter] = _votingStrategies[i];
+            votingStrategies[votingStrategyCounter] = _votingStrategies[i];
             votingStrategyCounter++;
         }
     }
@@ -223,7 +223,7 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
             }
 
             // get the Strategy from StrategiesMap using the strategySelector
-            Strategy memory strategy = votingStrategiesMap[strategyIndex];
+            Strategy memory strategy = votingStrategies[strategyIndex];
 
             totalVotingPower += IVotingStrategy(strategy.addr).getVotingPower(
                 timestamp,
