@@ -11,7 +11,7 @@ import { Choice, FinalizationStatus, IndexedStrategy, Proposal, ProposalStatus, 
 import { IVotingStrategy } from "src/interfaces/IVotingStrategy.sol";
 import { IExecutionStrategy } from "src/interfaces/IExecutionStrategy.sol";
 import { IProposalValidationStrategy } from "src/interfaces/IProposalValidationStrategy.sol";
-import { IndexedStrategyUtils } from "./utils/IndexedStrategyUtils.sol";
+import { SXUtils } from "./utils/SXUtils.sol";
 import { BitPacker } from "./utils/BitPacker.sol";
 
 /**
@@ -21,7 +21,7 @@ import { BitPacker } from "./utils/BitPacker.sol";
  */
 contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, ReentrancyGuard {
     using BitPacker for uint256;
-    using IndexedStrategyUtils for IndexedStrategy[];
+    using SXUtils for IndexedStrategy[];
 
     // Maximum duration a proposal can last.
     uint32 public maxVotingDuration;

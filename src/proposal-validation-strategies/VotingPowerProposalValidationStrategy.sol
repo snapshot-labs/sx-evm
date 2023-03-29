@@ -6,11 +6,11 @@ import { IProposalValidationStrategy } from "../interfaces/IProposalValidationSt
 import { IndexedStrategy, Strategy } from "../types.sol";
 import { ISpaceState } from "src/interfaces/space/ISpaceState.sol";
 import { IVotingStrategy } from "src/interfaces/IVotingStrategy.sol";
-import { IndexedStrategyUtils } from "../utils/IndexedStrategyUtils.sol";
+import { SXUtils } from "../utils/SXUtils.sol";
 import { BitPacker } from "../utils/BitPacker.sol";
 
 contract VotingPowerProposalValidationStrategy is IProposalValidationStrategy {
-    using IndexedStrategyUtils for IndexedStrategy[];
+    using SXUtils for IndexedStrategy[];
     using BitPacker for uint256;
 
     error InvalidStrategyIndex(uint256 index);
