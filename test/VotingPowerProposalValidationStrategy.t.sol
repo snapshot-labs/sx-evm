@@ -12,9 +12,9 @@ import { CompToken } from "./mocks/CompToken.sol";
 
 contract VotingPowerProposalValidationTest is SpaceTest {
     error DuplicateFound(uint8 index);
-    uint256 proposalThreshold = 100;
-    CompToken compToken;
-    IndexedStrategy[] userPropositionPowerStrategies;
+    uint256 internal proposalThreshold = 100;
+    CompToken internal compToken;
+    IndexedStrategy[] internal userPropositionPowerStrategies;
 
     function setUp() public virtual override {
         super.setUp();
@@ -48,7 +48,7 @@ contract VotingPowerProposalValidationTest is SpaceTest {
 
     function testProposeInsufficientVotingPower() public {
         vm.prank(author);
-        compToken.burn(author, 1); // Voting power of thr author is  now 99 when the proposal threshold is 100
+        compToken.burn(author, 1); // Voting power of the author is now 99 when the proposal threshold is 100
         vm.roll(block.number + 1);
         vm.expectRevert(FailedToPassProposalValidation.selector);
         _createProposal(author, proposalMetadataURI, executionStrategy, abi.encode(userPropositionPowerStrategies));
