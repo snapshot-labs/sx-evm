@@ -41,7 +41,7 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
     // check the corresponding index of the`activeVotingStrategies` bit array.
     mapping(uint8 strategyIndex => Strategy strategy) public votingStrategies;
 
-    // Counter for the number of voting strategies that have ever been added to the space. Cannot exceed 255
+    // Pointer to the next available voting strategy index.
     uint8 public nextVotingStrategyIndex;
 
     // The proposal validation contract.
