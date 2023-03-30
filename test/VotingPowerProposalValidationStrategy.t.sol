@@ -25,24 +25,21 @@ contract VotingPowerProposalValidationTest is SpaceTest {
         compToken.delegate(author);
         vm.roll(block.number + 1);
 
-        // We use a comp token strategy so that we can vary voting power easily and test the proposal threshold
         Strategy memory compVotingStrategy = Strategy(
             address(new CompVotingStrategy()),
             abi.encodePacked(address(compToken))
         );
-        Strategy[] memory powerStrategies = new Strategy[](1);
-        powerStrategies[0] = compVotingStrategy;
-        string[] memory metadataURIs = new string[](1);
-        space.addVotingStrategies(powerStrategies, metadataURIs);
+        Strategy[] memory propositionPowerStrategies = new Strategy[](1);
+        propositionPowerStrategies[0] = compVotingStrategy;
 
         Strategy memory votingPowerProposalValidationStrategy = Strategy(
             address(new VotingPowerProposalValidationStrategy()),
-            abi.encode(proposalThreshold, space.activeVotingStrategies())
+            abi.encode(proposalThreshold, propositionPowerStrategies)
         );
         space.setProposalValidationStrategy(votingPowerProposalValidationStrategy);
 
-        // The Comp token strategy is at index 1 of the proposal validation strategies
-        userPropositionPowerStrategies.push(IndexedStrategy(1, new bytes(0)));
+        // The Comp token strategy is at index 0 of the proposal validation strategies
+        userPropositionPowerStrategies.push(IndexedStrategy(0, new bytes(0)));
     }
 
     function testPropose() public {
@@ -93,19 +90,17 @@ contract VotingPowerProposalValidationTest is SpaceTest {
         Strategy[] memory propositionPowerStrategies = new Strategy[](2);
         propositionPowerStrategies[0] = Strategy(address(additionalStrategy), new bytes(0));
         propositionPowerStrategies[1] = Strategy(address(additionalStrategy), new bytes(0));
-        string[] memory propositionPowerMetadataURIs = new string[](2);
-        space.addVotingStrategies(propositionPowerStrategies, propositionPowerMetadataURIs);
 
         // Using a proposal threshold of 2
         Strategy memory votingPowerProposalValidationStrategy = Strategy(
             address(new VotingPowerProposalValidationStrategy()),
-            abi.encode(2, space.activeVotingStrategies())
+            abi.encode(2, propositionPowerStrategies)
         );
         space.setProposalValidationStrategy(votingPowerProposalValidationStrategy);
 
         IndexedStrategy[] memory newUserPropositionPowerStrategies = new IndexedStrategy[](2);
-        newUserPropositionPowerStrategies[0] = IndexedStrategy(2, new bytes(0));
-        newUserPropositionPowerStrategies[1] = IndexedStrategy(3, new bytes(0));
+        newUserPropositionPowerStrategies[0] = IndexedStrategy(0, new bytes(0));
+        newUserPropositionPowerStrategies[1] = IndexedStrategy(1, new bytes(0));
 
         _createProposal(author, proposalMetadataURI, executionStrategy, abi.encode(newUserPropositionPowerStrategies));
     }

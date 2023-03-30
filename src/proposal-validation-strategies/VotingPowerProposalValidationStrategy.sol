@@ -11,7 +11,6 @@ import { BitPacker } from "../utils/BitPacker.sol";
 
 contract VotingPowerProposalValidationStrategy is IProposalValidationStrategy {
     using SXUtils for IndexedStrategy[];
-    using BitPacker for uint256;
 
     error InvalidStrategyIndex(uint256 index);
 
@@ -27,7 +26,7 @@ contract VotingPowerProposalValidationStrategy is IProposalValidationStrategy {
         bytes calldata params,
         bytes calldata userParams
     ) external override returns (bool) {
-        (uint256 proposalThreshold, uint256 allowedStrategies) = abi.decode(params, (uint256, uint256));
+        (uint256 proposalThreshold, Strategy[] memory allowedStrategies) = abi.decode(params, (uint256, Strategy[]));
         IndexedStrategy[] memory userStrategies = abi.decode(userParams, (IndexedStrategy[]));
 
         uint256 votingPower = _getCumulativePower(author, uint32(block.timestamp), userStrategies, allowedStrategies);
@@ -39,27 +38,24 @@ contract VotingPowerProposalValidationStrategy is IProposalValidationStrategy {
         address userAddress,
         uint32 timestamp,
         IndexedStrategy[] memory userStrategies,
-        uint256 allowedStrategies
+        Strategy[] memory allowedStrategies
     ) internal returns (uint256) {
         // Ensure there are no duplicates to avoid an attack where people double count a strategy
         userStrategies.assertNoDuplicateIndices();
 
         uint256 totalVotingPower;
         for (uint256 i = 0; i < userStrategies.length; ++i) {
-            uint8 strategyIndex = userStrategies[i].index;
+            uint256 strategyIndex = userStrategies[i].index;
+            if (strategyIndex >= allowedStrategies.length) revert InvalidStrategyIndex(strategyIndex);
+            Strategy memory strategy = allowedStrategies[strategyIndex];
+            // A strategy address set to 0 indicates that this address has already been removed and is
+            // no longer a valid voting strategy. See `_removeVotingStrategies`.
+            if (strategy.addr == address(0)) revert InvalidStrategyIndex(strategyIndex);
 
-            // Check that the strategy is allowed for this proposal
-            if (!allowedStrategies.isBitSet(strategyIndex)) {
-                revert InvalidStrategyIndex(strategyIndex);
-            }
-
-            // The space contract resides at msg.sender
-            (address addr, bytes memory params) = ISpaceState(msg.sender).votingStrategiesMap(strategyIndex);
-
-            totalVotingPower += IVotingStrategy(addr).getVotingPower(
+            totalVotingPower += IVotingStrategy(strategy.addr).getVotingPower(
                 timestamp,
                 userAddress,
-                params,
+                strategy.params,
                 userStrategies[i].params
             );
         }
