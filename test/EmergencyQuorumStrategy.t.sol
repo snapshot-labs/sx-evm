@@ -49,7 +49,12 @@ contract EmergencyQuorumTest is SpaceTest {
     }
 
     function testEmergencyQuorum() public {
-        uint256 proposalId = _createProposal(author, proposalMetadataURI, emergencyStrategy, userVotingStrategies);
+        uint256 proposalId = _createProposal(
+            author,
+            proposalMetadataURI,
+            emergencyStrategy,
+            abi.encode(userVotingStrategies)
+        );
         _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataURI); // 1
         _vote(address(42), proposalId, Choice.For, userVotingStrategies, voteMetadataURI); // 2
 
@@ -61,7 +66,12 @@ contract EmergencyQuorumTest is SpaceTest {
     }
 
     function testEmergencyQuorumNotReached() public {
-        uint256 proposalId = _createProposal(author, proposalMetadataURI, emergencyStrategy, userVotingStrategies);
+        uint256 proposalId = _createProposal(
+            author,
+            proposalMetadataURI,
+            emergencyStrategy,
+            abi.encode(userVotingStrategies)
+        );
         _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataURI); // 1
 
         vm.expectRevert(abi.encodeWithSelector(InvalidProposalStatus.selector, uint8(ProposalStatus.VotingPeriod)));
@@ -69,7 +79,12 @@ contract EmergencyQuorumTest is SpaceTest {
     }
 
     function testEmergencyQuorumAfterMinDuration() public {
-        uint256 proposalId = _createProposal(author, proposalMetadataURI, emergencyStrategy, userVotingStrategies);
+        uint256 proposalId = _createProposal(
+            author,
+            proposalMetadataURI,
+            emergencyStrategy,
+            abi.encode(userVotingStrategies)
+        );
         _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataURI); // 1
 
         vm.warp(block.timestamp + minVotingDuration);
@@ -80,7 +95,12 @@ contract EmergencyQuorumTest is SpaceTest {
     }
 
     function testEmergencyQuorumAfterMaxDuration() public {
-        uint256 proposalId = _createProposal(author, proposalMetadataURI, emergencyStrategy, userVotingStrategies);
+        uint256 proposalId = _createProposal(
+            author,
+            proposalMetadataURI,
+            emergencyStrategy,
+            abi.encode(userVotingStrategies)
+        );
         _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataURI); // 1
 
         vm.warp(block.timestamp + maxVotingDuration);
@@ -91,7 +111,12 @@ contract EmergencyQuorumTest is SpaceTest {
     }
 
     function testEmergencyQuorumReachedButRejected() public {
-        uint256 proposalId = _createProposal(author, proposalMetadataURI, emergencyStrategy, userVotingStrategies);
+        uint256 proposalId = _createProposal(
+            author,
+            proposalMetadataURI,
+            emergencyStrategy,
+            abi.encode(userVotingStrategies)
+        );
 
         // Cast two votes AGAINST
         _vote(author, proposalId, Choice.Against, userVotingStrategies, voteMetadataURI); // 1
@@ -115,7 +140,12 @@ contract EmergencyQuorumTest is SpaceTest {
         emergencyStrategy = Strategy(address(lowerThanQuorum), new bytes(0));
 
         // Create proposal and vote
-        uint256 proposalId = _createProposal(author, proposalMetadataURI, emergencyStrategy, userVotingStrategies);
+        uint256 proposalId = _createProposal(
+            author,
+            proposalMetadataURI,
+            emergencyStrategy,
+            abi.encode(userVotingStrategies)
+        );
         _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataURI); // emergencyQuorum reached
         vm.warp(block.timestamp + maxVotingDuration);
 
