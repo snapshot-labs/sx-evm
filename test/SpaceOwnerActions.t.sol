@@ -234,6 +234,23 @@ contract SpaceOwnerActionsTest is SpaceTest {
         _vote(author, proposalId3, Choice.For, userVotingStrategies, voteMetadataURI);
     }
 
+    function testAddVotingStrategiesOverflow() public {
+        Strategy[] memory newVotingStrategies = new Strategy[](1);
+        newVotingStrategies[0] = votingStrategies[0];
+
+        string[] memory votingStrategyMetadataURIs = new string[](0);
+
+        // Adding the maximum number of voting strategies (256)
+        // Note: We start at 1 because the first strategy is added in the setup
+        for (uint256 i = 1; i < 255; i++) {
+            space.addVotingStrategies(newVotingStrategies, votingStrategyMetadataURIs);
+        }
+
+        // There are now 256 strategies added to the space, Try adding one more
+        vm.expectRevert(abi.encodeWithSelector(ExceedsStrategyLimit.selector));
+        space.addVotingStrategies(newVotingStrategies, votingStrategyMetadataURIs);
+    }
+
     function testAddVotingStrategiesUnauthorized() public {
         vm.expectRevert("Ownable: caller is not the owner");
         vm.prank(unauthorized);
