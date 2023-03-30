@@ -32,7 +32,8 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
     // Delay between when the proposal is created and when the voting period starts for this proposal.
     uint32 public votingDelay;
 
-    // Bit array where the index of each each bit corresponds to whether the voting strategy at that index is active
+    // Bit array where the index of each bit corresponds to whether the strategy at that index
+    // in `votingStrategies` is active.
     uint256 public activeVotingStrategies;
 
     // Mapping storing all voting strategies. Both active and inactive.
@@ -41,7 +42,7 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
     mapping(uint8 strategyIndex => Strategy strategy) public votingStrategies;
 
     // Counter for the number of voting strategies that have ever been added to the space. Cannot exceed 255
-    uint8 public votingStrategyCounter;
+    uint8 public nextVotingStrategyIndex;
 
     // The proposal validation contract.
     Strategy public proposalValidationStrategy;
@@ -134,11 +135,16 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
      */
     function _addVotingStrategies(Strategy[] memory _votingStrategies) internal {
         if (_votingStrategies.length == 0) revert EmptyArray();
+        uint256 cachedActiveVotingStrategies = activeVotingStrategies;
+        uint8 cachedNextVotingStrategyIndex = nextVotingStrategyIndex;
+        if (cachedNextVotingStrategyIndex >= 256 - _votingStrategies.length) revert ExceedsStrategyLimit();
         for (uint256 i = 0; i < _votingStrategies.length; i++) {
-            activeVotingStrategies = activeVotingStrategies.setBit(votingStrategyCounter, true);
-            votingStrategies[votingStrategyCounter] = _votingStrategies[i];
-            votingStrategyCounter++;
+            cachedActiveVotingStrategies = cachedActiveVotingStrategies.setBit(cachedNextVotingStrategyIndex, true);
+            votingStrategies[cachedNextVotingStrategyIndex] = _votingStrategies[i];
+            cachedNextVotingStrategyIndex++;
         }
+        activeVotingStrategies = cachedActiveVotingStrategies;
+        nextVotingStrategyIndex = cachedNextVotingStrategyIndex;
     }
 
     /**
@@ -222,7 +228,6 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
                 revert InvalidStrategyIndex(strategyIndex);
             }
 
-            // get the Strategy from StrategiesMap using the strategySelector
             Strategy memory strategy = votingStrategies[strategyIndex];
 
             totalVotingPower += IVotingStrategy(strategy.addr).getVotingPower(

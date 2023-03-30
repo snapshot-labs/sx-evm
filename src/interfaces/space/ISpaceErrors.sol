@@ -11,6 +11,7 @@ interface ISpaceErrors {
     // All strategy addresses must be != address(0).
     error InvalidStrategyAddress();
     error InvalidStrategyIndex(uint256 index);
+    error ExceedsStrategyLimit();
     error InvalidProposal();
     error AuthenticatorNotWhitelisted(address auth);
     error InvalidExecutionStrategyIndex(uint256 index);
