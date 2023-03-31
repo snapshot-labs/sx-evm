@@ -234,6 +234,13 @@ contract SpaceOwnerActionsTest is SpaceTest {
         _vote(author, proposalId3, Choice.For, userVotingStrategies, voteMetadataURI);
     }
 
+    function testRemoveAllVotingStrategies() public {
+        uint8[] memory indices = new uint8[](1);
+        indices[0] = 0;
+        vm.expectRevert(NoActiveVotingStrategies.selector);
+        space.removeVotingStrategies(indices);
+    }
+
     function testAddVotingStrategiesOverflow() public {
         Strategy[] memory newVotingStrategies = new Strategy[](1);
         newVotingStrategies[0] = votingStrategies[0];
