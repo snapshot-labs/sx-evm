@@ -2,6 +2,8 @@
 
 pragma solidity ^0.8.18;
 
+import { IProposalValidationStrategy } from "../interfaces/IProposalValidationStrategy.sol";
+
 /**
  * @author  Snapshot Labs
  * @title   Active Proposals Limiter
@@ -10,7 +12,7 @@ pragma solidity ^0.8.18;
  *          The counter gets reset everytime `cooldown` has passed.
  */
 
-abstract contract ActiveProposalsLimiter {
+contract ActiveProposalsLimiter is IProposalValidationStrategy {
     error MaxActiveProposalsCannotBeZero();
 
     // cooldown to wait before the counter gets reset
@@ -31,9 +33,13 @@ abstract contract ActiveProposalsLimiter {
         maxActiveProposals = _maxActiveProposals;
     }
 
-    function increaseActiveProposalCount(address user) internal returns (bool success) {
+    function validate(
+        address author,
+        bytes memory /* params */,
+        bytes memory /* userParams */
+    ) public virtual override returns (bool success) {
         // See comments of `usersPackedData`
-        uint256 packedData = usersPackedData[user];
+        uint256 packedData = usersPackedData[author];
 
         // Effectively a uint32 (32 last bits of packedData)
         uint256 lastTimestamp = uint32(packedData);
@@ -56,7 +62,7 @@ abstract contract ActiveProposalsLimiter {
         }
 
         // Update storage
-        usersPackedData[user] = (activeProposals << 32) + uint32(block.timestamp);
+        usersPackedData[author] = (activeProposals << 32) + uint32(block.timestamp);
         return true;
     }
 }
