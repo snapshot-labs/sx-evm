@@ -346,6 +346,8 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
     ) external override {
         _assertValidAuthenticator();
 
+        if (activeVotingStrategies == 0) revert NoActiveVotingStrategies();
+
         // Casting to `uint32` is fine because this gives us until year ~2106.
         uint32 snapshotTimestamp = uint32(block.timestamp);
 
