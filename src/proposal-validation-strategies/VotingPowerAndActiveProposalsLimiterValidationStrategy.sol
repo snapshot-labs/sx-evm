@@ -45,9 +45,13 @@ contract VotingPowerAndActiveProposalsLimiterValidationStrategy is
         )
         returns (bool)
     {
-        ActiveProposalsLimiterProposalValidationStrategy.validate(author, new bytes(0), new bytes(0));
-        VotingPowerProposalValidationStrategy.validate(author, params, userParams);
+        bool maxProposalsNotExceeded = ActiveProposalsLimiterProposalValidationStrategy.validate(
+            author,
+            new bytes(0),
+            new bytes(0)
+        );
+        bool proposalThresholdExceeded = VotingPowerProposalValidationStrategy.validate(author, params, userParams);
 
-        return true;
+        return maxProposalsNotExceeded && proposalThresholdExceeded;
     }
 }
