@@ -61,14 +61,4 @@ contract ProposeTest is SpaceTest {
         vm.expectRevert(FailedToPassProposalValidation.selector);
         _createProposal(author, proposalMetadataURI, executionStrategy, new bytes(0));
     }
-
-    function testProposeNoActiveVotingStrategies() public {
-        uint8[] memory indices = new uint8[](1);
-        indices[0] = 0;
-        space.removeVotingStrategies(indices);
-        assertEq(space.activeVotingStrategies(), 0);
-        // There are now no active voting strategies so the proposal should be rejected
-        vm.expectRevert(NoActiveVotingStrategies.selector);
-        _createProposal(author, proposalMetadataURI, executionStrategy, new bytes(0));
-    }
 }

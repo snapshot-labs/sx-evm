@@ -157,8 +157,8 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         for (uint8 i = 0; i < _votingStrategyIndices.length; i++) {
             activeVotingStrategies = activeVotingStrategies.setBit(_votingStrategyIndices[i], false);
         }
-
-        // TODO: should we check that there are still voting strategies left after this?
+        // There must always be at least one active voting strategy.
+        if (activeVotingStrategies == 0) revert NoActiveVotingStrategies();
     }
 
     /**
