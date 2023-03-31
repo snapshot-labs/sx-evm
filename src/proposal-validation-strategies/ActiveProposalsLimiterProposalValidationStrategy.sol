@@ -12,7 +12,7 @@ import { IProposalValidationStrategy } from "../interfaces/IProposalValidationSt
  *          The counter gets reset everytime `cooldown` has passed.
  */
 
-contract ActiveProposalsLimiter is IProposalValidationStrategy {
+contract ActiveProposalsLimiterProposalValidationStrategy is IProposalValidationStrategy {
     error MaxActiveProposalsCannotBeZero();
 
     // cooldown to wait before the counter gets reset

@@ -8,16 +8,21 @@ import { ISpaceState } from "src/interfaces/space/ISpaceState.sol";
 import { IVotingStrategy } from "src/interfaces/IVotingStrategy.sol";
 import { SXUtils } from "../utils/SXUtils.sol";
 import { BitPacker } from "../utils/BitPacker.sol";
-import { ActiveProposalsLimiter } from "./ActiveProposalsLimiter.sol";
+import {
+    ActiveProposalsLimiterProposalValidationStrategy
+} from "./ActiveProposalsLimiterProposalValidationStrategy.sol";
 import { VotingPowerProposalValidationStrategy } from "./VotingPowerProposalValidationStrategy.sol";
 
 contract VotingPowerAndActiveProposalsLimiterValidationStrategy is
     IProposalValidationStrategy,
-    ActiveProposalsLimiter,
+    ActiveProposalsLimiterProposalValidationStrategy,
     VotingPowerProposalValidationStrategy
 {
     // solhint-disable-next-line no-empty-blocks
-    constructor(uint32 _cooldown, uint224 _maxActiveProposals) ActiveProposalsLimiter(_cooldown, _maxActiveProposals) {}
+    constructor(
+        uint32 _cooldown,
+        uint224 _maxActiveProposals
+    ) ActiveProposalsLimiterProposalValidationStrategy(_cooldown, _maxActiveProposals) {}
 
     /**
      * @notice  Validates a proposal using the voting strategies to compute the proposal power, while also ensuring
@@ -33,10 +38,14 @@ contract VotingPowerAndActiveProposalsLimiterValidationStrategy is
         bytes memory userParams
     )
         public
-        override(IProposalValidationStrategy, ActiveProposalsLimiter, VotingPowerProposalValidationStrategy)
+        override(
+            IProposalValidationStrategy,
+            ActiveProposalsLimiterProposalValidationStrategy,
+            VotingPowerProposalValidationStrategy
+        )
         returns (bool)
     {
-        ActiveProposalsLimiter.validate(author, new bytes(0), new bytes(0));
+        ActiveProposalsLimiterProposalValidationStrategy.validate(author, new bytes(0), new bytes(0));
         VotingPowerProposalValidationStrategy.validate(author, params, userParams);
 
         return true;
