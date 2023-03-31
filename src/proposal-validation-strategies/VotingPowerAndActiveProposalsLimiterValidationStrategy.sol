@@ -58,9 +58,6 @@ contract VotingPowerAndActiveProposalsLimiterValidationStrategy is IProposalVali
             uint256 strategyIndex = userStrategies[i].index;
             if (strategyIndex >= allowedStrategies.length) revert InvalidStrategyIndex(strategyIndex);
             Strategy memory strategy = allowedStrategies[strategyIndex];
-            // A strategy address set to 0 indicates that this address has already been removed and is
-            // no longer a valid voting strategy. See `_removeVotingStrategies`.
-            if (strategy.addr == address(0)) revert InvalidStrategyIndex(strategyIndex);
 
             totalVotingPower += IVotingStrategy(strategy.addr).getVotingPower(
                 timestamp,

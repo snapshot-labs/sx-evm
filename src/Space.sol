@@ -139,6 +139,7 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         uint8 cachedNextVotingStrategyIndex = nextVotingStrategyIndex;
         if (cachedNextVotingStrategyIndex >= 256 - _votingStrategies.length) revert ExceedsStrategyLimit();
         for (uint256 i = 0; i < _votingStrategies.length; i++) {
+            if (_votingStrategies[i].addr == address(0)) revert InvalidStrategyAddress();
             cachedActiveVotingStrategies = cachedActiveVotingStrategies.setBit(cachedNextVotingStrategyIndex, true);
             votingStrategies[cachedNextVotingStrategyIndex] = _votingStrategies[i];
             cachedNextVotingStrategyIndex++;
