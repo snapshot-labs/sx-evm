@@ -25,36 +25,29 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
 
     /// @inheritdoc ISpaceState
     uint32 public override maxVotingDuration;
-    // Minimum duration a proposal can last.
+    /// @inheritdoc ISpaceState
     uint32 public override minVotingDuration;
-    // Next proposal nonce, increased by one every time a new proposal is created.
+    /// @inheritdoc ISpaceState
     uint256 public override nextProposalId;
-    // Delay between when the proposal is created and when the voting period starts for this proposal.
+    /// @inheritdoc ISpaceState
     uint32 public override votingDelay;
-
-    // Bit array where the index of each bit corresponds to whether the strategy at that index
-    // in `votingStrategies` is active.
+    /// @inheritdoc ISpaceState
     uint256 public override activeVotingStrategies;
-
-    // Mapping storing all voting strategies. Both active and inactive.
-    // To see whether the strategy at a specific index is active,
-    // check the corresponding index of the`activeVotingStrategies` bit array.
+    /// @inheritdoc ISpaceState
     mapping(uint8 strategyIndex => Strategy strategy) public override votingStrategies;
-
-    // Pointer to the next available voting strategy index.
+    /// @inheritdoc ISpaceState
     uint8 public override nextVotingStrategyIndex;
-
-    // The proposal validation contract.
+    /// @inheritdoc ISpaceState
     Strategy public override proposalValidationStrategy;
-
-    // Mapping of allowed authenticators.
+    /// @inheritdoc ISpaceState
     mapping(address auth => bool allowed) public override authenticators;
-    // Mapping of all `Proposal`s of this space (past and present).
+    /// @inheritdoc ISpaceState
     mapping(uint256 proposalId => Proposal proposal) public override proposals;
-    // Mapping used to know if a voter already voted on a specific proposal. Here to prevent double voting.
-    mapping(uint256 proposalId => mapping(address voter => bool hasVoted)) public override voteRegistry;
     // Mapping used to check the current voting power in favor of a `Choice` for a specific proposal.
     mapping(uint256 proposalId => mapping(Choice choice => uint256 votePower)) public override votePower;
+    /// @dev Mapping that stores whether a voter has voted on a proposal yet.
+    /// Use `hasVoted` to safely query this data.
+    mapping(uint256 proposalId => mapping(address voter => bool hasVoted)) internal voteRegistry;
 
     // ------------------------------------
     // |                                  |
@@ -300,6 +293,7 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
     // |                                  |
     // ------------------------------------
 
+    /// @inheritdoc ISpaceState
     function getProposalStatus(uint256 proposalId) external view override returns (ProposalStatus) {
         Proposal memory proposal = proposals[proposalId];
         _assertProposalExists(proposal);
@@ -312,6 +306,7 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
             );
     }
 
+    /// @inheritdoc ISpaceState
     function hasVoted(uint256 proposalId, address voter) external view override returns (bool) {
         Proposal memory proposal = proposals[proposalId];
         _assertProposalExists(proposal);
