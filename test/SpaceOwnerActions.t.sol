@@ -7,7 +7,6 @@ import { Choice, IndexedStrategy, Strategy } from "../src/types.sol";
 import { VanillaExecutionStrategy } from "../src/execution-strategies/VanillaExecutionStrategy.sol";
 
 contract SpaceOwnerActionsTest is SpaceTest {
-    error InvalidStrategyIndex(uint256 index);
     event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
 
     // ------- Transfer Ownership -------
@@ -34,7 +33,7 @@ contract SpaceOwnerActionsTest is SpaceTest {
     // ------- Cancel Proposal ----
 
     function testCancel() public {
-        uint256 proposalId = _createProposal(author, proposalMetadataURI, executionStrategy, userVotingStrategies);
+        uint256 proposalId = _createProposal(author, proposalMetadataURI, executionStrategy, new bytes(0));
         _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataURI);
 
         vm.expectEmit(true, true, true, true);
@@ -43,7 +42,7 @@ contract SpaceOwnerActionsTest is SpaceTest {
     }
 
     function testCancelInvalidProposal() public {
-        uint256 proposalId = _createProposal(author, proposalMetadataURI, executionStrategy, userVotingStrategies);
+        uint256 proposalId = _createProposal(author, proposalMetadataURI, executionStrategy, new bytes(0));
         _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataURI);
 
         // proposal does not exist
@@ -53,7 +52,7 @@ contract SpaceOwnerActionsTest is SpaceTest {
     }
 
     function testCancelUnauthorized() public {
-        uint256 proposalId = _createProposal(author, proposalMetadataURI, executionStrategy, userVotingStrategies);
+        uint256 proposalId = _createProposal(author, proposalMetadataURI, executionStrategy, new bytes(0));
         _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataURI);
 
         vm.expectRevert("Ownable: caller is not the owner");
@@ -62,7 +61,7 @@ contract SpaceOwnerActionsTest is SpaceTest {
     }
 
     function testCancelAlreadyExecuted() public {
-        uint256 proposalId = _createProposal(author, proposalMetadataURI, executionStrategy, userVotingStrategies);
+        uint256 proposalId = _createProposal(author, proposalMetadataURI, executionStrategy, new bytes(0));
         _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataURI);
         space.execute(proposalId, executionStrategy.params);
 
@@ -71,7 +70,7 @@ contract SpaceOwnerActionsTest is SpaceTest {
     }
 
     function testCancelAlreadyCancelled() public {
-        uint256 proposalId = _createProposal(author, proposalMetadataURI, executionStrategy, userVotingStrategies);
+        uint256 proposalId = _createProposal(author, proposalMetadataURI, executionStrategy, new bytes(0));
         _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataURI);
         space.cancel(proposalId);
 
@@ -213,7 +212,7 @@ contract SpaceOwnerActionsTest is SpaceTest {
         space.addVotingStrategies(newVotingStrategies, votingStrategyMetadataURIs);
 
         // Create a proposal using the default proposal validation strategy
-        uint256 proposalId1 = _createProposal(author, proposalMetadataURI, executionStrategy, userVotingStrategies);
+        uint256 proposalId1 = _createProposal(author, proposalMetadataURI, executionStrategy, new bytes(0));
         // Cast a vote with the new voting strategy.
         _vote(author, proposalId1, Choice.For, newUserVotingStrategies, voteMetadataURI);
 
@@ -223,16 +222,40 @@ contract SpaceOwnerActionsTest is SpaceTest {
         space.removeVotingStrategies(newIndices);
 
         // Create a proposal using the default proposal validation strategy
-        uint256 proposalId2 = _createProposal(author, proposalMetadataURI, executionStrategy, userVotingStrategies);
+        uint256 proposalId2 = _createProposal(author, proposalMetadataURI, executionStrategy, new bytes(0));
 
         // Try voting on a proposal using the strategies that were just removed.
         vm.expectRevert(abi.encodeWithSelector(InvalidStrategyIndex.selector, 1));
         _vote(author, proposalId2, Choice.For, newUserVotingStrategies, voteMetadataURI);
 
         // Create a proposal with the default proposal validation strategy
-        uint256 proposalId3 = _createProposal(author, proposalMetadataURI, executionStrategy, userVotingStrategies);
+        uint256 proposalId3 = _createProposal(author, proposalMetadataURI, executionStrategy, new bytes(0));
         // Cast a vote with the strategy that was never removed
         _vote(author, proposalId3, Choice.For, userVotingStrategies, voteMetadataURI);
+    }
+
+    function testRemoveAllVotingStrategies() public {
+        uint8[] memory indices = new uint8[](1);
+        indices[0] = 0;
+        vm.expectRevert(NoActiveVotingStrategies.selector);
+        space.removeVotingStrategies(indices);
+    }
+
+    function testAddVotingStrategiesOverflow() public {
+        Strategy[] memory newVotingStrategies = new Strategy[](1);
+        newVotingStrategies[0] = votingStrategies[0];
+
+        string[] memory votingStrategyMetadataURIs = new string[](0);
+
+        // Adding the maximum number of voting strategies (256)
+        // Note: We start at 1 because the first strategy is added in the setup
+        for (uint256 i = 1; i < 255; i++) {
+            space.addVotingStrategies(newVotingStrategies, votingStrategyMetadataURIs);
+        }
+
+        // There are now 256 strategies added to the space, Try adding one more
+        vm.expectRevert(abi.encodeWithSelector(ExceedsStrategyLimit.selector));
+        space.addVotingStrategies(newVotingStrategies, votingStrategyMetadataURIs);
     }
 
     function testAddVotingStrategiesUnauthorized() public {
