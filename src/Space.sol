@@ -6,7 +6,7 @@ import { Initializable } from "@openzeppelin/contracts-upgradeable/proxy/utils/I
 import { UUPSUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import { ReentrancyGuard } from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
-import { ISpace } from "src/interfaces/ISpace.sol";
+import { ISpace, ISpaceState } from "src/interfaces/ISpace.sol";
 import { Choice, FinalizationStatus, IndexedStrategy, Proposal, ProposalStatus, Strategy } from "src/types.sol";
 import { IVotingStrategy } from "src/interfaces/IVotingStrategy.sol";
 import { IExecutionStrategy } from "src/interfaces/IExecutionStrategy.sol";
@@ -23,7 +23,7 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
     using BitPacker for uint256;
     using SXUtils for IndexedStrategy[];
 
-    // Maximum duration a proposal can last.
+    /// @inheritdoc ISpaceState
     uint32 public override maxVotingDuration;
     // Minimum duration a proposal can last.
     uint32 public override minVotingDuration;
