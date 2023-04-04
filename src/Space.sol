@@ -24,37 +24,37 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
     using SXUtils for IndexedStrategy[];
 
     // Maximum duration a proposal can last.
-    uint32 public maxVotingDuration;
+    uint32 public override maxVotingDuration;
     // Minimum duration a proposal can last.
-    uint32 public minVotingDuration;
+    uint32 public override minVotingDuration;
     // Next proposal nonce, increased by one every time a new proposal is created.
-    uint256 public nextProposalId;
+    uint256 public override nextProposalId;
     // Delay between when the proposal is created and when the voting period starts for this proposal.
-    uint32 public votingDelay;
+    uint32 public override votingDelay;
 
     // Bit array where the index of each bit corresponds to whether the strategy at that index
     // in `votingStrategies` is active.
-    uint256 public activeVotingStrategies;
+    uint256 public override activeVotingStrategies;
 
     // Mapping storing all voting strategies. Both active and inactive.
     // To see whether the strategy at a specific index is active,
     // check the corresponding index of the`activeVotingStrategies` bit array.
-    mapping(uint8 strategyIndex => Strategy strategy) public votingStrategies;
+    mapping(uint8 strategyIndex => Strategy strategy) public override votingStrategies;
 
     // Pointer to the next available voting strategy index.
-    uint8 public nextVotingStrategyIndex;
+    uint8 public override nextVotingStrategyIndex;
 
     // The proposal validation contract.
-    Strategy public proposalValidationStrategy;
+    Strategy public override proposalValidationStrategy;
 
     // Mapping of allowed authenticators.
-    mapping(address auth => bool allowed) public authenticators;
+    mapping(address auth => bool allowed) public override authenticators;
     // Mapping of all `Proposal`s of this space (past and present).
-    mapping(uint256 proposalId => Proposal proposal) public proposals;
+    mapping(uint256 proposalId => Proposal proposal) public override proposals;
     // Mapping used to know if a voter already voted on a specific proposal. Here to prevent double voting.
-    mapping(uint256 proposalId => mapping(address voter => bool hasVoted)) public voteRegistry;
+    mapping(uint256 proposalId => mapping(address voter => bool hasVoted)) public override voteRegistry;
     // Mapping used to check the current voting power in favor of a `Choice` for a specific proposal.
-    mapping(uint256 proposalId => mapping(Choice choice => uint256 votePower)) public votePower;
+    mapping(uint256 proposalId => mapping(Choice choice => uint256 votePower)) public override votePower;
 
     // ------------------------------------
     // |                                  |
