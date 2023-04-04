@@ -22,8 +22,7 @@ interface ISpaceState {
 
     function votePower(uint256 proposalId, Choice choice) external view returns (uint256);
 
-    // function proposalRegistry(uint256 proposalId) external view returns (Proposal memory);
-    function proposalRegistry(
+    function proposals(
         uint256 proposalId
     )
         external

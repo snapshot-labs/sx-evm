@@ -51,7 +51,7 @@ contract ProposeTest is SpaceTest {
             address _author,
             FinalizationStatus _finalizationStatus,
             uint256 _activeVotingStrategies
-        ) = space.proposalRegistry(proposalId);
+        ) = space.proposals(proposalId);
 
         Proposal memory _proposal = Proposal(
             _snapshotTimestamp,

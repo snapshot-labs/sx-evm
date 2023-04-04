@@ -50,7 +50,7 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
     // Mapping of allowed authenticators.
     mapping(address auth => bool allowed) public authenticators;
     // Mapping of all `Proposal`s of this space (past and present).
-    mapping(uint256 proposalId => Proposal proposal) public proposalRegistry;
+    mapping(uint256 proposalId => Proposal proposal) public proposals;
     // Mapping used to know if a voter already voted on a specific proposal. Here to prevent double voting.
     mapping(uint256 proposalId => mapping(address voter => bool hasVoted)) public voteRegistry;
     // Mapping used to check the current voting power in favor of a `Choice` for a specific proposal.
@@ -301,7 +301,7 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
     // ------------------------------------
 
     function getProposalStatus(uint256 proposalId) public view override returns (ProposalStatus) {
-        Proposal memory proposal = proposalRegistry[proposalId];
+        Proposal memory proposal = proposals[proposalId];
         _assertProposalExists(proposal);
         return
             proposal.executionStrategy.getProposalStatus(
@@ -313,7 +313,7 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
     }
 
     function hasVoted(uint256 proposalId, address voter) external view override returns (bool) {
-        Proposal memory proposal = proposalRegistry[proposalId];
+        Proposal memory proposal = proposals[proposalId];
         _assertProposalExists(proposal);
 
         return voteRegistry[proposalId][voter];
@@ -370,7 +370,7 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
             activeVotingStrategies
         );
 
-        proposalRegistry[nextProposalId] = proposal;
+        proposals[nextProposalId] = proposal;
         emit ProposalCreated(nextProposalId, author, proposal, metadataURI, executionStrategy.params);
 
         nextProposalId++;
@@ -392,7 +392,7 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         string calldata metadataUri
     ) external override {
         _assertValidAuthenticator();
-        Proposal memory proposal = proposalRegistry[proposalId];
+        Proposal memory proposal = proposals[proposalId];
         _assertProposalExists(proposal);
         if (block.timestamp >= proposal.maxEndTimestamp) revert VotingPeriodHasEnded();
         if (block.timestamp < proposal.startTimestamp) revert VotingPeriodHasNotStarted();
@@ -422,7 +422,7 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
      * @param   executionPayload  The execution payload, as described in `propose()`.
      */
     function execute(uint256 proposalId, bytes calldata executionPayload) external override nonReentrant {
-        Proposal storage proposal = proposalRegistry[proposalId];
+        Proposal storage proposal = proposals[proposalId];
         _assertProposalExists(proposal);
 
         // We add reentrancy protection here to prevent this function being re-entered by the execution strategy.
@@ -446,7 +446,7 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
      * @param   proposalId  The proposal to cancel
      */
     function cancel(uint256 proposalId) external override onlyOwner {
-        Proposal storage proposal = proposalRegistry[proposalId];
+        Proposal storage proposal = proposals[proposalId];
         _assertProposalExists(proposal);
         if (proposal.finalizationStatus != FinalizationStatus.Pending) revert ProposalFinalized();
         proposal.finalizationStatus = FinalizationStatus.Cancelled;
@@ -468,7 +468,7 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
     ) external override {
         _assertValidAuthenticator();
 
-        Proposal storage proposal = proposalRegistry[proposalId];
+        Proposal storage proposal = proposals[proposalId];
         if (author != proposal.author) revert InvalidCaller();
         if (block.timestamp >= proposal.startTimestamp) revert VotingDelayHasPassed();
 
