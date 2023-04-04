@@ -45,6 +45,11 @@ interface ISpaceState {
     /// @param choice The choice of the voter.
     function votePower(uint256 proposalId, Choice choice) external view returns (uint256);
 
+    /// @notice Returns whether a voter has voted on a proposal.
+    /// @param proposalId The ID of the proposal.
+    /// @param voter The address of the voter.
+    function voteRegistry(uint256 proposalId, address voter) external view returns (bool);
+
     /// @notice Returns the proposal at a given ID.
     /// @dev Returns all zeros if the proposal does not exist.
     /// @param proposalId The ID of the proposal.
@@ -79,9 +84,4 @@ interface ISpaceState {
     /// @param proposalId The ID of the proposal.
     /// @return The status of the proposal. Refer to the `ProposalStatus` enum for more information.
     function getProposalStatus(uint256 proposalId) external view returns (ProposalStatus);
-
-    /// @notice Returns whether a voter has voted on a proposal.
-    /// @param proposalId The ID of the proposal.
-    /// @param voter The address of the voter.
-    function hasVoted(uint256 proposalId, address voter) external view returns (bool);
 }

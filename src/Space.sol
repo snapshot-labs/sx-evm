@@ -43,11 +43,10 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
     mapping(address auth => bool allowed) public override authenticators;
     /// @inheritdoc ISpaceState
     mapping(uint256 proposalId => Proposal proposal) public override proposals;
-    // Mapping used to check the current voting power in favor of a `Choice` for a specific proposal.
+    // @inheritdoc ISpaceState
     mapping(uint256 proposalId => mapping(Choice choice => uint256 votePower)) public override votePower;
-    /// @dev Mapping that stores whether a voter has voted on a proposal yet.
-    /// Use `hasVoted` to safely query this data.
-    mapping(uint256 proposalId => mapping(address voter => bool hasVoted)) internal voteRegistry;
+    /// @inheritdoc ISpaceState
+    mapping(uint256 proposalId => mapping(address voter => bool hasVoted)) public override voteRegistry;
 
     // ------------------------------------
     // |                                  |
@@ -304,14 +303,6 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
                 votePower[proposalId][Choice.Against],
                 votePower[proposalId][Choice.Abstain]
             );
-    }
-
-    /// @inheritdoc ISpaceState
-    function hasVoted(uint256 proposalId, address voter) external view override returns (bool) {
-        Proposal memory proposal = proposals[proposalId];
-        _assertProposalExists(proposal);
-
-        return voteRegistry[proposalId][voter];
     }
 
     // ------------------------------------
