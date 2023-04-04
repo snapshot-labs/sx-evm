@@ -13,22 +13,16 @@ contract ProposeTest is SpaceTest {
     function testPropose() public {
         uint256 proposalId = space.nextProposalId();
 
-        bytes32 executionHash = keccak256(abi.encodePacked(executionStrategy.params));
-        uint32 snapshotTimestamp = uint32(block.timestamp);
-        uint32 startTimestamp = uint32(snapshotTimestamp + votingDelay);
-        uint32 minEndTimestamp = uint32(startTimestamp + minVotingDuration);
-        uint32 maxEndTimestamp = uint32(startTimestamp + maxVotingDuration);
-
         // There is only one voting strategy, so the `activeVotingStrategies` bit array should be ..001 = 1
         uint256 activeVotingStrategies = 1;
 
         // Expected content of the proposal struct
         Proposal memory proposal = Proposal(
-            snapshotTimestamp,
-            startTimestamp,
-            minEndTimestamp,
-            maxEndTimestamp,
-            executionHash,
+            uint32(block.timestamp),
+            uint32(block.timestamp + votingDelay),
+            uint32(block.timestamp + votingDelay + minVotingDuration),
+            uint32(block.timestamp + votingDelay + maxVotingDuration),
+            keccak256(abi.encodePacked(executionStrategy.params)),
             IExecutionStrategy(executionStrategy.addr),
             author,
             FinalizationStatus.Pending,
