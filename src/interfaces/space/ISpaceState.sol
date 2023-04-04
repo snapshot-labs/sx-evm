@@ -40,11 +40,6 @@ interface ISpaceState {
     /// @return params The parameters of the proposal validation strategy.
     function proposalValidationStrategy() external view returns (address addr, bytes memory params);
 
-    /// @notice Returns whether a voter has voted on a proposal.
-    /// @param proposalId The ID of the proposal.
-    /// @param voter The address of the voter.
-    function voteRegistry(uint256 proposalId, address voter) external view returns (bool);
-
     /// @notice Returns the voting power of a choice on a proposal.
     /// @param proposalId The ID of the proposal.
     /// @param choice The choice of the voter.
