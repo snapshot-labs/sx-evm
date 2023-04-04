@@ -14,7 +14,13 @@ interface ISpaceState {
 
     function votingDelay() external view returns (uint32);
 
+    function authenticators(address) external view returns (bool);
+
     function votingStrategies(uint8 index) external view returns (address addr, bytes memory params);
+
+    function activeVotingStrategies() external view returns (uint256);
+
+    function nextVotingStrategyIndex() external view returns (uint8);
 
     function proposalValidationStrategy() external view returns (address addr, bytes memory params);
 
