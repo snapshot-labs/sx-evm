@@ -300,7 +300,7 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
     // |                                  |
     // ------------------------------------
 
-    function getProposalStatus(uint256 proposalId) public view override returns (ProposalStatus) {
+    function getProposalStatus(uint256 proposalId) external view override returns (ProposalStatus) {
         Proposal memory proposal = proposals[proposalId];
         _assertProposalExists(proposal);
         return
