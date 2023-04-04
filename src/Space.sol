@@ -50,7 +50,7 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
     // Mapping of allowed authenticators.
     mapping(address auth => bool allowed) public authenticators;
     // Mapping of all `Proposal`s of this space (past and present).
-    mapping(uint256 proposalId => Proposal proposal) private proposalRegistry;
+    mapping(uint256 proposalId => Proposal proposal) public proposalRegistry;
     // Mapping used to know if a voter already voted on a specific proposal. Here to prevent double voting.
     mapping(uint256 proposalId => mapping(address voter => bool hasVoted)) public voteRegistry;
     // Mapping used to check the current voting power in favor of a `Choice` for a specific proposal.
@@ -299,12 +299,6 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
     // |             GETTERS              |
     // |                                  |
     // ------------------------------------
-
-    function getProposal(uint256 proposalId) external view override returns (Proposal memory) {
-        Proposal memory proposal = proposalRegistry[proposalId];
-        _assertProposalExists(proposal);
-        return proposalRegistry[proposalId];
-    }
 
     function getProposalStatus(uint256 proposalId) public view override returns (ProposalStatus) {
         Proposal memory proposal = proposalRegistry[proposalId];

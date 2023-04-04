@@ -2,7 +2,8 @@
 
 pragma solidity ^0.8.18;
 
-import { Choice, Proposal, ProposalStatus, Strategy } from "src/types.sol";
+import { Choice, Proposal, ProposalStatus, FinalizationStatus, Strategy } from "src/types.sol";
+import { IExecutionStrategy } from "src/interfaces/IExecutionStrategy.sol";
 
 interface ISpaceState {
     function maxVotingDuration() external view returns (uint32);
@@ -21,7 +22,23 @@ interface ISpaceState {
 
     function votePower(uint256 proposalId, Choice choice) external view returns (uint256);
 
-    function getProposal(uint256 proposalId) external view returns (Proposal memory);
+    // function proposalRegistry(uint256 proposalId) external view returns (Proposal memory);
+    function proposalRegistry(
+        uint256 proposalId
+    )
+        external
+        view
+        returns (
+            uint32 snapshotTimestamp,
+            uint32 startTimestamp,
+            uint32 minEndTimestamp,
+            uint32 maxEndTimestamp,
+            bytes32 executionPayloadHash,
+            IExecutionStrategy executionStrategy,
+            address author,
+            FinalizationStatus finalizationStatus,
+            uint256 activeVotingStrategies
+        );
 
     function getProposalStatus(uint256 proposalId) external view returns (ProposalStatus);
 

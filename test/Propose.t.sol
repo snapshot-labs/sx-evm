@@ -41,7 +41,31 @@ contract ProposeTest is SpaceTest {
         _createProposal(author, proposalMetadataURI, executionStrategy, new bytes(0));
 
         // Actual content of the proposal struct
-        Proposal memory _proposal = space.getProposal(proposalId);
+        (
+            uint32 _snapshotTimestamp,
+            uint32 _startTimestamp,
+            uint32 _minEndTimestamp,
+            uint32 _maxEndTimestamp,
+            bytes32 _executionPayloadHash,
+            IExecutionStrategy _executionStrategy,
+            address _author,
+            FinalizationStatus _finalizationStatus,
+            uint256 _activeVotingStrategies
+        ) = space.proposalRegistry(proposalId);
+
+        Proposal memory _proposal = Proposal(
+            _snapshotTimestamp,
+            _startTimestamp,
+            _minEndTimestamp,
+            _maxEndTimestamp,
+            _executionPayloadHash,
+            IExecutionStrategy(_executionStrategy),
+            _author,
+            _finalizationStatus,
+            _activeVotingStrategies
+        );
+
+        // Proposal memory _proposal = space.proposalRegistry(proposalId);
 
         // Checking expectations and actual values match
         assertEq(keccak256(abi.encode(_proposal)), keccak256(abi.encode(proposal)));
