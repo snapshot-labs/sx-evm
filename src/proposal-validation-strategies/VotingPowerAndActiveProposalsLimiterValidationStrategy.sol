@@ -8,14 +8,20 @@ import { ISpaceState } from "src/interfaces/space/ISpaceState.sol";
 import { IVotingStrategy } from "src/interfaces/IVotingStrategy.sol";
 import { SXUtils } from "../utils/SXUtils.sol";
 import { BitPacker } from "../utils/BitPacker.sol";
+import { ActiveProposalsLimiter } from "./ActiveProposalsLimiter.sol";
 
-contract VotingPowerProposalValidationStrategy is IProposalValidationStrategy {
+contract VotingPowerAndActiveProposalsLimiterValidationStrategy is IProposalValidationStrategy, ActiveProposalsLimiter {
     using SXUtils for IndexedStrategy[];
+    using BitPacker for uint256;
 
     error InvalidStrategyIndex(uint256 index);
 
+    // solhint-disable-next-line no-empty-blocks
+    constructor(uint32 _cooldown, uint224 _maxActiveProposals) ActiveProposalsLimiter(_cooldown, _maxActiveProposals) {}
+
     /**
-     * @notice  Validates a proposal using the voting strategies to compute the proposal power.
+     * @notice  Validates a proposal using the voting strategies to compute the proposal power, while also ensuring
+                that the author respects the active proposals limit.
      * @param   author  Author of the proposal
      * @param   userParams  User provided parameters for the voting strategies
      * @param   params  Bytes that should decode to proposalThreshold and allowedStrategies
@@ -26,6 +32,10 @@ contract VotingPowerProposalValidationStrategy is IProposalValidationStrategy {
         bytes calldata params,
         bytes calldata userParams
     ) external override returns (bool) {
+        if (!increaseActiveProposalCount(author)) {
+            return false;
+        }
+
         (uint256 proposalThreshold, Strategy[] memory allowedStrategies) = abi.decode(params, (uint256, Strategy[]));
         IndexedStrategy[] memory userStrategies = abi.decode(userParams, (IndexedStrategy[]));
 

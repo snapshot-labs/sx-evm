@@ -8,10 +8,9 @@ import { VanillaVotingStrategy } from "../src/voting-strategies/VanillaVotingStr
 
 contract VoteTest is SpaceTest {
     error DuplicateFound(uint8 index);
-    error InvalidStrategyIndex(uint256 index);
 
     function testVote() public {
-        uint256 proposalId = _createProposal(author, proposalMetadataURI, executionStrategy, userVotingStrategies);
+        uint256 proposalId = _createProposal(author, proposalMetadataURI, executionStrategy, new bytes(0));
 
         vm.expectEmit(true, true, true, true);
         emit VoteCastWithMetadata(proposalId, author, Choice.For, 1, voteMetadataURI);
@@ -23,14 +22,14 @@ contract VoteTest is SpaceTest {
     }
 
     function testVoteInvalidAuth() public {
-        uint256 proposalId = _createProposal(author, proposalMetadataURI, executionStrategy, userVotingStrategies);
+        uint256 proposalId = _createProposal(author, proposalMetadataURI, executionStrategy, new bytes(0));
 
         vm.expectRevert(abi.encodeWithSelector(AuthenticatorNotWhitelisted.selector, address(this)));
         space.vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataURI);
     }
 
     function testVoteInvalidProposalId() public {
-        uint256 proposalId = _createProposal(author, proposalMetadataURI, executionStrategy, userVotingStrategies);
+        uint256 proposalId = _createProposal(author, proposalMetadataURI, executionStrategy, new bytes(0));
         uint256 invalidProposalId = proposalId + 1;
 
         vm.expectRevert(abi.encodeWithSelector(InvalidProposal.selector));
@@ -38,7 +37,7 @@ contract VoteTest is SpaceTest {
     }
 
     function testVoteAlreadyExecuted() public {
-        uint256 proposalId = _createProposal(author, proposalMetadataURI, executionStrategy, userVotingStrategies);
+        uint256 proposalId = _createProposal(author, proposalMetadataURI, executionStrategy, new bytes(0));
 
         _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataURI);
 
@@ -49,7 +48,7 @@ contract VoteTest is SpaceTest {
     }
 
     function testVoteVotingPeriodHasEnded() public {
-        uint256 proposalId = _createProposal(author, proposalMetadataURI, executionStrategy, userVotingStrategies);
+        uint256 proposalId = _createProposal(author, proposalMetadataURI, executionStrategy, new bytes(0));
 
         vm.warp(block.timestamp + space.maxVotingDuration());
         vm.expectRevert(abi.encodeWithSelector(VotingPeriodHasEnded.selector));
@@ -58,7 +57,7 @@ contract VoteTest is SpaceTest {
 
     function testVoteVotingPeriodHasNotStarted() public {
         space.setVotingDelay(100);
-        uint256 proposalId = _createProposal(author, proposalMetadataURI, executionStrategy, userVotingStrategies);
+        uint256 proposalId = _createProposal(author, proposalMetadataURI, executionStrategy, new bytes(0));
 
         vm.expectRevert(abi.encodeWithSelector(VotingPeriodHasNotStarted.selector));
         _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataURI);
@@ -68,7 +67,7 @@ contract VoteTest is SpaceTest {
     }
 
     function testVoteDoubleVote() public {
-        uint256 proposalId = _createProposal(author, proposalMetadataURI, executionStrategy, userVotingStrategies);
+        uint256 proposalId = _createProposal(author, proposalMetadataURI, executionStrategy, new bytes(0));
 
         _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataURI);
 
@@ -77,7 +76,7 @@ contract VoteTest is SpaceTest {
     }
 
     function testVoteNoVotingPower() public {
-        uint256 proposalId = _createProposal(author, proposalMetadataURI, executionStrategy, userVotingStrategies);
+        uint256 proposalId = _createProposal(author, proposalMetadataURI, executionStrategy, new bytes(0));
 
         IndexedStrategy[] memory empty = new IndexedStrategy[](0);
 
@@ -86,7 +85,13 @@ contract VoteTest is SpaceTest {
     }
 
     function testVoteRemovedVotingStrategy() public {
-        uint256 proposalId = _createProposal(author, proposalMetadataURI, executionStrategy, userVotingStrategies);
+        uint256 proposalId = _createProposal(author, proposalMetadataURI, executionStrategy, new bytes(0));
+
+        // adding a new voting strategy which will reside at index 1
+        Strategy[] memory newVotingStrategies = new Strategy[](1);
+        newVotingStrategies[0] = votingStrategies[0];
+        string[] memory newVotingStrategyMetadataURIs = new string[](0);
+        space.addVotingStrategies(newVotingStrategies, newVotingStrategyMetadataURIs);
 
         // removing the voting strategy at index 0
         uint8[] memory removeIndices = new uint8[](1);
@@ -99,7 +104,7 @@ contract VoteTest is SpaceTest {
     }
 
     function testVoteAddedVotingStrategy() public {
-        uint256 proposalId = _createProposal(author, proposalMetadataURI, executionStrategy, userVotingStrategies);
+        uint256 proposalId = _createProposal(author, proposalMetadataURI, executionStrategy, new bytes(0));
 
         // adding a new voting strategy which will reside at index 1
         Strategy[] memory newVotingStrategies = new Strategy[](1);
@@ -116,7 +121,7 @@ contract VoteTest is SpaceTest {
     }
 
     function testVoteInvalidVotingStrategy() public {
-        uint256 proposalId = _createProposal(author, proposalMetadataURI, executionStrategy, userVotingStrategies);
+        uint256 proposalId = _createProposal(author, proposalMetadataURI, executionStrategy, new bytes(0));
 
         // This voting strategy is not registered in the space.
         IndexedStrategy[] memory newUserVotingStrategies = new IndexedStrategy[](1);
@@ -126,7 +131,7 @@ contract VoteTest is SpaceTest {
     }
 
     function testVoteDuplicateUsedVotingStrategy() public {
-        uint256 proposalId = _createProposal(author, proposalMetadataURI, executionStrategy, userVotingStrategies);
+        uint256 proposalId = _createProposal(author, proposalMetadataURI, executionStrategy, new bytes(0));
 
         IndexedStrategy[] memory duplicateStrategies = new IndexedStrategy[](2);
         duplicateStrategies[0] = userVotingStrategies[0];
@@ -150,7 +155,7 @@ contract VoteTest is SpaceTest {
         newVotingStrategies[1] = IndexedStrategy(1, new bytes(0)); // strat2
         newVotingStrategies[2] = IndexedStrategy(2, new bytes(0)); // strat3
 
-        uint256 proposalId = _createProposal(author, proposalMetadataURI, executionStrategy, userVotingStrategies);
+        uint256 proposalId = _createProposal(author, proposalMetadataURI, executionStrategy, new bytes(0));
 
         uint256 expectedVotingPower = 3; // 1 voting power per vanilla strat, so 3
         vm.expectEmit(true, true, true, true);
