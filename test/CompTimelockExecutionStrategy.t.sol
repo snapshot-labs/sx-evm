@@ -385,6 +385,28 @@ abstract contract CompTimelockExecutionStrategyTest is SpaceTest {
         timelockExecutionStrategy.veto(keccak256(abi.encode(transactions)));
     }
 
+    function testVetoProposalNotQueued() external {
+        MetaTransaction[] memory transactions = new MetaTransaction[](1);
+        transactions[0] = MetaTransaction(recipient, 1, "", Enum.Operation.Call, 0);
+        uint256 proposalId = _createProposal(
+            author,
+            proposalMetadataURI,
+            Strategy(address(timelockExecutionStrategy), abi.encode(transactions)),
+            new bytes(0)
+        );
+        _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataURI);
+
+        // Set veto guardian
+        address vetoGuardian = address(0x7e20);
+        vm.expectEmit(true, true, true, true);
+        emit VetoGuardianSet(address(0), vetoGuardian);
+        timelockExecutionStrategy.setVetoGuardian(vetoGuardian);
+
+        vm.prank(vetoGuardian);
+        vm.expectRevert(ProposalNotQueued.selector);
+        timelockExecutionStrategy.veto(keccak256(abi.encode(transactions)));
+    }
+
     function testExecuteNFTs() external {
         TestERC721 erc721 = new TestERC721();
 

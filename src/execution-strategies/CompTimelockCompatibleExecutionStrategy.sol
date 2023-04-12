@@ -6,8 +6,6 @@ import { SimpleQuorumExecutionStrategy } from "./SimpleQuorumExecutionStrategy.s
 import { SpaceManager } from "../utils/SpaceManager.sol";
 import { MetaTransaction, Proposal, ProposalStatus } from "../types.sol";
 import { Enum } from "@gnosis.pm/safe-contracts/contracts/common/Enum.sol";
-import { IERC1155Receiver } from "@openzeppelin/contracts/interfaces/IERC1155Receiver.sol";
-import { IERC721Receiver } from "@openzeppelin/contracts/interfaces/IERC721Receiver.sol";
 
 interface ICompTimelock {
     /// @notice Msg.sender accepts admin status.
@@ -67,7 +65,7 @@ interface ICompTimelock {
 }
 
 /// @title Timelock Execution Strategy - An Execution strategy that executes transactions according to a timelock delay.
-contract CompTimelockCompatibleExecutionStrategy is SimpleQuorumExecutionStrategy, IERC1155Receiver, IERC721Receiver {
+contract CompTimelockCompatibleExecutionStrategy is SimpleQuorumExecutionStrategy {
     /// @notice Thrown if timelock delay is in the future.
     error TimelockDelayNotMet();
     /// @notice Thrown if the proposal execution payload hash is not queued.
@@ -210,33 +208,5 @@ contract CompTimelockCompatibleExecutionStrategy is SimpleQuorumExecutionStrateg
 
     function getStrategyType() external pure override returns (string memory) {
         return "SimpleQuorumTimelock";
-    }
-
-    /// Receive Functions:
-
-    // solhint-disable-next-line no-empty-blocks
-    receive() external payable {}
-
-    function onERC1155Received(address, address, uint256, uint256, bytes calldata) external pure returns (bytes4) {
-        return IERC1155Receiver.onERC1155Received.selector;
-    }
-
-    function onERC1155BatchReceived(
-        address,
-        address,
-        uint256[] calldata,
-        uint256[] calldata,
-        bytes calldata
-    ) external pure returns (bytes4) {
-        return IERC1155Receiver.onERC1155BatchReceived.selector;
-    }
-
-    function onERC721Received(address, address, uint256, bytes calldata) external pure returns (bytes4) {
-        return IERC721Receiver.onERC721Received.selector;
-    }
-
-    /// @notice IERC165 interface support
-    function supportsInterface(bytes4 interfaceId) external pure returns (bool) {
-        return interfaceId == type(IERC721Receiver).interfaceId || interfaceId == type(IERC1155Receiver).interfaceId;
     }
 }
