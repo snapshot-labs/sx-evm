@@ -57,11 +57,13 @@ interface ICompTimelock {
 
     function setDelay(uint delay) external;
 
-    function GRACE_PERIOD() external returns (uint);
+    function GRACE_PERIOD() external view returns (uint);
 
-    function MINIMUM_DELAY() external returns (uint);
+    function MINIMUM_DELAY() external view returns (uint);
 
-    function MAXIMUM_DELAY() external returns (uint);
+    function MAXIMUM_DELAY() external view returns (uint);
+
+    function delay() external view returns (uint);
 }
 
 /// @title Timelock Execution Strategy - An Execution strategy that executes transactions according to a timelock delay.
@@ -74,8 +76,6 @@ contract CompTimelockCompatibleExecutionStrategy is SimpleQuorumExecutionStrateg
     error DuplicateExecutionPayloadHash();
     /// @notice Thrown if veto caller is not the veto guardian.
     error OnlyVetoGuardian();
-    /// @notice Thrown if timelock delay is invalid.
-    error InvalidTimelockDelay();
     /// @notice Thrown if the transaction is invalid.
     error InvalidTransaction();
 
@@ -85,9 +85,6 @@ contract CompTimelockCompatibleExecutionStrategy is SimpleQuorumExecutionStrateg
     event ProposalVetoed(bytes32 executionPayloadHash);
     event ProposalQueued(bytes32 executionPayloadHash);
     event ProposalExecuted(bytes32 executionPayloadHash);
-
-    /// @notice The delay in seconds between a proposal being queued and the execution of the proposal.
-    uint256 public timelockDelay;
 
     /// @notice The time at which a proposal can be executed. Indexed by the hash of the proposal execution payload.
     mapping(bytes32 => uint256) public proposalExecutionTime;
@@ -101,29 +98,32 @@ contract CompTimelockCompatibleExecutionStrategy is SimpleQuorumExecutionStrateg
     /// @notice Constructor
     /// @param _owner Address of the owner of this contract.
     /// @param _spaces Array of whitelisted space contracts.
-    /// @param _timelockDelay The timelock delay in seconds.
     /// @param _quorum The quorum required to execute a proposal.
-    constructor(address _owner, address[] memory _spaces, uint256 _timelockDelay, uint256 _quorum, address _timelock) {
-        setUp(abi.encode(_owner, _spaces, _timelockDelay, _quorum, _timelock));
+    constructor(address _owner, address[] memory _spaces, uint256 _quorum, address _timelock) {
+        setUp(abi.encode(_owner, _spaces, _quorum, _timelock));
     }
 
     function setUp(bytes memory initializeParams) public initializer {
-        (address _owner, address[] memory _spaces, uint256 _timelockDelay, uint256 _quorum, address _timelock) = abi
-            .decode(initializeParams, (address, address[], uint256, uint256, address));
+        (address _owner, address[] memory _spaces, uint256 _quorum, address _timelock) = abi.decode(
+            initializeParams,
+            (address, address[], uint256, address)
+        );
         __Ownable_init();
         transferOwnership(_owner);
         __SpaceManager_init(_spaces);
         __SimpleQuorumExecutionStrategy_init(_quorum);
 
         timelock = ICompTimelock(_timelock);
-        if (_timelockDelay < timelock.MINIMUM_DELAY() || timelockDelay > timelock.MAXIMUM_DELAY())
-            revert InvalidTimelockDelay();
-        timelockDelay = _timelockDelay;
     }
 
     /// @notice Accepts admin role of the timelock contract. Must be called before using the timelock.
     function acceptAdmin() external {
         timelock.acceptAdmin();
+    }
+
+    /// @notice The delay in seconds between a proposal being queued and the execution of the proposal.
+    function timelockDelay() public view returns (uint256) {
+        return timelock.delay();
     }
 
     /// @notice Effectively a timelock queue function. Can only be called by approved spaces.
@@ -143,7 +143,7 @@ contract CompTimelockCompatibleExecutionStrategy is SimpleQuorumExecutionStrateg
 
         if (proposalExecutionTime[proposal.executionPayloadHash] != 0) revert DuplicateExecutionPayloadHash();
 
-        uint256 executionTime = block.timestamp + timelockDelay;
+        uint256 executionTime = block.timestamp + timelockDelay();
         proposalExecutionTime[proposal.executionPayloadHash] = executionTime;
 
         MetaTransaction[] memory transactions = abi.decode(payload, (MetaTransaction[]));

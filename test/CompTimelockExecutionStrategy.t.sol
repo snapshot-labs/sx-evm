@@ -456,7 +456,6 @@ contract CompTimelockExecutionStrategyTestDirect is CompTimelockExecutionStrateg
         timelockExecutionStrategy = new CompTimelockCompatibleExecutionStrategy(
             owner,
             spaces,
-            1000,
             quorum,
             address(timelock)
         );
@@ -474,7 +473,6 @@ contract CompTimelockExecutionStrategyTestProxy is CompTimelockExecutionStrategy
         CompTimelockCompatibleExecutionStrategy masterExecutionStrategy = new CompTimelockCompatibleExecutionStrategy(
             owner,
             spaces,
-            1000,
             quorum,
             address(timelock)
         );
@@ -485,7 +483,7 @@ contract CompTimelockExecutionStrategyTestProxy is CompTimelockExecutionStrategy
                     address(masterExecutionStrategy),
                     abi.encodeWithSelector(
                         CompTimelockCompatibleExecutionStrategy.setUp.selector,
-                        abi.encode(owner, spaces, 1000, quorum, address(timelock))
+                        abi.encode(owner, spaces, quorum, address(timelock))
                     )
                 )
             )
