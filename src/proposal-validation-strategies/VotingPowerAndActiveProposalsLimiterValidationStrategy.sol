@@ -4,25 +4,16 @@ pragma solidity ^0.8.18;
 
 import { IProposalValidationStrategy } from "../interfaces/IProposalValidationStrategy.sol";
 import { IndexedStrategy, Strategy } from "../types.sol";
-import { ISpaceState } from "src/interfaces/space/ISpaceState.sol";
-import { IVotingStrategy } from "src/interfaces/IVotingStrategy.sol";
-import { SXUtils } from "../utils/SXUtils.sol";
-import { BitPacker } from "../utils/BitPacker.sol";
-import {
-    ActiveProposalsLimiterProposalValidationStrategy
-} from "./ActiveProposalsLimiterProposalValidationStrategy.sol";
-import { VotingPowerProposalValidationStrategy } from "./VotingPowerProposalValidationStrategy.sol";
+import { ActiveProposalsLimiter } from "./utils/ActiveProposalsLimiter.sol";
+import { PropositionPower } from "./utils/PropositionPower.sol";
 
 contract VotingPowerAndActiveProposalsLimiterValidationStrategy is
-    IProposalValidationStrategy,
-    ActiveProposalsLimiterProposalValidationStrategy,
-    VotingPowerProposalValidationStrategy
+    ActiveProposalsLimiter,
+    PropositionPower,
+    IProposalValidationStrategy
 {
     // solhint-disable-next-line no-empty-blocks
-    constructor(
-        uint32 _cooldown,
-        uint224 _maxActiveProposals
-    ) ActiveProposalsLimiterProposalValidationStrategy(_cooldown, _maxActiveProposals) {}
+    constructor(uint32 _cooldown, uint224 _maxActiveProposals) ActiveProposalsLimiter(_cooldown, _maxActiveProposals) {}
 
     /**
      * @notice  Validates a proposal using the voting strategies to compute the proposal power, while also ensuring
@@ -32,26 +23,10 @@ contract VotingPowerAndActiveProposalsLimiterValidationStrategy is
      * @param   params  Bytes that should decode to proposalThreshold and allowedStrategies
      * @return  bool  Whether the proposal should be validated or not
      */
-    function validate(
-        address author,
-        bytes memory params,
-        bytes memory userParams
-    )
-        public
-        override(
-            IProposalValidationStrategy,
-            ActiveProposalsLimiterProposalValidationStrategy,
-            VotingPowerProposalValidationStrategy
-        )
-        returns (bool)
-    {
-        bool maxProposalsNotExceeded = ActiveProposalsLimiterProposalValidationStrategy.validate(
-            author,
-            new bytes(0),
-            new bytes(0)
-        );
-        bool proposalThresholdExceeded = VotingPowerProposalValidationStrategy.validate(author, params, userParams);
+    function validate(address author, bytes calldata params, bytes calldata userParams) public returns (bool) {
+        (uint256 proposalThreshold, Strategy[] memory allowedStrategies) = abi.decode(params, (uint256, Strategy[]));
+        IndexedStrategy[] memory userStrategies = abi.decode(userParams, (IndexedStrategy[]));
 
-        return maxProposalsNotExceeded && proposalThresholdExceeded;
+        return _validate(author) && _validate(author, proposalThreshold, allowedStrategies, userStrategies);
     }
 }
