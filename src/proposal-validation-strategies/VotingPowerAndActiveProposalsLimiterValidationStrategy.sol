@@ -27,6 +27,8 @@ contract VotingPowerAndActiveProposalsLimiterValidationStrategy is
         (uint256 proposalThreshold, Strategy[] memory allowedStrategies) = abi.decode(params, (uint256, Strategy[]));
         IndexedStrategy[] memory userStrategies = abi.decode(userParams, (IndexedStrategy[]));
 
-        return _validate(author) && _validate(author, proposalThreshold, allowedStrategies, userStrategies);
+        return
+            ActiveProposalsLimiter._validate(author) &&
+            PropositionPower._validate(author, proposalThreshold, allowedStrategies, userStrategies);
     }
 }
