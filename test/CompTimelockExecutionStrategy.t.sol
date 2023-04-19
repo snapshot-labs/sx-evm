@@ -79,7 +79,7 @@ abstract contract CompTimelockExecutionStrategyTest is SpaceTest {
         space.execute(proposalId, abi.encode(transactions));
     }
 
-    function testQueueingFailedProposal() external {
+    function testQueueingRejectedProposal() external {
         MetaTransaction[] memory transactions = new MetaTransaction[](1);
         transactions[0] = MetaTransaction(recipient, 1, "", Enum.Operation.Call, 0);
         uint256 proposalId = _createProposal(
@@ -90,7 +90,7 @@ abstract contract CompTimelockExecutionStrategyTest is SpaceTest {
         );
         vm.warp(block.timestamp + space.maxVotingDuration());
 
-        vm.expectRevert();
+        vm.expectRevert(abi.encodeWithSelector(InvalidProposalStatus.selector, ProposalStatus.Rejected));
         space.execute(proposalId, abi.encode(transactions));
     }
 
@@ -110,7 +110,7 @@ abstract contract CompTimelockExecutionStrategyTest is SpaceTest {
         emit TransactionQueued(transactions[0], block.timestamp + 1000);
         space.execute(proposalId, abi.encode(transactions));
 
-        vm.expectRevert();
+        vm.expectRevert(abi.encodeWithSelector(InvalidProposalStatus.selector, ProposalStatus.Executed));
         space.execute(proposalId, abi.encode(transactions));
     }
 
@@ -383,6 +383,14 @@ abstract contract CompTimelockExecutionStrategyTest is SpaceTest {
         vm.prank(vetoGuardian);
         vm.expectRevert(OnlyVetoGuardian.selector);
         timelockExecutionStrategy.veto(keccak256(abi.encode(transactions)));
+    }
+
+    function testSetVetoGuardian() external {
+        timelockExecutionStrategy.setVetoGuardian(address(0));
+
+        vm.prank(voter);
+        vm.expectRevert("Ownable: caller is not the owner");
+        timelockExecutionStrategy.setVetoGuardian(address(1));
     }
 
     function testVetoProposalNotQueued() external {
