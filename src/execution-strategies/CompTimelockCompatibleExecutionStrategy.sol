@@ -207,6 +207,6 @@ contract CompTimelockCompatibleExecutionStrategy is SimpleQuorumExecutionStrateg
     }
 
     function getStrategyType() external pure override returns (string memory) {
-        return "SimpleQuorumTimelock";
+        return "CompTimelockCompatibleSimpleQuorum";
     }
 }
