@@ -34,7 +34,7 @@ contract SpaceFactoryTest is Test, IProxyFactoryEvents, IProxyFactoryErrors {
     Strategy public proposalValidationStrategy;
     uint32 public quorum;
     string public metadataURI = "SX-EVM";
-    string[] public votingStrategyMetadataURIs;
+    string[] public votingStrategiesMetadataURIs;
     string[] public executionStrategyMetadataURIs;
 
     function setUp() public {
@@ -78,7 +78,7 @@ contract SpaceFactoryTest is Test, IProxyFactoryEvents, IProxyFactoryErrors {
                 proposalValidationStrategy,
                 metadataURI,
                 votingStrategies,
-                votingStrategyMetadataURIs,
+                votingStrategiesMetadataURIs,
                 authenticators,
                 executionStrategies,
                 executionStrategyMetadataURIs
@@ -100,7 +100,7 @@ contract SpaceFactoryTest is Test, IProxyFactoryEvents, IProxyFactoryErrors {
                 proposalValidationStrategy,
                 metadataURI,
                 votingStrategies,
-                votingStrategyMetadataURIs,
+                votingStrategiesMetadataURIs,
                 authenticators,
                 executionStrategies,
                 executionStrategyMetadataURIs
@@ -121,7 +121,7 @@ contract SpaceFactoryTest is Test, IProxyFactoryEvents, IProxyFactoryErrors {
                 proposalValidationStrategy,
                 metadataURI,
                 votingStrategies,
-                votingStrategyMetadataURIs,
+                votingStrategiesMetadataURIs,
                 authenticators,
                 executionStrategies,
                 executionStrategyMetadataURIs
@@ -143,7 +143,7 @@ contract SpaceFactoryTest is Test, IProxyFactoryEvents, IProxyFactoryErrors {
                 proposalValidationStrategy,
                 metadataURI,
                 votingStrategies,
-                votingStrategyMetadataURIs,
+                votingStrategiesMetadataURIs,
                 authenticators,
                 executionStrategies,
                 executionStrategyMetadataURIs
@@ -162,7 +162,7 @@ contract SpaceFactoryTest is Test, IProxyFactoryEvents, IProxyFactoryErrors {
             proposalValidationStrategy,
             metadataURI,
             votingStrategies,
-            votingStrategyMetadataURIs,
+            votingStrategiesMetadataURIs,
             authenticators
         );
     }

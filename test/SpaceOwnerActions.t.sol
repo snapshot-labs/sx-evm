@@ -5,8 +5,11 @@ import { SpaceV2 } from "./mocks/SpaceV2.sol";
 import { SpaceTest } from "./utils/Space.t.sol";
 import { Choice, IndexedStrategy, Strategy } from "../src/types.sol";
 import { VanillaExecutionStrategy } from "../src/execution-strategies/VanillaExecutionStrategy.sol";
+import { BitPacker } from "../src/utils/BitPacker.sol";
 
 contract SpaceOwnerActionsTest is SpaceTest {
+    using BitPacker for uint256;
+
     event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
 
     // ------- Transfer Ownership -------
@@ -201,15 +204,15 @@ contract SpaceOwnerActionsTest is SpaceTest {
         uint8[] memory newIndices = new uint8[](1);
         newIndices[0] = 1;
 
-        string[] memory votingStrategyMetadataURIs = new string[](0);
+        string[] memory votingStrategiesMetadataURIs = new string[](0);
 
         IndexedStrategy[] memory newUserVotingStrategies = new IndexedStrategy[](1);
         newUserVotingStrategies[0] = IndexedStrategy(newIndices[0], new bytes(0));
 
         vm.expectEmit(true, true, true, true);
-        emit VotingStrategiesAdded(newVotingStrategies, votingStrategyMetadataURIs);
+        emit VotingStrategiesAdded(newVotingStrategies, votingStrategiesMetadataURIs);
         vm.prank(owner);
-        space.addVotingStrategies(newVotingStrategies, votingStrategyMetadataURIs);
+        space.addVotingStrategies(newVotingStrategies, votingStrategiesMetadataURIs);
 
         // Create a proposal using the default proposal validation strategy
         uint256 proposalId1 = _createProposal(author, proposalMetadataURI, executionStrategy, new bytes(0));
@@ -261,9 +264,9 @@ contract SpaceOwnerActionsTest is SpaceTest {
     function testAddVotingStrategiesUnauthorized() public {
         vm.expectRevert("Ownable: caller is not the owner");
         vm.prank(unauthorized);
-        string[] memory votingStrategyMetadataURIs = new string[](0);
+        string[] memory votingStrategiesMetadataURIs = new string[](0);
 
-        space.addVotingStrategies(votingStrategies, votingStrategyMetadataURIs);
+        space.addVotingStrategies(votingStrategies, votingStrategiesMetadataURIs);
     }
 
     function testRemoveVotingStrategiesUnauthorized() public {
@@ -306,6 +309,92 @@ contract SpaceOwnerActionsTest is SpaceTest {
         vm.expectRevert("Ownable: caller is not the owner");
         vm.prank(unauthorized);
         space.removeAuthenticators(authenticators);
+    }
+
+    function testUpdateAuthenticators() public {
+        address[] memory newAuths = new address[](2);
+        newAuths[0] = address(111);
+        newAuths[1] = address(222);
+
+        space.updateAuthenticators(newAuths, authenticators);
+
+        // Ensure authenticators were correctly updated
+        assertEq(space.authenticators(newAuths[0]), true);
+        assertEq(space.authenticators(newAuths[1]), true);
+        assertEq(space.authenticators(authenticators[0]), false);
+    }
+
+    function testUpdateVotingStrategies() public {
+        Strategy[] memory _votingStrategiesToAdd = new Strategy[](2);
+        _votingStrategiesToAdd[0] = Strategy(address(0xc), new bytes(0));
+        _votingStrategiesToAdd[1] = Strategy(address(0xd), new bytes(0));
+
+        string[] memory _votingStrategiesMetadataURIsToAdd = new string[](2);
+        _votingStrategiesMetadataURIsToAdd[0] = "test456";
+        _votingStrategiesMetadataURIsToAdd[1] = "test789";
+
+        uint8[] memory _indicesToRemove = new uint8[](1);
+        _indicesToRemove[0] = 0;
+
+        space.updateVotingStrategies(_votingStrategiesToAdd, _votingStrategiesMetadataURIsToAdd, _indicesToRemove);
+        // Ensure voting strategies were correctly updated
+        assertEq(space.activeVotingStrategies().isBitSet(0), false);
+        assertEq(space.activeVotingStrategies().isBitSet(1), true);
+        assertEq(space.activeVotingStrategies().isBitSet(2), true);
+    }
+
+    function testUpdateSettings() public {
+        uint32 _maxVotingDuration = maxVotingDuration + 1;
+        uint32 _minVotingDuration = minVotingDuration + 1;
+        string memory _metadataURI = "test123";
+        Strategy memory _proposalValidationStrategy = Strategy(address(111), new bytes(0));
+        uint32 _votingDelay = 42;
+        address[] memory _authenticatorsToAdd = new address[](2);
+        _authenticatorsToAdd[0] = address(0xa);
+        _authenticatorsToAdd[1] = address(0xb);
+
+        address[] memory _authenticatorsToRemove = authenticators;
+
+        Strategy[] memory _votingStrategiesToAdd = new Strategy[](2);
+        _votingStrategiesToAdd[0] = Strategy(address(0xc), new bytes(0));
+        _votingStrategiesToAdd[1] = Strategy(address(0xd), new bytes(0));
+
+        string[] memory _votingStrategiesMetadataURIsToAdd = new string[](2);
+        _votingStrategiesMetadataURIsToAdd[0] = "test456";
+        _votingStrategiesMetadataURIsToAdd[1] = "test789";
+
+        uint8[] memory _indicesToRemove = new uint8[](1);
+        _indicesToRemove[0] = 0;
+
+        space.updateSettings(
+            _maxVotingDuration,
+            _minVotingDuration,
+            _metadataURI,
+            _proposalValidationStrategy,
+            _votingDelay,
+            _authenticatorsToAdd,
+            _authenticatorsToRemove,
+            _votingStrategiesToAdd,
+            _votingStrategiesMetadataURIsToAdd,
+            _indicesToRemove
+        );
+
+        // Ensure settings were correctly updated
+        assertEq(space.maxVotingDuration(), _maxVotingDuration);
+        assertEq(space.minVotingDuration(), _minVotingDuration);
+        (address addr, bytes memory params) = space.proposalValidationStrategy();
+        assertEq(addr, _proposalValidationStrategy.addr);
+        assertEq(params, _proposalValidationStrategy.params);
+        assertEq(space.votingDelay(), _votingDelay);
+
+        // Authenticators
+        assertEq(space.authenticators(_authenticatorsToAdd[0]), true);
+        assertEq(space.authenticators(_authenticatorsToAdd[1]), true);
+
+        // Voting Strategies
+        assertEq(space.activeVotingStrategies().isBitSet(0), false);
+        assertEq(space.activeVotingStrategies().isBitSet(1), true);
+        assertEq(space.activeVotingStrategies().isBitSet(1), true);
     }
 
     // ------- Upgrading a Space ----

@@ -13,7 +13,7 @@ interface ISpaceEvents {
         Strategy proposalValidationStrategy,
         string metadataURI,
         Strategy[] votingStrategies,
-        string[] votingStrategyMetadataURIs,
+        string[] votingStrategiesMetadataURIs,
         address[] authenticators
     );
     event ProposalCreated(uint256 nextProposalId, address author, Proposal proposal, string metadataUri, bytes payload);

@@ -48,7 +48,7 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
     Strategy public proposalValidationStrategy;
 
     // Mapping of allowed authenticators.
-    mapping(address auth => bool allowed) private authenticators;
+    mapping(address auth => bool allowed) public authenticators;
     // Mapping of all `Proposal`s of this space (past and present).
     mapping(uint256 proposalId => Proposal proposal) private proposalRegistry;
     // Mapping used to know if a voter already voted on a specific proposal. Here to prevent double voting.
@@ -70,7 +70,7 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         Strategy memory _proposalValidationStrategy,
         string memory _metadataURI,
         Strategy[] memory _votingStrategies,
-        string[] memory _votingStrategyMetadataURIs,
+        string[] memory _votingStrategiesMetadataURIs,
         address[] memory _authenticators
     ) public initializer {
         __Ownable_init();
@@ -93,7 +93,7 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
             _proposalValidationStrategy,
             _metadataURI,
             _votingStrategies,
-            _votingStrategyMetadataURIs,
+            _votingStrategiesMetadataURIs,
             _authenticators
         );
     }
@@ -273,10 +273,10 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
 
     function addVotingStrategies(
         Strategy[] calldata _votingStrategies,
-        string[] calldata votingStrategyMetadataURIs
+        string[] calldata _votingStrategiesMetadataURIs
     ) external override onlyOwner {
         _addVotingStrategies(_votingStrategies);
-        emit VotingStrategiesAdded(_votingStrategies, votingStrategyMetadataURIs);
+        emit VotingStrategiesAdded(_votingStrategies, _votingStrategiesMetadataURIs);
     }
 
     function removeVotingStrategies(uint8[] calldata _votingStrategyIndices) external override onlyOwner {
@@ -292,6 +292,65 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
     function removeAuthenticators(address[] calldata _authenticators) external override onlyOwner {
         _removeAuthenticators(_authenticators);
         emit AuthenticatorsRemoved(_authenticators);
+    }
+
+    function updateAuthenticators(address[] calldata _toAdd, address[] calldata _toRemove) external override onlyOwner {
+        _addAuthenticators(_toAdd);
+        emit AuthenticatorsAdded(_toAdd);
+
+        _removeAuthenticators(_toRemove);
+        emit AuthenticatorsRemoved(_toRemove);
+    }
+
+    function updateVotingStrategies(
+        Strategy[] calldata _votingStrategiesToAdd,
+        string[] calldata _votingStrategiesMetadataURIsToAdd,
+        uint8[] calldata _indicesToRemove
+    ) external override onlyOwner {
+        _addVotingStrategies(_votingStrategiesToAdd);
+        emit VotingStrategiesAdded(_votingStrategiesToAdd, _votingStrategiesMetadataURIsToAdd);
+
+        _removeVotingStrategies(_indicesToRemove);
+        emit VotingStrategiesRemoved(_indicesToRemove);
+    }
+
+    function updateSettings(
+        uint32 _maxVotingDuration,
+        uint32 _minVotingDuration,
+        string calldata _metadataURI,
+        Strategy calldata _proposalValidationStrategy,
+        uint32 _votingDelay,
+        address[] calldata _authenticatorsToAdd,
+        address[] calldata _authenticatorsToRemove,
+        Strategy[] calldata _votingStrategiesToAdd,
+        string[] calldata _votingStrategiesMetadataURIsToAdd,
+        uint8[] calldata _indicesToRemove
+    ) external override onlyOwner {
+        _setMaxVotingDuration(_maxVotingDuration);
+        emit MaxVotingDurationUpdated(_maxVotingDuration);
+
+        _setMinVotingDuration(_minVotingDuration);
+        emit MinVotingDurationUpdated(_minVotingDuration);
+
+        emit MetadataURIUpdated(_metadataURI);
+
+        _setProposalValidationStrategy(_proposalValidationStrategy);
+        emit ProposalValidationStrategyUpdated(_proposalValidationStrategy);
+
+        _setVotingDelay(_votingDelay);
+        emit VotingDelayUpdated(_votingDelay);
+
+        _addAuthenticators(_authenticatorsToAdd);
+        emit AuthenticatorsAdded(_authenticatorsToAdd);
+
+        _removeAuthenticators(_authenticatorsToRemove);
+        emit AuthenticatorsRemoved(_authenticatorsToRemove);
+
+        _addVotingStrategies(_votingStrategiesToAdd);
+        emit VotingStrategiesAdded(_votingStrategiesToAdd, _votingStrategiesMetadataURIsToAdd);
+
+        _removeVotingStrategies(_indicesToRemove);
+        emit VotingStrategiesRemoved(_indicesToRemove);
     }
 
     // ------------------------------------

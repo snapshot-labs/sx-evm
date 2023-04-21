@@ -64,7 +64,7 @@ abstract contract SpaceTest is Test, GasSnapshot, ISpaceEvents, ISpaceErrors, IE
     // Dummy metadata URIs
     string public spaceMetadataURI = "SOC Test Space";
     string public proposalMetadataURI = "SOC Test Proposal";
-    string[] public votingStrategyMetadataURIs;
+    string[] public votingStrategiesMetadataURIs;
     string[] public executionStrategyMetadataURIs;
 
     function setUp() public virtual {
@@ -99,7 +99,7 @@ abstract contract SpaceTest is Test, GasSnapshot, ISpaceEvents, ISpaceErrors, IE
                         proposalValidationStrategy,
                         spaceMetadataURI,
                         votingStrategies,
-                        votingStrategyMetadataURIs,
+                        votingStrategiesMetadataURIs,
                         authenticators
                     )
                 )

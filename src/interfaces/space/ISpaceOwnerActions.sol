@@ -19,7 +19,7 @@ interface ISpaceOwnerActions {
 
     function addVotingStrategies(
         Strategy[] calldata votingStrategies,
-        string[] calldata votingStrategyMetadataURIs
+        string[] calldata votingStrategiesMetadataURIs
     ) external;
 
     function removeVotingStrategies(uint8[] calldata indicesToRemove) external;
@@ -27,4 +27,25 @@ interface ISpaceOwnerActions {
     function addAuthenticators(address[] calldata _authenticators) external;
 
     function removeAuthenticators(address[] calldata _authenticators) external;
+
+    function updateAuthenticators(address[] calldata _toAdd, address[] calldata _toRemove) external;
+
+    function updateVotingStrategies(
+        Strategy[] calldata _votingStrategies,
+        string[] calldata _votingStrategiesMetadataURIs,
+        uint8[] calldata _indicesToRemove
+    ) external;
+
+    function updateSettings(
+        uint32 _maxVotingDuration,
+        uint32 _minVotingDuration,
+        string calldata _metadataURI,
+        Strategy calldata _proposalValidationStrategy,
+        uint32 _votingDelay,
+        address[] calldata _authenticatorsToAdd,
+        address[] calldata _authenticatorsToRemove,
+        Strategy[] calldata _votingStrategiesToAdd,
+        string[] calldata _votingStrategiesMetadataURIsToAdd,
+        uint8[] calldata _indicesToRemove
+    ) external;
 }
