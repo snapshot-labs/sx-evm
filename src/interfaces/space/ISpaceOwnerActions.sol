@@ -36,6 +36,14 @@ interface ISpaceOwnerActions {
         uint8[] calldata _indicesToRemove
     ) external;
 
+    function updateAuthenticatorsAndVotingStrategies(
+        address[] calldata _toAdd,
+        address[] calldata _toRemove,
+        Strategy[] calldata _votingStrategiesToAdd,
+        string[] calldata _votingStrategiesMetadataURIsToAdd,
+        uint8[] calldata _indicesToRemove
+    ) external;
+
     function updateSettings(
         uint32 _maxVotingDuration,
         uint32 _minVotingDuration,

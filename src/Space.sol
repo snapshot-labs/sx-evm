@@ -314,6 +314,26 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         emit VotingStrategiesRemoved(_indicesToRemove);
     }
 
+    function updateAuthenticatorsAndVotingStrategies(
+        address[] calldata _toAdd,
+        address[] calldata _toRemove,
+        Strategy[] calldata _votingStrategiesToAdd,
+        string[] calldata _votingStrategiesMetadataURIsToAdd,
+        uint8[] calldata _indicesToRemove
+    ) external override onlyOwner {
+        _addAuthenticators(_toAdd);
+        emit AuthenticatorsAdded(_toAdd);
+
+        _removeAuthenticators(_toRemove);
+        emit AuthenticatorsRemoved(_toRemove);
+
+        _addVotingStrategies(_votingStrategiesToAdd);
+        emit VotingStrategiesAdded(_votingStrategiesToAdd, _votingStrategiesMetadataURIsToAdd);
+
+        _removeVotingStrategies(_indicesToRemove);
+        emit VotingStrategiesRemoved(_indicesToRemove);
+    }
+
     function updateSettings(
         uint32 _maxVotingDuration,
         uint32 _minVotingDuration,
