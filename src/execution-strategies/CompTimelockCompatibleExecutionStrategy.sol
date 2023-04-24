@@ -186,7 +186,6 @@ contract CompTimelockCompatibleExecutionStrategy is SimpleQuorumExecutionStrateg
                 transactions[i].data,
                 executionTime
             );
-
             emit TransactionExecuted(transactions[i]);
         }
         emit ProposalExecuted(executionPayloadHash);
@@ -195,6 +194,7 @@ contract CompTimelockCompatibleExecutionStrategy is SimpleQuorumExecutionStrateg
     function veto(bytes memory payload) external {
         bytes32 payloadHash = keccak256(payload);
         if (msg.sender != vetoGuardian) revert OnlyVetoGuardian();
+
         uint256 executionTime = proposalExecutionTime[payloadHash];
         if (executionTime == 0) revert ProposalNotQueued();
 
@@ -207,10 +207,8 @@ contract CompTimelockCompatibleExecutionStrategy is SimpleQuorumExecutionStrateg
                 transactions[i].data,
                 executionTime
             );
-
             emit TransactionVetoed(transactions[i]);
         }
-
         proposalExecutionTime[payloadHash] = 0;
         emit ProposalVetoed(payloadHash);
     }
