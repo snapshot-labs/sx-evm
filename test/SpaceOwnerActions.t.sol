@@ -392,6 +392,8 @@ contract SpaceOwnerActionsTest is SpaceTest {
         string memory _metadataURI = "test123";
         uint32 _votingDelay = 42;
 
+        vm.expectEmit(true, true, true, true);
+        emit MetadataURIUpdated(_metadataURI);
         space.updateSettings(_minVotingDuration, _maxVotingDuration, _votingDelay, _metadataURI);
 
         // Ensure durations were correctly updated
