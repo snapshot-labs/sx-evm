@@ -38,6 +38,6 @@ interface ISpaceEvents {
     event MetadataURIUpdated(string newMetadataURI);
     event ProposalValidationStrategyUpdated(Strategy newProposalValidationStrategy);
     event QuorumUpdated(uint256 newQuorum);
-    event VotingDelayUpdated(uint256 newVotingDelay);
+    event VotingDelayUpdated(uint32 newVotingDelay);
     event ProposalUpdated(uint256 proposalId, Strategy newExecutionStrategy, string newMetadataURI);
 }

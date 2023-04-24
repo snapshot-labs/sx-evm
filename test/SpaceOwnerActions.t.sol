@@ -343,7 +343,9 @@ contract SpaceOwnerActionsTest is SpaceTest {
         assertEq(space.activeVotingStrategies().isBitSet(2), true);
     }
 
-    function testUpdateAuthenticatorsAndVotingStrategies() public {
+    function testUpdateStrategies() public {
+        Strategy memory _proposalValidationStrategy = Strategy(address(111), new bytes(0));
+
         address[] memory newAuths = new address[](2);
         newAuths[0] = address(111);
         newAuths[1] = address(222);
@@ -359,13 +361,19 @@ contract SpaceOwnerActionsTest is SpaceTest {
         uint8[] memory _indicesToRemove = new uint8[](1);
         _indicesToRemove[0] = 0;
 
-        space.updateAuthenticatorsAndVotingStrategies(
+        space.updateStrategies(
+            _proposalValidationStrategy,
             newAuths,
             authenticators,
             _votingStrategiesToAdd,
             _votingStrategiesMetadataURIsToAdd,
             _indicesToRemove
         );
+
+        // Ensure the proposal validation strategy was correctly updated
+        (address addr, bytes memory params) = space.proposalValidationStrategy();
+        assertEq(addr, _proposalValidationStrategy.addr);
+        assertEq(params, _proposalValidationStrategy.params);
 
         // Ensure authenticators were correctly updated
         assertEq(space.authenticators(newAuths[0]), true);
@@ -382,54 +390,16 @@ contract SpaceOwnerActionsTest is SpaceTest {
         uint32 _maxVotingDuration = maxVotingDuration + 1;
         uint32 _minVotingDuration = minVotingDuration + 1;
         string memory _metadataURI = "test123";
-        Strategy memory _proposalValidationStrategy = Strategy(address(111), new bytes(0));
         uint32 _votingDelay = 42;
-        address[] memory _authenticatorsToAdd = new address[](2);
-        _authenticatorsToAdd[0] = address(0xa);
-        _authenticatorsToAdd[1] = address(0xb);
 
-        address[] memory _authenticatorsToRemove = authenticators;
+        space.updateSettings(_minVotingDuration, _maxVotingDuration, _votingDelay, _metadataURI);
 
-        Strategy[] memory _votingStrategiesToAdd = new Strategy[](2);
-        _votingStrategiesToAdd[0] = Strategy(address(0xc), new bytes(0));
-        _votingStrategiesToAdd[1] = Strategy(address(0xd), new bytes(0));
-
-        string[] memory _votingStrategiesMetadataURIsToAdd = new string[](2);
-        _votingStrategiesMetadataURIsToAdd[0] = "test456";
-        _votingStrategiesMetadataURIsToAdd[1] = "test789";
-
-        uint8[] memory _indicesToRemove = new uint8[](1);
-        _indicesToRemove[0] = 0;
-
-        space.updateSettings(
-            _maxVotingDuration,
-            _minVotingDuration,
-            _metadataURI,
-            _proposalValidationStrategy,
-            _votingDelay,
-            _authenticatorsToAdd,
-            _authenticatorsToRemove,
-            _votingStrategiesToAdd,
-            _votingStrategiesMetadataURIsToAdd,
-            _indicesToRemove
-        );
-
-        // Ensure settings were correctly updated
+        // Ensure durations were correctly updated
         assertEq(space.maxVotingDuration(), _maxVotingDuration);
         assertEq(space.minVotingDuration(), _minVotingDuration);
-        (address addr, bytes memory params) = space.proposalValidationStrategy();
-        assertEq(addr, _proposalValidationStrategy.addr);
-        assertEq(params, _proposalValidationStrategy.params);
+
+        // Ensure voting delay was correctly updated
         assertEq(space.votingDelay(), _votingDelay);
-
-        // Authenticators
-        assertEq(space.authenticators(_authenticatorsToAdd[0]), true);
-        assertEq(space.authenticators(_authenticatorsToAdd[1]), true);
-
-        // Voting Strategies
-        assertEq(space.activeVotingStrategies().isBitSet(0), false);
-        assertEq(space.activeVotingStrategies().isBitSet(1), true);
-        assertEq(space.activeVotingStrategies().isBitSet(1), true);
     }
 
     // ------- Upgrading a Space ----

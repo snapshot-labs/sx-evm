@@ -314,51 +314,16 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         emit VotingStrategiesRemoved(_indicesToRemove);
     }
 
-    function updateAuthenticatorsAndVotingStrategies(
-        address[] calldata _toAdd,
-        address[] calldata _toRemove,
-        Strategy[] calldata _votingStrategiesToAdd,
-        string[] calldata _votingStrategiesMetadataURIsToAdd,
-        uint8[] calldata _indicesToRemove
-    ) external override onlyOwner {
-        _addAuthenticators(_toAdd);
-        emit AuthenticatorsAdded(_toAdd);
-
-        _removeAuthenticators(_toRemove);
-        emit AuthenticatorsRemoved(_toRemove);
-
-        _addVotingStrategies(_votingStrategiesToAdd);
-        emit VotingStrategiesAdded(_votingStrategiesToAdd, _votingStrategiesMetadataURIsToAdd);
-
-        _removeVotingStrategies(_indicesToRemove);
-        emit VotingStrategiesRemoved(_indicesToRemove);
-    }
-
-    function updateSettings(
-        uint32 _maxVotingDuration,
-        uint32 _minVotingDuration,
-        string calldata _metadataURI,
+    function updateStrategies(
         Strategy calldata _proposalValidationStrategy,
-        uint32 _votingDelay,
         address[] calldata _authenticatorsToAdd,
         address[] calldata _authenticatorsToRemove,
         Strategy[] calldata _votingStrategiesToAdd,
         string[] calldata _votingStrategiesMetadataURIsToAdd,
-        uint8[] calldata _indicesToRemove
+        uint8[] calldata _votingIndicesToRemove
     ) external override onlyOwner {
-        _setMaxVotingDuration(_maxVotingDuration);
-        emit MaxVotingDurationUpdated(_maxVotingDuration);
-
-        _setMinVotingDuration(_minVotingDuration);
-        emit MinVotingDurationUpdated(_minVotingDuration);
-
-        emit MetadataURIUpdated(_metadataURI);
-
         _setProposalValidationStrategy(_proposalValidationStrategy);
         emit ProposalValidationStrategyUpdated(_proposalValidationStrategy);
-
-        _setVotingDelay(_votingDelay);
-        emit VotingDelayUpdated(_votingDelay);
 
         _addAuthenticators(_authenticatorsToAdd);
         emit AuthenticatorsAdded(_authenticatorsToAdd);
@@ -369,8 +334,26 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         _addVotingStrategies(_votingStrategiesToAdd);
         emit VotingStrategiesAdded(_votingStrategiesToAdd, _votingStrategiesMetadataURIsToAdd);
 
-        _removeVotingStrategies(_indicesToRemove);
-        emit VotingStrategiesRemoved(_indicesToRemove);
+        _removeVotingStrategies(_votingIndicesToRemove);
+        emit VotingStrategiesRemoved(_votingIndicesToRemove);
+    }
+
+    function updateSettings(
+        uint32 _minVotingDuration,
+        uint32 _maxVotingDuration,
+        uint32 _votingDelay,
+        string calldata _metadataURI
+    ) external override onlyOwner {
+        _setMinVotingDuration(_minVotingDuration);
+        emit MinVotingDurationUpdated(_minVotingDuration);
+
+        _setMaxVotingDuration(_maxVotingDuration);
+        emit MaxVotingDurationUpdated(_maxVotingDuration);
+
+        _setVotingDelay(_votingDelay);
+        emit VotingDelayUpdated(_votingDelay);
+
+        emit MetadataURIUpdated(_metadataURI);
     }
 
     // ------------------------------------
