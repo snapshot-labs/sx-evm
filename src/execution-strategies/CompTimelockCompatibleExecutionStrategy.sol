@@ -81,6 +81,7 @@ contract CompTimelockCompatibleExecutionStrategy is SimpleQuorumExecutionStrateg
 
     event TransactionQueued(MetaTransaction transaction, uint256 executionTime);
     event TransactionExecuted(MetaTransaction transaction);
+    event TransactionVetoed(MetaTransaction transaction);
     event VetoGuardianSet(address vetoGuardian, address newVetoGuardian);
     event ProposalVetoed(bytes32 executionPayloadHash);
     event ProposalQueued(bytes32 executionPayloadHash);
@@ -191,14 +192,27 @@ contract CompTimelockCompatibleExecutionStrategy is SimpleQuorumExecutionStrateg
         emit ProposalExecuted(executionPayloadHash);
     }
 
-    function veto(bytes32 executionPayloadHash) external {
+    function veto(bytes memory payload) external {
+        bytes32 payloadHash = keccak256(payload);
         if (msg.sender != vetoGuardian) revert OnlyVetoGuardian();
-        if (proposalExecutionTime[executionPayloadHash] == 0) revert ProposalNotQueued();
+        uint256 executionTime = proposalExecutionTime[payloadHash];
+        if (executionTime == 0) revert ProposalNotQueued();
 
-        // TODO: cancel on timelock
+        MetaTransaction[] memory transactions = abi.decode(payload, (MetaTransaction[]));
+        for (uint256 i = 0; i < transactions.length; i++) {
+            timelock.cancelTransaction(
+                transactions[i].to,
+                transactions[i].value,
+                "",
+                transactions[i].data,
+                executionTime
+            );
 
-        proposalExecutionTime[executionPayloadHash] = 0;
-        emit ProposalVetoed(executionPayloadHash);
+            emit TransactionVetoed(transactions[i]);
+        }
+
+        proposalExecutionTime[payloadHash] = 0;
+        emit ProposalVetoed(payloadHash);
     }
 
     function setVetoGuardian(address newVetoGuardian) external onlyOwner {

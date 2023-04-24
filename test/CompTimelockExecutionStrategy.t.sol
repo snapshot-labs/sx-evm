@@ -358,7 +358,7 @@ abstract contract CompTimelockExecutionStrategyTest is SpaceTest {
         vm.prank(vetoGuardian);
         vm.expectEmit(true, true, true, true);
         emit ProposalVetoed(keccak256(abi.encode(transactions)));
-        timelockExecutionStrategy.veto(keccak256(abi.encode(transactions)));
+        timelockExecutionStrategy.veto(abi.encode(transactions));
 
         vm.warp(block.timestamp + timelockExecutionStrategy.timelockDelay());
         vm.expectRevert(ProposalNotQueued.selector);
@@ -382,7 +382,7 @@ abstract contract CompTimelockExecutionStrategyTest is SpaceTest {
         address vetoGuardian = address(0x7e20);
         vm.prank(vetoGuardian);
         vm.expectRevert(OnlyVetoGuardian.selector);
-        timelockExecutionStrategy.veto(keccak256(abi.encode(transactions)));
+        timelockExecutionStrategy.veto(abi.encode(transactions));
     }
 
     function testSetVetoGuardian() external {
@@ -412,7 +412,7 @@ abstract contract CompTimelockExecutionStrategyTest is SpaceTest {
 
         vm.prank(vetoGuardian);
         vm.expectRevert(ProposalNotQueued.selector);
-        timelockExecutionStrategy.veto(keccak256(abi.encode(transactions)));
+        timelockExecutionStrategy.veto(abi.encode(transactions));
     }
 
     function testExecuteNFTs() external {
