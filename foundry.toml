@@ -19,3 +19,4 @@ fs_permissions = [{ access = "read-write", path = ".forge-snapshots/"}]
 [profile.ci]
 fuzz = { runs = 1_000 }
 verbosity = 4
+via_ir = true
