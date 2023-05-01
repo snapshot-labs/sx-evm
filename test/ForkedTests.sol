@@ -47,7 +47,7 @@ contract ForkedTest is SpaceTest, SigUtils {
     function setUp() public virtual override {
         super.setUp();
 
-        string GOERLI_RPC_URL = vm.envString("GOERLI_RPC_URL");
+        string memory GOERLI_RPC_URL = vm.envString("GOERLI_RPC_URL");
         goerliFork = vm.createFork(GOERLI_RPC_URL);
 
         (voter2, key2) = makeAddrAndKey("Voter 2 Key");
