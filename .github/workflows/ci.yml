@@ -57,7 +57,7 @@ jobs:
         run: "forge config"
 
       - name: "Create env file"
-        run: "echo 'hi'"
+        run: "touch .env"
 
       - name: "Run the tests"
         run: "yarn test"
