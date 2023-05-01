@@ -4,9 +4,13 @@ pragma solidity ^0.8.18;
 
 import { Strategy } from "../../types.sol";
 
+/// @title Space Owner Actions
+/// @notice The actions that can be performed by the owner of a Space,
+///         These are in addition to the methods exposed by the `OwnableUpgradeable` module and the
+///         `upgradeTo()` method of `UUPSUpgradeable`.
 interface ISpaceOwnerActions {
     /// @notice  Cancels a proposal that has not already been finalized.
-    /// @param   proposalId  The proposal to cancel
+    /// @param   proposalId  The proposal to cancel.
     function cancel(uint256 proposalId) external;
 
     /// @notice Sets the voting delay.

@@ -3,6 +3,7 @@ pragma solidity ^0.8.18;
 
 import { IndexedStrategy, Proposal, Strategy, Choice } from "src/types.sol";
 
+/// @title Space Events
 interface ISpaceEvents {
     /// @notice Emitted when a space is created.
     /// @param space The address of the space.

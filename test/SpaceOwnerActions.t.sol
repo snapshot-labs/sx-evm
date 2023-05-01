@@ -292,7 +292,7 @@ contract SpaceOwnerActionsTest is SpaceTest {
         space.removeAuthenticators(newAuths);
 
         // Ensure we can't propose with this authenticator anymore
-        vm.expectRevert(abi.encodeWithSelector(AuthenticatorNotWhitelisted.selector, address(this)));
+        vm.expectRevert(abi.encodeWithSelector(AuthenticatorNotWhitelisted.selector));
         space.propose(author, proposalMetadataURI, executionStrategy, abi.encode(userVotingStrategies));
     }
 

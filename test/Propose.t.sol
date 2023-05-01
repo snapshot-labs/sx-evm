@@ -67,7 +67,7 @@ contract ProposeTest is SpaceTest {
 
     function testProposeInvalidAuth() public {
         //  Using this contract as an authenticator, which is not whitelisted
-        vm.expectRevert(abi.encodeWithSelector(AuthenticatorNotWhitelisted.selector, address(this)));
+        vm.expectRevert(abi.encodeWithSelector(AuthenticatorNotWhitelisted.selector));
         space.propose(author, proposalMetadataURI, executionStrategy, abi.encode(userVotingStrategies));
     }
 

@@ -236,7 +236,7 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         if (block.timestamp >= proposal.maxEndTimestamp) revert VotingPeriodHasEnded();
         if (block.timestamp < proposal.startTimestamp) revert VotingPeriodHasNotStarted();
         if (proposal.finalizationStatus != FinalizationStatus.Pending) revert ProposalFinalized();
-        if (voteRegistry[proposalId][voter]) revert UserHasAlreadyVoted();
+        if (voteRegistry[proposalId][voter]) revert UserAlreadyVoted();
 
         uint256 votingPower = _getCumulativePower(
             voter,
@@ -345,7 +345,7 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         uint8 cachedNextVotingStrategyIndex = nextVotingStrategyIndex;
         if (cachedNextVotingStrategyIndex >= 256 - _votingStrategies.length) revert ExceedsStrategyLimit();
         for (uint256 i = 0; i < _votingStrategies.length; i++) {
-            if (_votingStrategies[i].addr == address(0)) revert InvalidStrategyAddress();
+            if (_votingStrategies[i].addr == address(0)) revert ZeroAddress();
             cachedActiveVotingStrategies = cachedActiveVotingStrategies.setBit(cachedNextVotingStrategyIndex, true);
             votingStrategies[cachedNextVotingStrategyIndex] = _votingStrategies[i];
             cachedNextVotingStrategyIndex++;
@@ -394,7 +394,7 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
      * @notice  Internal function to ensure `msg.sender` is in the list of allowed authenticators.
      */
     function _assertValidAuthenticator() internal view {
-        if (authenticators[msg.sender] != true) revert AuthenticatorNotWhitelisted(msg.sender);
+        if (authenticators[msg.sender] != true) revert AuthenticatorNotWhitelisted();
     }
 
     /**

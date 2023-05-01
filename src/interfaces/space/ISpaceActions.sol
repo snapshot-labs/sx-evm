@@ -4,6 +4,8 @@ pragma solidity ^0.8.18;
 
 import { Choice, IndexedStrategy, Strategy } from "src/types.sol";
 
+/// @title Space Actions
+/// @notice User focused actions that can be performed on a space.
 interface ISpaceActions {
     /// @notice  Initializes a space proxy after deployment.
     /// @param   owner  The address of the space owner.
