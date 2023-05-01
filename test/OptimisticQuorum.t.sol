@@ -35,7 +35,7 @@ contract OptimisticExec is OptimisticQuorumExecutionStrategy {
         numExecuted++;
     }
 
-    function getStrategyType() external pure returns (string memory) {
+    function getStrategyType() external pure override returns (string memory) {
         return "OptimisticQuorumExecution";
     }
 }
