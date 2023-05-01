@@ -14,7 +14,11 @@ contract VotingPowerProposalValidationStrategy is PropositionPower, IProposalVal
      * @param   params  Bytes that should decode to proposalThreshold and allowedStrategies
      * @return  bool  Whether the proposal should be validated or not
      */
-    function validate(address author, bytes calldata params, bytes calldata userParams) public override returns (bool) {
+    function validate(
+        address author,
+        bytes calldata params,
+        bytes calldata userParams
+    ) external override returns (bool) {
         (uint256 proposalThreshold, Strategy[] memory allowedStrategies) = abi.decode(params, (uint256, Strategy[]));
         IndexedStrategy[] memory userStrategies = abi.decode(userParams, (IndexedStrategy[]));
 

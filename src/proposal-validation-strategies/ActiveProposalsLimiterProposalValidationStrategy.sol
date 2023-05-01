@@ -19,7 +19,7 @@ contract ActiveProposalsLimiterProposalValidationStrategy is ActiveProposalsLimi
         address author,
         bytes calldata /* params */,
         bytes calldata /* userParams*/
-    ) public override returns (bool) {
+    ) external override returns (bool) {
         return _validate(author);
     }
 }
