@@ -57,7 +57,7 @@ jobs:
         run: "forge config"
 
       - name: "Create env file"
-        run: "touch .env && echo GOERLI_RPC_URL=${{ secrest.GOERLI_RPC_URL }} >> .env"
+        run: "echo 'hi'"
 
       - name: "Run the tests"
         run: "yarn test"
