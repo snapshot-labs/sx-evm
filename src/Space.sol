@@ -1,4 +1,5 @@
-// SPDX-License-Identifier: UNLICENSED
+// SPDX-License-Identifier: MIT
+
 pragma solidity ^0.8.18;
 
 import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
@@ -14,11 +15,9 @@ import { IProposalValidationStrategy } from "src/interfaces/IProposalValidationS
 import { SXUtils } from "./utils/SXUtils.sol";
 import { BitPacker } from "./utils/BitPacker.sol";
 
-/**
- * @author  SnapshotLabs
- * @title   Space Contract.
- * @notice  Logic and bookkeeping contract.
- */
+/// @title Space Contract
+/// @notice The core contract for Snapshot X.
+///         A proxy of this contract should be deployed with the Proxy Factory.
 contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, ReentrancyGuard {
     using BitPacker for uint256;
     using SXUtils for IndexedStrategy[];
@@ -91,6 +90,7 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
     // |                                  |
     // ------------------------------------
 
+    /// @inheritdoc ISpaceOwnerActions
     function setMaxVotingDuration(uint32 _maxVotingDuration) external override onlyOwner {
         _setMaxVotingDuration(_maxVotingDuration);
         emit MaxVotingDurationUpdated(_maxVotingDuration);
@@ -171,13 +171,7 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
     // |                                  |
     // ------------------------------------
 
-    /**
-     * @notice  Create a proposal.
-     * @param   author  The address of the proposal creator.
-     * @param   metadataURI  The metadata URI for the proposal.
-     * @param   executionStrategy  The execution strategy index and associated execution payload to use in the proposal.
-     * @param   userProposalValidationParams  The user provided parameters for proposal validation.
-     */
+    /// @inheritdoc ISpaceActions
     function propose(
         address author,
         string calldata metadataURI,
@@ -310,35 +304,33 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
     // |                                  |
     // ------------------------------------
 
-    /**
-     * @notice Only the space owner can authorize an upgrade to this contract.
-     * @param newImplementation The address of the new implementation.
-     */
+    /// @dev Only the Space owner can authorize an upgrade to this contract.
     // solhint-disable-next-line no-empty-blocks
     function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
 
+    /// @dev Sets the maximum voting duration.
     function _setMaxVotingDuration(uint32 _maxVotingDuration) internal {
         if (_maxVotingDuration < minVotingDuration) revert InvalidDuration(minVotingDuration, _maxVotingDuration);
         maxVotingDuration = _maxVotingDuration;
     }
 
+    /// @dev Sets the minimum voting duration.
     function _setMinVotingDuration(uint32 _minVotingDuration) internal {
         if (_minVotingDuration > maxVotingDuration) revert InvalidDuration(_minVotingDuration, maxVotingDuration);
         minVotingDuration = _minVotingDuration;
     }
 
+    /// @dev Sets the proposal validation strategy.
     function _setProposalValidationStrategy(Strategy memory _proposalValidationStrategy) internal {
         proposalValidationStrategy = _proposalValidationStrategy;
     }
 
+    /// @dev Sets the voting delay.
     function _setVotingDelay(uint32 _votingDelay) internal {
         votingDelay = _votingDelay;
     }
 
-    /**
-     * @notice  Internal function to add voting strategies.
-     * @param   _votingStrategies  Array of voting strategies to add.
-     */
+    /// @dev Adds an array of voting strategies.
     function _addVotingStrategies(Strategy[] memory _votingStrategies) internal {
         if (_votingStrategies.length == 0) revert EmptyArray();
         uint256 cachedActiveVotingStrategies = activeVotingStrategies;
@@ -354,10 +346,7 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         nextVotingStrategyIndex = cachedNextVotingStrategyIndex;
     }
 
-    /**
-     * @notice  Internal function to remove voting strategies.
-     * @param   _votingStrategyIndices  Indices of the strategies to remove.
-     */
+    /// @dev Removes an array of voting strategies, specified by their index.
     function _removeVotingStrategies(uint8[] memory _votingStrategyIndices) internal {
         if (_votingStrategyIndices.length == 0) revert EmptyArray();
         for (uint8 i = 0; i < _votingStrategyIndices.length; i++) {
@@ -367,10 +356,7 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         if (activeVotingStrategies == 0) revert NoActiveVotingStrategies();
     }
 
-    /**
-     * @notice  Internal function to add authenticators.
-     * @param   _authenticators  Array of authenticators to add.
-     */
+    /// @dev Adds an array of authenticators.
     function _addAuthenticators(address[] memory _authenticators) internal {
         if (_authenticators.length == 0) revert EmptyArray();
         for (uint256 i = 0; i < _authenticators.length; i++) {
@@ -378,10 +364,7 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         }
     }
 
-    /**
-     * @notice  Internal function to remove authenticators.
-     * @param   _authenticators  Array of authenticators to remove.
-     */
+    /// @dev Removes an array of authenticators.
     function _removeAuthenticators(address[] memory _authenticators) internal {
         if (_authenticators.length == 0) revert EmptyArray();
         for (uint256 i = 0; i < _authenticators.length; i++) {
@@ -390,17 +373,12 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         // TODO: should we check that there are still authenticators left? same for other setters..
     }
 
-    /**
-     * @notice  Internal function to ensure `msg.sender` is in the list of allowed authenticators.
-     */
+    /// @dev Reverts if `msg.sender` is not in the list of whitelisted authenticators.
     function _assertValidAuthenticator() internal view {
         if (authenticators[msg.sender] != true) revert AuthenticatorNotWhitelisted();
     }
 
-    /**
-     * @notice  Internal function that checks if `proposalId` exists or not.
-     * @param   proposal  The proposal to check.
-     */
+    /// @dev Reverts if a specified proposal does not exist.
     function _assertProposalExists(Proposal memory proposal) internal pure {
         // startTimestamp cannot be set to 0 when a proposal is created,
         // so if proposal.startTimestamp is 0 it means this proposal does not exist
@@ -408,15 +386,7 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         if (proposal.startTimestamp == 0) revert InvalidProposal();
     }
 
-    /**
-     * @notice  Loop over the strategies and return the cumulative power.
-     * @dev
-     * @param   timestamp  Timestamp of the snapshot.
-     * @param   userAddress  Address for which to compute the voting power.
-     * @param   userStrategies The desired voting strategies to check.
-     * @param   allowedStrategies The array of strategies that were active at the time of the proposal snapshot.
-     * @return  uint256  The total voting power of a user (over those specified voting strategies).
-     */
+    /// @dev Returns the cumulative voting power of a user over a set of  voting strategies.
     function _getCumulativePower(
         address userAddress,
         uint32 timestamp,
