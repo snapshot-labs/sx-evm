@@ -2,14 +2,20 @@
 
 pragma solidity ^0.8.18;
 
+/// @title Timestamp Resolver
+/// @notice The Space contract tracks time with timestamps but some strategies require block numbers,
+///         this base contract can be inherited by strategies to resolve this conversion in a secure way.
 abstract contract TimestampResolver {
+    /// @notice Emitted when a timestamp passed is in the future.
     error TimestampInFuture();
+
+    /// @notice Emitted when the block number is 1, an edge case that cannot be resolved.
     error InvalidBlockNumber();
 
     mapping(uint32 timestamp => uint256 blockNumber) public timestampToBlockNumber;
 
-    /// @notice Resolves a timestamp to a block number in such a way that the same timestamp
-    /// always resolves to the same block number. If the timestamp is in the future, reverts.
+    /// @notice Resolves a timestamp to a block number in such a way that the same timestamp always
+    ///         resolves to the same block number. If the timestamp is in the future, it reverts.
     /// @param timestamp The timestamp to resolve
     /// @return blockNumber The block number that the timestamp resolves to
     function resolveSnapshotTimestamp(uint32 timestamp) internal returns (uint256 blockNumber) {

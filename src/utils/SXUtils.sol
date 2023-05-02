@@ -4,7 +4,7 @@ pragma solidity ^0.8.18;
 
 import { IndexedStrategy } from "src/types.sol";
 
-/// @title Utilities Library for Snapshot X Types.
+/// @title Snapshot X Types Utilities Library
 library SXUtils {
     error DuplicateFound(uint8 index);
 
