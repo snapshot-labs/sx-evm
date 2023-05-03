@@ -108,6 +108,6 @@ contract ExecuteTest is SpaceTest {
     }
 
     function testGetStrategyType() external {
-        assertEq(vanillaExecutionStrategy.getStrategyType(), "executionStrategy");
+        assertEq(vanillaExecutionStrategy.getStrategyType(), "SimpleQuorumVanilla");
     }
 }
