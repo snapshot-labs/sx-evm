@@ -344,10 +344,16 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         uint32 _votingDelay,
         string calldata _metadataURI
     ) external override onlyOwner {
-        _setMinVotingDuration(_minVotingDuration);
+        // Check that min and max VotingDuration are valid
+        // We don't use the internal `_setMinVotingDuration` and `_setMaxVotingDuration` functions because
+        // it would revert when `_minVotingDuration > maxVotingDuration` (when the new `_min` is
+        // bigger than the current `max`).
+        if (_minVotingDuration > _maxVotingDuration) revert InvalidDuration(_minVotingDuration, _maxVotingDuration);
+
+        minVotingDuration = _minVotingDuration;
         emit MinVotingDurationUpdated(_minVotingDuration);
 
-        _setMaxVotingDuration(_maxVotingDuration);
+        maxVotingDuration = _maxVotingDuration;
         emit MaxVotingDurationUpdated(_maxVotingDuration);
 
         _setVotingDelay(_votingDelay);
