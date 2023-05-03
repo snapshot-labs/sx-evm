@@ -6,11 +6,17 @@ import { SXUtils } from "../../utils/SXUtils.sol";
 import { IndexedStrategy, Strategy } from "../../types.sol";
 import { IVotingStrategy } from "../../interfaces/IVotingStrategy.sol";
 
+/// @title Proposition Power Proposal Validation Strategy Module
+/// @notice This module allows a proposal to be validated based on the proposition power of an author exceeding
+///         a threshold over a set of voting strategies.
+/// @dev The voting strategies used here are configured independently of the strategies set in the Space.
 abstract contract PropositionPower {
     using SXUtils for IndexedStrategy[];
 
+    /// @notice Thrown when an invalid strategy index is supplied.
     error InvalidStrategyIndex(uint256 index);
 
+    /// @dev Validates an author based on the voting power of the author exceeding a threshold over a set of strategies.
     function _validate(
         address author,
         uint256 proposalThreshold,
@@ -21,6 +27,7 @@ abstract contract PropositionPower {
         return (votingPower >= proposalThreshold);
     }
 
+    /// @dev Computes the cumulative proposition power of an address at a given timestamp over a set of strategies.
     function _getCumulativePower(
         address userAddress,
         uint32 timestamp,

@@ -6,14 +6,15 @@ import { IProposalValidationStrategy } from "../interfaces/IProposalValidationSt
 import { IndexedStrategy, Strategy } from "../types.sol";
 import { PropositionPower } from "./utils/PropositionPower.sol";
 
-contract VotingPowerProposalValidationStrategy is PropositionPower, IProposalValidationStrategy {
-    /**
-     * @notice  Validates a proposal using the voting strategies to compute the proposal power.
-     * @param   author  Author of the proposal
-     * @param   userParams  User provided parameters for the voting strategies
-     * @param   params  Bytes that should decode to proposalThreshold and allowedStrategies
-     * @return  bool  Whether the proposal should be validated or not
-     */
+/// @title Proposition Power Proposal Validation Strategy
+/// @notice Strategy that limits proposal creation to authors that exceed a threshold proposition power
+///         over a set of voting strategies.
+contract PropositionPowerProposalValidationStrategy is PropositionPower, IProposalValidationStrategy {
+    /// @notice Validates an author by checking if the proposition power of the author exceeds a threshold
+    ///         over a set of strategies.
+    /// @param author Author of the proposal.
+    /// @param params ABI encoded array that should contain the proposal threshold and allowed voting strategies.
+    /// @param userParams ABI encoded array that should contain the user voting strategies.
     function validate(
         address author,
         bytes calldata params,

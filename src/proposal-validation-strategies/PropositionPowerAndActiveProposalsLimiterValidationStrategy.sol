@@ -7,7 +7,10 @@ import { IndexedStrategy, Strategy } from "../types.sol";
 import { ActiveProposalsLimiter } from "./utils/ActiveProposalsLimiter.sol";
 import { PropositionPower } from "./utils/PropositionPower.sol";
 
-contract VotingPowerAndActiveProposalsLimiterValidationStrategy is
+/// @title Proposition Power and Active Proposals Limiter Proposal Validation Strategy
+/// @notice Strategy that limits proposal creation to authors that exceed a threshold proposition
+///         power over a set of voting strategies, and a maximum number of active proposals.
+contract PropositionPowerAndActiveProposalsLimiterValidationStrategy is
     ActiveProposalsLimiter,
     PropositionPower,
     IProposalValidationStrategy
@@ -15,14 +18,8 @@ contract VotingPowerAndActiveProposalsLimiterValidationStrategy is
     // solhint-disable-next-line no-empty-blocks
     constructor(uint32 _cooldown, uint224 _maxActiveProposals) ActiveProposalsLimiter(_cooldown, _maxActiveProposals) {}
 
-    /**
-     * @notice  Validates a proposal using the voting strategies to compute the proposal power, while also ensuring
-                that the author respects the active proposals limit.
-     * @param   author  Author of the proposal
-     * @param   userParams  User provided parameters for the voting strategies
-     * @param   params  Bytes that should decode to proposalThreshold and allowedStrategies
-     * @return  bool  Whether the proposal should be validated or not
-     */
+    /// @notice Validates an author by checking if the proposition power of the author exceeds a threshold over a set of
+    ///         strategies and if the author has reached the maximum number of active proposals at the current timestamp.
     function validate(address author, bytes calldata params, bytes calldata userParams) external returns (bool) {
         (uint256 proposalThreshold, Strategy[] memory allowedStrategies) = abi.decode(params, (uint256, Strategy[]));
         IndexedStrategy[] memory userStrategies = abi.decode(userParams, (IndexedStrategy[]));
