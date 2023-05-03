@@ -49,8 +49,8 @@ contract SpaceManager is OwnableUpgradeable {
         return spaces[space];
     }
 
-    modifier onlySpace(address callerAddress) {
-        if (!isSpaceEnabled(callerAddress)) revert InvalidSpace();
+    modifier onlySpace() {
+        if (!isSpaceEnabled(msg.sender)) revert InvalidSpace();
         _;
     }
 }
