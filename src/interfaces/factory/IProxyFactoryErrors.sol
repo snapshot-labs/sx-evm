@@ -10,6 +10,6 @@ interface IProxyFactoryErrors {
     /// @notice Thrown when the proxy factory fails to call the initializer on a proxy.
     error FailedInitialization();
 
-    /// @notice Thrown when the implementation supplied to the proxy factory is the zero address or has no code.å
+    /// @notice Thrown when the implementation supplied to the proxy factory is the zero address or has no code.
     error InvalidImplementation();
 }

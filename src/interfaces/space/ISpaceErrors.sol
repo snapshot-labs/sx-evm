@@ -29,10 +29,10 @@ interface ISpaceErrors {
     /// @notice Thrown if a proposal is invalid.
     error InvalidProposal();
 
-    /// @notice Thrown if a caller is not whitelisted authenticator.
+    /// @notice Thrown if the caller is not a whitelisted authenticator.
     error AuthenticatorNotWhitelisted();
 
-    /// @notice Thrown if user attempts to vote twice on the same proposal.
+    /// @notice Thrown if a user attempts to vote twice on the same proposal.
     error UserAlreadyVoted();
 
     /// @notice Thrown if a user attempts to vote with no voting power.

@@ -2,6 +2,7 @@
 
 pragma solidity ^0.8.18;
 
+import { ICompTimelock } from "../interfaces/ICompTimelock.sol";
 import { SimpleQuorumExecutionStrategy } from "./SimpleQuorumExecutionStrategy.sol";
 import { SpaceManager } from "../utils/SpaceManager.sol";
 import { MetaTransaction, Proposal, ProposalStatus } from "../types.sol";

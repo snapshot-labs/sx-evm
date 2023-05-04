@@ -11,7 +11,7 @@ abstract contract SimpleQuorumExecutionStrategy is IExecutionStrategy, SpaceMana
     /// @notice The quorum required to execute a proposal using this strategy.
     uint256 public quorum;
 
-    /// @dev initializer
+    /// @dev Initializer
     // solhint-disable-next-line func-name-mixedcase
     function __SimpleQuorumExecutionStrategy_init(uint256 _quorum) internal onlyInitializing {
         quorum = _quorum;
@@ -27,7 +27,7 @@ abstract contract SimpleQuorumExecutionStrategy is IExecutionStrategy, SpaceMana
 
     /// @notice Returns the status of a proposal that uses a simple quorum.
     ///        A proposal is accepted if the for votes exceeds the against votes
-    ///        and a quorum of total votes is reached.
+    ///        and a quorum of total votes (for + against + abstain) is reached.
     /// @param proposal The proposal struct.
     /// @param votesFor The number of votes for the proposal.
     /// @param votesAgainst The number of votes against the proposal.

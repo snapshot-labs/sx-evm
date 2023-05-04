@@ -19,7 +19,7 @@ struct Proposal {
     bytes32 executionPayloadHash;
     // The address of execution strategy used for the proposal.
     IExecutionStrategy executionStrategy;
-    // The address of the proposal creator
+    // The address of the proposal creator.
     address author;
     // An enum that stores whether a proposal is pending, executed, or cancelled.
     FinalizationStatus finalizationStatus;
