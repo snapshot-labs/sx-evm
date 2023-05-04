@@ -60,6 +60,7 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         uint32 _minVotingDuration,
         uint32 _maxVotingDuration,
         Strategy memory _proposalValidationStrategy,
+        string memory _proposalValidationStrategyMetadataURI,
         string memory _metadataURI,
         Strategy[] memory _votingStrategies,
         string[] memory _votingStrategyMetadataURIs,
@@ -83,6 +84,7 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
             _minVotingDuration,
             _maxVotingDuration,
             _proposalValidationStrategy,
+            _proposalValidationStrategyMetadataURI,
             _metadataURI,
             _votingStrategies,
             _votingStrategyMetadataURIs,
@@ -253,9 +255,12 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         emit MetadataURIUpdated(_metadataURI);
     }
 
-    function setProposalValidationStrategy(Strategy calldata _proposalValidationStrategy) external override onlyOwner {
+    function setProposalValidationStrategy(
+        Strategy calldata _proposalValidationStrategy,
+        string calldata proposalValidationStrategyMetadataURI
+    ) external override onlyOwner {
         _setProposalValidationStrategy(_proposalValidationStrategy);
-        emit ProposalValidationStrategyUpdated(_proposalValidationStrategy);
+        emit ProposalValidationStrategyUpdated(_proposalValidationStrategy, proposalValidationStrategyMetadataURI);
     }
 
     function setVotingDelay(uint32 _votingDelay) external override onlyOwner {
