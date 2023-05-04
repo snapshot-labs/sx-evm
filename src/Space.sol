@@ -346,7 +346,7 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         nextVotingStrategyIndex = cachedNextVotingStrategyIndex;
     }
 
-    /// @dev Removes an array of voting strategies, specified by their index.
+    /// @dev Removes an array of voting strategies, specified by their indices.
     function _removeVotingStrategies(uint8[] memory _votingStrategyIndices) internal {
         if (_votingStrategyIndices.length == 0) revert EmptyArray();
         for (uint8 i = 0; i < _votingStrategyIndices.length; i++) {
@@ -386,21 +386,21 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         if (proposal.startTimestamp == 0) revert InvalidProposal();
     }
 
-    /// @dev Returns the cumulative voting power of a user over a set of  voting strategies.
+    /// @dev Returns the cumulative voting power of a user over a set of voting strategies.
     function _getCumulativePower(
         address userAddress,
         uint32 timestamp,
         IndexedStrategy[] memory userStrategies,
         uint256 allowedStrategies
     ) internal returns (uint256) {
-        // Ensure there are no duplicates to avoid an attack where people double count a strategy
+        // Ensure there are no duplicates to avoid an attack where people double count a strategy.
         userStrategies.assertNoDuplicateIndices();
 
         uint256 totalVotingPower;
         for (uint256 i = 0; i < userStrategies.length; ++i) {
             uint8 strategyIndex = userStrategies[i].index;
 
-            // Check that the strategy is allowed for this proposal
+            // Check that the strategy is allowed for this proposal.
             if (!allowedStrategies.isBitSet(strategyIndex)) {
                 revert InvalidStrategyIndex(strategyIndex);
             }

@@ -91,7 +91,7 @@ contract AvatarExecutionStrategy is SimpleQuorumExecutionStrategy {
                 transactions[i].data,
                 transactions[i].operation
             );
-            // If any transaction fails, the entire execution will revert
+            // If any transaction fails, the entire execution will revert.
             if (!success) revert ExecutionFailed();
         }
     }

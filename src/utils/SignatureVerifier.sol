@@ -76,7 +76,7 @@ abstract contract SignatureVerifier is EIP712 {
 
         if (recoveredAddress != author) revert InvalidSignature();
 
-        // Mark salt as used to prevent replay attacks
+        // Mark salt as used to prevent replay attacks.
         usedSalts[author][salt] = true;
     }
 
@@ -149,7 +149,7 @@ abstract contract SignatureVerifier is EIP712 {
 
         if (recoveredAddress != author) revert InvalidSignature();
 
-        // Mark salt as used to prevent replay attacks
+        // Mark salt as used to prevent replay attacks.
         usedSalts[author][salt] = true;
     }
 }

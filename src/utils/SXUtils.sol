@@ -16,7 +16,7 @@ library SXUtils {
 
         uint256 bitMap;
         for (uint256 i = 0; i < strats.length; ++i) {
-            // Check that bit at index `strats[i].index` is not set
+            // Check that bit at index `strats[i].index` is not set.
             uint256 s = 1 << strats[i].index;
             if (bitMap & s != 0) revert DuplicateFound(strats[i].index);
             // Update aforementioned bit.

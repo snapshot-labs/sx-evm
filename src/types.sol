@@ -15,24 +15,24 @@ struct Proposal {
     uint32 startTimestamp;
     uint32 minEndTimestamp;
     uint32 maxEndTimestamp;
-    // The hash of the execution payload. We do not store the payload itself to save gas
+    // The hash of the execution payload. We do not store the payload itself to save gas.
     bytes32 executionPayloadHash;
-    // The address of execution strategy used for the proposal
+    // The address of execution strategy used for the proposal.
     IExecutionStrategy executionStrategy;
     // The address of the proposal creator
     address author;
-    // An enum that stores whether a proposal is pending, executed, or cancelled
+    // An enum that stores whether a proposal is pending, executed, or cancelled.
     FinalizationStatus finalizationStatus;
-    // Bit array where the index of each each bit corresponds to whether the voting strategy
-    // at that index is active at the time of proposal creation
+    // Bit array where the index of each each bit corresponds to whether the voting strategy.
+    // at that index is active at the time of proposal creation.
     uint256 activeVotingStrategies;
 }
 
 /// @notice The data stored for each strategy.
 struct Strategy {
-    // The address of the strategy contract
+    // The address of the strategy contract.
     address addr;
-    // The parameters of the strategy
+    // The parameters of the strategy.
     bytes params;
 }
 
