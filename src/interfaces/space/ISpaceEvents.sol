@@ -36,6 +36,7 @@ interface ISpaceEvents {
     event MaxVotingDurationUpdated(uint32 newMaxVotingDuration);
     event MinVotingDurationUpdated(uint32 newMinVotingDuration);
     event MetadataURIUpdated(string newMetadataURI);
+    event DaoURIUpdated(string newDaoURI);
     event ProposalValidationStrategyUpdated(Strategy newProposalValidationStrategy);
     event QuorumUpdated(uint256 newQuorum);
     event VotingDelayUpdated(uint256 newVotingDelay);

@@ -17,6 +17,8 @@ interface ISpaceOwnerActions {
 
     function setMetadataURI(string calldata metadataURI) external;
 
+    function setDaoURI(string calldata daoURI) external;
+
     function addVotingStrategies(
         Strategy[] calldata votingStrategies,
         string[] calldata votingStrategyMetadataURIs

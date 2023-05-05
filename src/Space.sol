@@ -7,6 +7,7 @@ import { UUPSUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/utils
 import { ReentrancyGuard } from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
 import { ISpace, ISpaceState } from "src/interfaces/ISpace.sol";
+import { IERC4824 } from "src/interfaces/IERC4824.sol";
 import { Choice, FinalizationStatus, IndexedStrategy, Proposal, ProposalStatus, Strategy } from "src/types.sol";
 import { IVotingStrategy } from "src/interfaces/IVotingStrategy.sol";
 import { IExecutionStrategy } from "src/interfaces/IExecutionStrategy.sol";
@@ -19,10 +20,12 @@ import { BitPacker } from "./utils/BitPacker.sol";
  * @title   Space Contract.
  * @notice  Logic and bookkeeping contract.
  */
-contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, ReentrancyGuard {
+contract Space is ISpace, Initializable, IERC4824, UUPSUpgradeable, OwnableUpgradeable, ReentrancyGuard {
     using BitPacker for uint256;
     using SXUtils for IndexedStrategy[];
 
+    /// @inheritdoc IERC4824
+    string public daoURI;
     /// @inheritdoc ISpaceState
     uint32 public override maxVotingDuration;
     /// @inheritdoc ISpaceState
@@ -60,6 +63,7 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         uint32 _minVotingDuration,
         uint32 _maxVotingDuration,
         Strategy memory _proposalValidationStrategy,
+        string memory _daoURI,
         string memory _metadataURI,
         Strategy[] memory _votingStrategies,
         string[] memory _votingStrategyMetadataURIs,
@@ -67,6 +71,7 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
     ) public initializer {
         __Ownable_init();
         transferOwnership(_owner);
+        _setDaoURI(_daoURI);
         _setMaxVotingDuration(_maxVotingDuration);
         _setMinVotingDuration(_minVotingDuration);
         _setProposalValidationStrategy(_proposalValidationStrategy);
@@ -111,6 +116,10 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
     function _setMinVotingDuration(uint32 _minVotingDuration) internal {
         if (_minVotingDuration > maxVotingDuration) revert InvalidDuration(_minVotingDuration, maxVotingDuration);
         minVotingDuration = _minVotingDuration;
+    }
+
+    function _setDaoURI(string memory _daoURI) internal {
+        daoURI = _daoURI;
     }
 
     function _setProposalValidationStrategy(Strategy memory _proposalValidationStrategy) internal {
@@ -251,6 +260,13 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
 
     function setMetadataURI(string calldata _metadataURI) external override onlyOwner {
         emit MetadataURIUpdated(_metadataURI);
+    }
+
+    /// @notice Updates the set DAO URI to a new value.
+    /// @param newDaoURI The new DAO URI to be set.
+    function setDaoURI(string calldata newDaoURI) external override onlyOwner {
+        _setDaoURI(newDaoURI);
+        emit DaoURIUpdated(newDaoURI);
     }
 
     function setProposalValidationStrategy(Strategy calldata _proposalValidationStrategy) external override onlyOwner {
