@@ -33,6 +33,7 @@ contract SpaceFactoryTest is Test, IProxyFactoryEvents, IProxyFactoryErrors {
     uint32 public maxVotingDuration;
     Strategy public proposalValidationStrategy;
     uint32 public quorum;
+    string public daoURI;
     string public metadataURI = "SX-EVM";
     string[] public votingStrategyMetadataURIs;
     string[] public executionStrategyMetadataURIs;
@@ -76,6 +77,7 @@ contract SpaceFactoryTest is Test, IProxyFactoryEvents, IProxyFactoryErrors {
                 minVotingDuration,
                 maxVotingDuration,
                 proposalValidationStrategy,
+                daoURI,
                 metadataURI,
                 votingStrategies,
                 votingStrategyMetadataURIs,
@@ -98,6 +100,7 @@ contract SpaceFactoryTest is Test, IProxyFactoryEvents, IProxyFactoryErrors {
                 minVotingDuration,
                 maxVotingDuration,
                 proposalValidationStrategy,
+                daoURI,
                 metadataURI,
                 votingStrategies,
                 votingStrategyMetadataURIs,
@@ -119,6 +122,7 @@ contract SpaceFactoryTest is Test, IProxyFactoryEvents, IProxyFactoryErrors {
                 minVotingDuration,
                 maxVotingDuration,
                 proposalValidationStrategy,
+                daoURI,
                 metadataURI,
                 votingStrategies,
                 votingStrategyMetadataURIs,
@@ -141,6 +145,7 @@ contract SpaceFactoryTest is Test, IProxyFactoryEvents, IProxyFactoryErrors {
                 minVotingDuration,
                 maxVotingDuration,
                 proposalValidationStrategy,
+                daoURI,
                 metadataURI,
                 votingStrategies,
                 votingStrategyMetadataURIs,
@@ -160,6 +165,7 @@ contract SpaceFactoryTest is Test, IProxyFactoryEvents, IProxyFactoryErrors {
             minVotingDuration,
             maxVotingDuration,
             proposalValidationStrategy,
+            daoURI,
             metadataURI,
             votingStrategies,
             votingStrategyMetadataURIs,

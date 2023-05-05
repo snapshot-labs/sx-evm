@@ -62,6 +62,7 @@ abstract contract SpaceTest is Test, GasSnapshot, ISpaceEvents, ISpaceErrors, IE
     Strategy public executionStrategy;
 
     // Dummy metadata URIs
+    string public daoURI = "SOC Test DAO";
     string public spaceMetadataURI = "SOC Test Space";
     string public proposalMetadataURI = "SOC Test Proposal";
     string[] public votingStrategyMetadataURIs;
@@ -97,6 +98,7 @@ abstract contract SpaceTest is Test, GasSnapshot, ISpaceEvents, ISpaceErrors, IE
                         minVotingDuration,
                         maxVotingDuration,
                         proposalValidationStrategy,
+                        daoURI,
                         spaceMetadataURI,
                         votingStrategies,
                         votingStrategyMetadataURIs,
