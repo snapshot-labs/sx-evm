@@ -20,8 +20,7 @@ contract VoteTest is SpaceTest {
             abi.encode(author, proposalId, Choice.For, userVotingStrategies, voteMetadataURI)
         );
 
-        // Temp fix
-        // assertTrue(space.hasVoted(proposalId, author));
+        assertTrue(space.voteRegistry(proposalId, author));
     }
 
     function testVoteInvalidAuth() public {
