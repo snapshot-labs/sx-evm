@@ -11,12 +11,13 @@ import {
 } from "../src/proposal-validation-strategies/VanillaProposalValidationStrategy.sol";
 import { ProxyFactory } from "../src/ProxyFactory.sol";
 import { Space } from "../src/Space.sol";
+import { ISpaceEvents } from "../src/interfaces/space/ISpaceEvents.sol";
 import { IProxyFactoryEvents } from "../src/interfaces/factory/IProxyFactoryEvents.sol";
 import { IProxyFactoryErrors } from "../src/interfaces/factory/IProxyFactoryErrors.sol";
 import { Strategy } from "../src/types.sol";
 
 // solhint-disable-next-line max-states-count
-contract SpaceFactoryTest is Test, IProxyFactoryEvents, IProxyFactoryErrors {
+contract SpaceFactoryTest is Test, IProxyFactoryEvents, IProxyFactoryErrors, ISpaceEvents {
     Space public masterSpace;
     ProxyFactory public factory;
     VanillaVotingStrategy public vanillaVotingStrategy;
@@ -36,7 +37,6 @@ contract SpaceFactoryTest is Test, IProxyFactoryEvents, IProxyFactoryErrors {
     string public daoURI;
     string public metadataURI = "SX-EVM";
     string[] public votingStrategyMetadataURIs;
-    string[] public executionStrategyMetadataURIs;
 
     function setUp() public {
         masterSpace = new Space();
@@ -61,13 +61,14 @@ contract SpaceFactoryTest is Test, IProxyFactoryEvents, IProxyFactoryErrors {
         );
     }
 
-    function testCreateSpace() public {
+    function testCreateSpace1() public {
         bytes32 salt = bytes32(keccak256(abi.encodePacked("random salt")));
         // Pre-computed address of the space (possible because of CREATE2 deployment)
         address spaceProxy = _predictProxyAddress(address(factory), address(masterSpace), salt);
 
         vm.expectEmit(true, true, true, true);
         emit ProxyDeployed(address(masterSpace), spaceProxy);
+
         factory.deployProxy(
             address(masterSpace),
             abi.encodeWithSelector(
@@ -81,9 +82,7 @@ contract SpaceFactoryTest is Test, IProxyFactoryEvents, IProxyFactoryErrors {
                 metadataURI,
                 votingStrategies,
                 votingStrategyMetadataURIs,
-                authenticators,
-                executionStrategies,
-                executionStrategyMetadataURIs
+                authenticators
             ),
             salt
         );
@@ -104,9 +103,7 @@ contract SpaceFactoryTest is Test, IProxyFactoryEvents, IProxyFactoryErrors {
                 metadataURI,
                 votingStrategies,
                 votingStrategyMetadataURIs,
-                authenticators,
-                executionStrategies,
-                executionStrategyMetadataURIs
+                authenticators
             ),
             salt
         );
@@ -126,9 +123,7 @@ contract SpaceFactoryTest is Test, IProxyFactoryEvents, IProxyFactoryErrors {
                 metadataURI,
                 votingStrategies,
                 votingStrategyMetadataURIs,
-                authenticators,
-                executionStrategies,
-                executionStrategyMetadataURIs
+                authenticators
             ),
             salt
         );
@@ -149,9 +144,7 @@ contract SpaceFactoryTest is Test, IProxyFactoryEvents, IProxyFactoryErrors {
                 metadataURI,
                 votingStrategies,
                 votingStrategyMetadataURIs,
-                authenticators,
-                executionStrategies,
-                executionStrategyMetadataURIs
+                authenticators
             ),
             salt
         );

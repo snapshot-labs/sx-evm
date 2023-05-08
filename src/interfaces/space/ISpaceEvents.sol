@@ -11,6 +11,7 @@ interface ISpaceEvents {
         uint32 minVotingDuration,
         uint32 maxVotingDuration,
         Strategy proposalValidationStrategy,
+        string daoURI,
         string metadataURI,
         Strategy[] votingStrategies,
         string[] votingStrategyMetadataURIs,

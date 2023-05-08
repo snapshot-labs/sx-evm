@@ -88,6 +88,7 @@ contract Space is ISpace, Initializable, IERC4824, UUPSUpgradeable, OwnableUpgra
             _minVotingDuration,
             _maxVotingDuration,
             _proposalValidationStrategy,
+            _daoURI,
             _metadataURI,
             _votingStrategies,
             _votingStrategyMetadataURIs,
