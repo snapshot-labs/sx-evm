@@ -70,7 +70,7 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         Strategy memory _proposalValidationStrategy,
         string memory _metadataURI,
         Strategy[] memory _votingStrategies,
-        string[] memory _votingStrategiesMetadataURIs,
+        string[] memory _votingStrategyMetadataURIs,
         address[] memory _authenticators
     ) public initializer {
         __Ownable_init();
@@ -93,7 +93,7 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
             _proposalValidationStrategy,
             _metadataURI,
             _votingStrategies,
-            _votingStrategiesMetadataURIs,
+            _votingStrategyMetadataURIs,
             _authenticators
         );
     }
@@ -273,10 +273,10 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
 
     function addVotingStrategies(
         Strategy[] calldata _votingStrategies,
-        string[] calldata _votingStrategiesMetadataURIs
+        string[] calldata _votingStrategyMetadataURIs
     ) external override onlyOwner {
         _addVotingStrategies(_votingStrategies);
-        emit VotingStrategiesAdded(_votingStrategies, _votingStrategiesMetadataURIs);
+        emit VotingStrategiesAdded(_votingStrategies, _votingStrategyMetadataURIs);
     }
 
     function removeVotingStrategies(uint8[] calldata _votingStrategyIndices) external override onlyOwner {
@@ -304,11 +304,11 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
 
     function updateVotingStrategies(
         Strategy[] calldata _votingStrategiesToAdd,
-        string[] calldata _votingStrategiesMetadataURIsToAdd,
+        string[] calldata _votingStrategyMetadataURIsToAdd,
         uint8[] calldata _indicesToRemove
     ) external override onlyOwner {
         _addVotingStrategies(_votingStrategiesToAdd);
-        emit VotingStrategiesAdded(_votingStrategiesToAdd, _votingStrategiesMetadataURIsToAdd);
+        emit VotingStrategiesAdded(_votingStrategiesToAdd, _votingStrategyMetadataURIsToAdd);
 
         _removeVotingStrategies(_indicesToRemove);
         emit VotingStrategiesRemoved(_indicesToRemove);
@@ -319,7 +319,7 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         address[] calldata _authenticatorsToAdd,
         address[] calldata _authenticatorsToRemove,
         Strategy[] calldata _votingStrategiesToAdd,
-        string[] calldata _votingStrategiesMetadataURIsToAdd,
+        string[] calldata _votingStrategyMetadataURIsToAdd,
         uint8[] calldata _votingIndicesToRemove
     ) external override onlyOwner {
         _setProposalValidationStrategy(_proposalValidationStrategy);
@@ -332,7 +332,7 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         emit AuthenticatorsRemoved(_authenticatorsToRemove);
 
         _addVotingStrategies(_votingStrategiesToAdd);
-        emit VotingStrategiesAdded(_votingStrategiesToAdd, _votingStrategiesMetadataURIsToAdd);
+        emit VotingStrategiesAdded(_votingStrategiesToAdd, _votingStrategyMetadataURIsToAdd);
 
         _removeVotingStrategies(_votingIndicesToRemove);
         emit VotingStrategiesRemoved(_votingIndicesToRemove);

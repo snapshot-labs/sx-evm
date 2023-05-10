@@ -204,15 +204,15 @@ contract SpaceOwnerActionsTest is SpaceTest {
         uint8[] memory newIndices = new uint8[](1);
         newIndices[0] = 1;
 
-        string[] memory votingStrategiesMetadataURIs = new string[](0);
+        string[] memory votingStrategyMetadataURIs = new string[](0);
 
         IndexedStrategy[] memory newUserVotingStrategies = new IndexedStrategy[](1);
         newUserVotingStrategies[0] = IndexedStrategy(newIndices[0], new bytes(0));
 
         vm.expectEmit(true, true, true, true);
-        emit VotingStrategiesAdded(newVotingStrategies, votingStrategiesMetadataURIs);
+        emit VotingStrategiesAdded(newVotingStrategies, votingStrategyMetadataURIs);
         vm.prank(owner);
-        space.addVotingStrategies(newVotingStrategies, votingStrategiesMetadataURIs);
+        space.addVotingStrategies(newVotingStrategies, votingStrategyMetadataURIs);
 
         // Create a proposal using the default proposal validation strategy
         uint256 proposalId1 = _createProposal(author, proposalMetadataURI, executionStrategy, new bytes(0));
@@ -264,9 +264,9 @@ contract SpaceOwnerActionsTest is SpaceTest {
     function testAddVotingStrategiesUnauthorized() public {
         vm.expectRevert("Ownable: caller is not the owner");
         vm.prank(unauthorized);
-        string[] memory votingStrategiesMetadataURIs = new string[](0);
+        string[] memory votingStrategyMetadataURIs = new string[](0);
 
-        space.addVotingStrategies(votingStrategies, votingStrategiesMetadataURIs);
+        space.addVotingStrategies(votingStrategies, votingStrategyMetadataURIs);
     }
 
     function testRemoveVotingStrategiesUnauthorized() public {
@@ -329,14 +329,14 @@ contract SpaceOwnerActionsTest is SpaceTest {
         _votingStrategiesToAdd[0] = Strategy(address(0xc), new bytes(0));
         _votingStrategiesToAdd[1] = Strategy(address(0xd), new bytes(0));
 
-        string[] memory _votingStrategiesMetadataURIsToAdd = new string[](2);
-        _votingStrategiesMetadataURIsToAdd[0] = "test456";
-        _votingStrategiesMetadataURIsToAdd[1] = "test789";
+        string[] memory _votingStrategyMetadataURIsToAdd = new string[](2);
+        _votingStrategyMetadataURIsToAdd[0] = "test456";
+        _votingStrategyMetadataURIsToAdd[1] = "test789";
 
         uint8[] memory _indicesToRemove = new uint8[](1);
         _indicesToRemove[0] = 0;
 
-        space.updateVotingStrategies(_votingStrategiesToAdd, _votingStrategiesMetadataURIsToAdd, _indicesToRemove);
+        space.updateVotingStrategies(_votingStrategiesToAdd, _votingStrategyMetadataURIsToAdd, _indicesToRemove);
         // Ensure voting strategies were correctly updated
         assertEq(space.activeVotingStrategies().isBitSet(0), false);
         assertEq(space.activeVotingStrategies().isBitSet(1), true);
@@ -354,9 +354,9 @@ contract SpaceOwnerActionsTest is SpaceTest {
         _votingStrategiesToAdd[0] = Strategy(address(0xc), new bytes(0));
         _votingStrategiesToAdd[1] = Strategy(address(0xd), new bytes(0));
 
-        string[] memory _votingStrategiesMetadataURIsToAdd = new string[](2);
-        _votingStrategiesMetadataURIsToAdd[0] = "test456";
-        _votingStrategiesMetadataURIsToAdd[1] = "test789";
+        string[] memory _votingStrategyMetadataURIsToAdd = new string[](2);
+        _votingStrategyMetadataURIsToAdd[0] = "test456";
+        _votingStrategyMetadataURIsToAdd[1] = "test789";
 
         uint8[] memory _indicesToRemove = new uint8[](1);
         _indicesToRemove[0] = 0;
@@ -366,7 +366,7 @@ contract SpaceOwnerActionsTest is SpaceTest {
             newAuths,
             authenticators,
             _votingStrategiesToAdd,
-            _votingStrategiesMetadataURIsToAdd,
+            _votingStrategyMetadataURIsToAdd,
             _indicesToRemove
         );
 
