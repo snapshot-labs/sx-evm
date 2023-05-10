@@ -13,7 +13,11 @@ import {
 } from "../src/proposal-validation-strategies/PropositionPowerAndActiveProposalsLimiterValidationStrategy.sol";
 import { Choice, IndexedStrategy, Strategy } from "../src/types.sol";
 
-contract GasSnapshotsTest is SpaceTest, SigUtils {
+// Similar to "GasSnapshots.t.sol" except this uses a forked network
+// solhint-disable-next-line max-states-count
+contract ForkedTest is SpaceTest, SigUtils {
+    uint256 internal goerliFork;
+
     CompVotingStrategy internal compVotingStrategy;
     CompToken internal compToken;
 
@@ -42,6 +46,9 @@ contract GasSnapshotsTest is SpaceTest, SigUtils {
 
     function setUp() public virtual override {
         super.setUp();
+
+        string memory GOERLI_RPC_URL = vm.envString("GOERLI_RPC_URL");
+        goerliFork = vm.createFork(GOERLI_RPC_URL);
 
         (voter2, key2) = makeAddrAndKey("Voter 2 Key");
         (voter3, key3) = makeAddrAndKey("Voter 3 Key");
@@ -89,7 +96,9 @@ contract GasSnapshotsTest is SpaceTest, SigUtils {
 
         // Adding the eth sig authenticator to the space
         ethSigAuth = new EthSigAuthenticator(NAME, VERSION);
+        vm.makePersistent(address(ethSigAuth));
         ethTxAuth = new EthTxAuthenticator();
+        vm.makePersistent(address(ethTxAuth));
         address[] memory newAuths = new address[](2);
         newAuths[0] = address(ethSigAuth);
         newAuths[1] = address(ethTxAuth);
@@ -115,7 +124,9 @@ contract GasSnapshotsTest is SpaceTest, SigUtils {
         );
     }
 
-    function testVoteAndProposeWithCompToken() public {
+    function testFork_VoteAndProposeWithCompToken() public {
+        vm.selectFork(goerliFork);
+
         vm.roll(block.number + 1);
 
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(
@@ -153,9 +164,7 @@ contract GasSnapshotsTest is SpaceTest, SigUtils {
                 1
             )
         );
-        // We take the snapshot on the second proposal because the first proposal will write to new
-        // storage making it not representative of average usage.
-        snapStart("ProposeSigComp");
+
         ethSigAuth.authenticate(
             v,
             r,
@@ -165,7 +174,6 @@ contract GasSnapshotsTest is SpaceTest, SigUtils {
             PROPOSE_SELECTOR,
             abi.encode(author, proposalMetadataURI, executionStrategy, abi.encode(userVotingStrategies))
         );
-        snapEnd();
 
         uint256 proposalId = 1;
 
@@ -196,9 +204,6 @@ contract GasSnapshotsTest is SpaceTest, SigUtils {
             )
         );
 
-        // We take the snapshot on the second vote because the first vote will write to new
-        // storage making it not representative of average usage.
-        snapStart("VoteSigComp");
         ethSigAuth.authenticate(
             v,
             r,
@@ -208,7 +213,6 @@ contract GasSnapshotsTest is SpaceTest, SigUtils {
             VOTE_SELECTOR,
             abi.encode(voter2, proposalId, Choice.For, userVotingStrategies, "")
         );
-        snapEnd();
 
         (v, r, s) = vm.sign(
             key3,
@@ -223,8 +227,6 @@ contract GasSnapshotsTest is SpaceTest, SigUtils {
             )
         );
 
-        // Adding metadata with the vote
-        snapStart("VoteSigCompMetadata");
         ethSigAuth.authenticate(
             v,
             r,
@@ -240,7 +242,6 @@ contract GasSnapshotsTest is SpaceTest, SigUtils {
                 "bafkreibv2yjocyotgj2n6awe5z7vqxrzyo72t2ml2ijgj4fgktfpyukuv4"
             )
         );
-        snapEnd();
 
         vm.prank(voter4);
         ethTxAuth.authenticate(
@@ -250,16 +251,13 @@ contract GasSnapshotsTest is SpaceTest, SigUtils {
         );
 
         vm.prank(voter5);
-        snapStart("VoteTxComp");
         ethTxAuth.authenticate(
             address(space),
             VOTE_SELECTOR,
             abi.encode(voter5, proposalId, Choice.For, userVotingStrategies, "")
         );
-        snapEnd();
 
         vm.prank(voter6);
-        snapStart("VoteTxCompMetadata");
         ethTxAuth.authenticate(
             address(space),
             VOTE_SELECTOR,
@@ -271,6 +269,5 @@ contract GasSnapshotsTest is SpaceTest, SigUtils {
                 "bafkreibv2yjocyotgj2n6awe5z7vqxrzyo72t2ml2ijgj4fgktfpyukuv4"
             )
         );
-        snapEnd();
     }
 }

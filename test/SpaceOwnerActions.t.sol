@@ -7,7 +7,6 @@ import { Choice, IndexedStrategy, Strategy } from "../src/types.sol";
 import { VanillaExecutionStrategy } from "../src/execution-strategies/VanillaExecutionStrategy.sol";
 
 contract SpaceOwnerActionsTest is SpaceTest {
-    error InvalidStrategyIndex(uint256 index);
     event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
 
     // ------- Transfer Ownership -------
@@ -235,6 +234,45 @@ contract SpaceOwnerActionsTest is SpaceTest {
         _vote(author, proposalId3, Choice.For, userVotingStrategies, voteMetadataURI);
     }
 
+    function testRemoveAllVotingStrategies() public {
+        uint8[] memory indices = new uint8[](1);
+        indices[0] = 0;
+        vm.expectRevert(NoActiveVotingStrategies.selector);
+        space.removeVotingStrategies(indices);
+    }
+
+    function testAddVotingStrategiesOverflow() public {
+        Strategy[] memory newVotingStrategies = new Strategy[](1);
+        newVotingStrategies[0] = votingStrategies[0];
+
+        string[] memory votingStrategyMetadataURIs = new string[](0);
+
+        // Adding the maximum number of voting strategies (256)
+        // Note: We start at 1 because the first strategy is added in the setup
+        for (uint256 i = 1; i < 255; i++) {
+            space.addVotingStrategies(newVotingStrategies, votingStrategyMetadataURIs);
+        }
+
+        // There are now 256 strategies added to the space, Try adding one more
+        vm.expectRevert(abi.encodeWithSelector(ExceedsStrategyLimit.selector));
+        space.addVotingStrategies(newVotingStrategies, votingStrategyMetadataURIs);
+    }
+
+    function testAddVotingStrategiesEmptyArray() public {
+        Strategy[] memory newVotingStrategies = new Strategy[](0);
+        string[] memory votingStrategyMetadataURIs = new string[](0);
+        vm.expectRevert(EmptyArray.selector);
+        space.addVotingStrategies(newVotingStrategies, votingStrategyMetadataURIs);
+    }
+
+    function testAddVotingStrategiesInvalidAddress() public {
+        Strategy[] memory newVotingStrategies = new Strategy[](1);
+        string[] memory votingStrategyMetadataURIs = new string[](0);
+        newVotingStrategies[0] = Strategy(address(0), new bytes(0));
+        vm.expectRevert(InvalidStrategyAddress.selector);
+        space.addVotingStrategies(newVotingStrategies, votingStrategyMetadataURIs);
+    }
+
     function testAddVotingStrategiesUnauthorized() public {
         vm.expectRevert("Ownable: caller is not the owner");
         vm.prank(unauthorized);
@@ -276,13 +314,25 @@ contract SpaceOwnerActionsTest is SpaceTest {
     function testAddAuthenticatorsUnauthorized() public {
         vm.expectRevert("Ownable: caller is not the owner");
         vm.prank(unauthorized);
-        space.removeAuthenticators(authenticators);
+        space.addAuthenticators(authenticators);
+    }
+
+    function testAddAuthenticatorsEmptyArray() public {
+        address[] memory emptyArray = new address[](0);
+        vm.expectRevert(EmptyArray.selector);
+        space.addAuthenticators(emptyArray);
     }
 
     function testRemoveAuthenticatorsUnauthorized() public {
         vm.expectRevert("Ownable: caller is not the owner");
         vm.prank(unauthorized);
         space.removeAuthenticators(authenticators);
+    }
+
+    function testRemoveAuthenticatorsEmptyArray() public {
+        address[] memory emptyArray = new address[](0);
+        vm.expectRevert(EmptyArray.selector);
+        space.removeAuthenticators(emptyArray);
     }
 
     // ------- Upgrading a Space ----
