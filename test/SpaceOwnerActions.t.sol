@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: UNLICENSED
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.18;
 
 import { SpaceV2 } from "./mocks/SpaceV2.sol";
@@ -258,6 +258,21 @@ contract SpaceOwnerActionsTest is SpaceTest {
         space.addVotingStrategies(newVotingStrategies, votingStrategyMetadataURIs);
     }
 
+    function testAddVotingStrategiesEmptyArray() public {
+        Strategy[] memory newVotingStrategies = new Strategy[](0);
+        string[] memory votingStrategyMetadataURIs = new string[](0);
+        vm.expectRevert(EmptyArray.selector);
+        space.addVotingStrategies(newVotingStrategies, votingStrategyMetadataURIs);
+    }
+
+    function testAddVotingStrategiesInvalidAddress() public {
+        Strategy[] memory newVotingStrategies = new Strategy[](1);
+        string[] memory votingStrategyMetadataURIs = new string[](0);
+        newVotingStrategies[0] = Strategy(address(0), new bytes(0));
+        vm.expectRevert(ZeroAddress.selector);
+        space.addVotingStrategies(newVotingStrategies, votingStrategyMetadataURIs);
+    }
+
     function testAddVotingStrategiesUnauthorized() public {
         vm.expectRevert("Ownable: caller is not the owner");
         vm.prank(unauthorized);
@@ -292,20 +307,32 @@ contract SpaceOwnerActionsTest is SpaceTest {
         space.removeAuthenticators(newAuths);
 
         // Ensure we can't propose with this authenticator anymore
-        vm.expectRevert(abi.encodeWithSelector(AuthenticatorNotWhitelisted.selector, address(this)));
+        vm.expectRevert(abi.encodeWithSelector(AuthenticatorNotWhitelisted.selector));
         space.propose(author, proposalMetadataURI, executionStrategy, abi.encode(userVotingStrategies));
     }
 
     function testAddAuthenticatorsUnauthorized() public {
         vm.expectRevert("Ownable: caller is not the owner");
         vm.prank(unauthorized);
-        space.removeAuthenticators(authenticators);
+        space.addAuthenticators(authenticators);
+    }
+
+    function testAddAuthenticatorsEmptyArray() public {
+        address[] memory emptyArray = new address[](0);
+        vm.expectRevert(EmptyArray.selector);
+        space.addAuthenticators(emptyArray);
     }
 
     function testRemoveAuthenticatorsUnauthorized() public {
         vm.expectRevert("Ownable: caller is not the owner");
         vm.prank(unauthorized);
         space.removeAuthenticators(authenticators);
+    }
+
+    function testRemoveAuthenticatorsEmptyArray() public {
+        address[] memory emptyArray = new address[](0);
+        vm.expectRevert(EmptyArray.selector);
+        space.removeAuthenticators(emptyArray);
     }
 
     // ------- Upgrading a Space ----
