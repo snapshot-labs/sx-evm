@@ -56,7 +56,7 @@ contract VoteTest is SpaceTest {
     }
 
     function testVoteVotingPeriodHasNotStarted() public {
-        space.setVotingDelay(100);
+        space.updateSettings(NO_UPDATE_DURATION, NO_UPDATE_DURATION, 100, NO_UPDATE_METADATA_URI);
         uint256 proposalId = _createProposal(author, proposalMetadataURI, executionStrategy, new bytes(0));
 
         vm.expectRevert(abi.encodeWithSelector(VotingPeriodHasNotStarted.selector));
@@ -91,12 +91,18 @@ contract VoteTest is SpaceTest {
         Strategy[] memory newVotingStrategies = new Strategy[](1);
         newVotingStrategies[0] = votingStrategies[0];
         string[] memory newVotingStrategyMetadataURIs = new string[](0);
-        space.addVotingStrategies(newVotingStrategies, newVotingStrategyMetadataURIs);
 
         // removing the voting strategy at index 0
         uint8[] memory removeIndices = new uint8[](1);
         removeIndices[0] = 0;
-        space.removeVotingStrategies(removeIndices);
+        space.updateStrategies(
+            NO_UPDATE_PROPOSAL_STRATEGY,
+            NO_UPDATE_ADDRESSES,
+            NO_UPDATE_ADDRESSES,
+            newVotingStrategies,
+            newVotingStrategyMetadataURIs,
+            removeIndices
+        );
 
         // casting a vote with the voting strategy that was just removed.
         // this is possible because voting strategies are stored inside a proposal.
@@ -110,7 +116,14 @@ contract VoteTest is SpaceTest {
         Strategy[] memory newVotingStrategies = new Strategy[](1);
         newVotingStrategies[0] = votingStrategies[0];
         string[] memory newVotingStrategyMetadataURIs = new string[](0);
-        space.addVotingStrategies(newVotingStrategies, newVotingStrategyMetadataURIs);
+        space.updateStrategies(
+            NO_UPDATE_PROPOSAL_STRATEGY,
+            NO_UPDATE_ADDRESSES,
+            NO_UPDATE_ADDRESSES,
+            newVotingStrategies,
+            newVotingStrategyMetadataURIs,
+            NO_UPDATE_UINT8S
+        );
 
         // attempting to use the new voting strategy to cast a vote.
         // this will fail fail because the strategy was added after the proposal was created.
@@ -148,7 +161,14 @@ contract VoteTest is SpaceTest {
         toAdd[1] = Strategy(address(strat3), new bytes(0));
         string[] memory newVotingStrategyMetadataURIs = new string[](0);
 
-        space.addVotingStrategies(toAdd, newVotingStrategyMetadataURIs);
+        space.updateStrategies(
+            NO_UPDATE_PROPOSAL_STRATEGY,
+            NO_UPDATE_ADDRESSES,
+            NO_UPDATE_ADDRESSES,
+            toAdd,
+            newVotingStrategyMetadataURIs,
+            NO_UPDATE_UINT8S
+        );
 
         IndexedStrategy[] memory newVotingStrategies = new IndexedStrategy[](3);
         newVotingStrategies[0] = userVotingStrategies[0]; // base strat

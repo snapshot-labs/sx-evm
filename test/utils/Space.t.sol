@@ -51,6 +51,18 @@ abstract contract SpaceTest is Test, GasSnapshot, ISpaceEvents, ISpaceErrors, IE
     address[] internal authenticators;
     Strategy[] internal executionStrategies;
 
+    // Empty array used to edit settings
+    Strategy[] internal NO_UPDATE_STRATEGIES;
+    address[] internal NO_UPDATE_ADDRESSES;
+    string[] internal NO_UPDATE_STRINGS;
+    uint8[] internal NO_UPDATE_UINT8S;
+
+    // Vanity address
+    address internal VANITY_ADDRESS = 0x1337133713371337133713371337133713371337;
+    Strategy internal NO_UPDATE_PROPOSAL_STRATEGY = Strategy(VANITY_ADDRESS, new bytes(0));
+    uint32 internal NO_UPDATE_DURATION = 2 ** 32 - 1;
+    string internal NO_UPDATE_METADATA_URI = "I do not want to update the metadataURI";
+
     // Initial space parameters
     uint32 public votingDelay;
     uint32 public minVotingDuration;

@@ -18,7 +18,15 @@ contract ActiveProposalsVanilla is SpaceTest {
 
         spamProtec = new ActiveProposalsLimiterVanilla(1 weeks, 5);
 
-        space.setProposalValidationStrategy(Strategy(address(spamProtec), new bytes(0)));
+        Strategy memory newProposalStrategy = Strategy(address(spamProtec), new bytes(0));
+        space.updateStrategies(
+            newProposalStrategy,
+            NO_UPDATE_ADDRESSES,
+            NO_UPDATE_ADDRESSES,
+            NO_UPDATE_STRATEGIES,
+            NO_UPDATE_STRINGS,
+            NO_UPDATE_UINT8S
+        );
     }
 
     function testSpamOneProposal() public {

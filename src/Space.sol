@@ -23,6 +23,11 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
     using BitPacker for uint256;
     using SXUtils for IndexedStrategy[];
 
+    bytes32 private constant NO_UPDATE_METADATA_URI =
+        keccak256(abi.encodePacked("I do not want to update the metadataURI"));
+    address private constant NO_UPDATE_PROPOSAL_STRATEGY = 0x1337133713371337133713371337133713371337;
+    uint32 private constant NO_UPDATE_DURATION = 2 ** 32 - 1;
+
     // Maximum duration a proposal can last.
     uint32 public maxVotingDuration;
     // Minimum duration a proposal can last.
@@ -137,6 +142,9 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         if (_votingStrategies.length == 0) revert EmptyArray();
         uint256 cachedActiveVotingStrategies = activeVotingStrategies;
         uint8 cachedNextVotingStrategyIndex = nextVotingStrategyIndex;
+        // We use `>=` because `cachedNextVotingStrategyIndex` will get incremented on every iteration
+        // and is a `uint8` that tracks the *next* index, so it will overflow right before we reach the 256th
+        // element to add. The total number of strategies we can hold is thus 255 elements.
         if (cachedNextVotingStrategyIndex >= 256 - _votingStrategies.length) revert ExceedsStrategyLimit();
         for (uint256 i = 0; i < _votingStrategies.length; i++) {
             if (_votingStrategies[i].addr == address(0)) revert InvalidStrategyAddress();
@@ -247,73 +255,6 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
     // |                                  |
     // ------------------------------------
 
-    function setMaxVotingDuration(uint32 _maxVotingDuration) external override onlyOwner {
-        _setMaxVotingDuration(_maxVotingDuration);
-        emit MaxVotingDurationUpdated(_maxVotingDuration);
-    }
-
-    function setMinVotingDuration(uint32 _minVotingDuration) external override onlyOwner {
-        _setMinVotingDuration(_minVotingDuration);
-        emit MinVotingDurationUpdated(_minVotingDuration);
-    }
-
-    function setMetadataURI(string calldata _metadataURI) external override onlyOwner {
-        emit MetadataURIUpdated(_metadataURI);
-    }
-
-    function setProposalValidationStrategy(Strategy calldata _proposalValidationStrategy) external override onlyOwner {
-        _setProposalValidationStrategy(_proposalValidationStrategy);
-        emit ProposalValidationStrategyUpdated(_proposalValidationStrategy);
-    }
-
-    function setVotingDelay(uint32 _votingDelay) external override onlyOwner {
-        _setVotingDelay(_votingDelay);
-        emit VotingDelayUpdated(_votingDelay);
-    }
-
-    function addVotingStrategies(
-        Strategy[] calldata _votingStrategies,
-        string[] calldata _votingStrategyMetadataURIs
-    ) external override onlyOwner {
-        _addVotingStrategies(_votingStrategies);
-        emit VotingStrategiesAdded(_votingStrategies, _votingStrategyMetadataURIs);
-    }
-
-    function removeVotingStrategies(uint8[] calldata _votingStrategyIndices) external override onlyOwner {
-        _removeVotingStrategies(_votingStrategyIndices);
-        emit VotingStrategiesRemoved(_votingStrategyIndices);
-    }
-
-    function addAuthenticators(address[] calldata _authenticators) external override onlyOwner {
-        _addAuthenticators(_authenticators);
-        emit AuthenticatorsAdded(_authenticators);
-    }
-
-    function removeAuthenticators(address[] calldata _authenticators) external override onlyOwner {
-        _removeAuthenticators(_authenticators);
-        emit AuthenticatorsRemoved(_authenticators);
-    }
-
-    function updateAuthenticators(address[] calldata _toAdd, address[] calldata _toRemove) external override onlyOwner {
-        _addAuthenticators(_toAdd);
-        emit AuthenticatorsAdded(_toAdd);
-
-        _removeAuthenticators(_toRemove);
-        emit AuthenticatorsRemoved(_toRemove);
-    }
-
-    function updateVotingStrategies(
-        Strategy[] calldata _votingStrategiesToAdd,
-        string[] calldata _votingStrategyMetadataURIsToAdd,
-        uint8[] calldata _indicesToRemove
-    ) external override onlyOwner {
-        _addVotingStrategies(_votingStrategiesToAdd);
-        emit VotingStrategiesAdded(_votingStrategiesToAdd, _votingStrategyMetadataURIsToAdd);
-
-        _removeVotingStrategies(_indicesToRemove);
-        emit VotingStrategiesRemoved(_indicesToRemove);
-    }
-
     function updateStrategies(
         Strategy calldata _proposalValidationStrategy,
         address[] calldata _authenticatorsToAdd,
@@ -322,20 +263,30 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         string[] calldata _votingStrategyMetadataURIsToAdd,
         uint8[] calldata _votingIndicesToRemove
     ) external override onlyOwner {
-        _setProposalValidationStrategy(_proposalValidationStrategy);
-        emit ProposalValidationStrategyUpdated(_proposalValidationStrategy);
+        if (_proposalValidationStrategy.addr != NO_UPDATE_PROPOSAL_STRATEGY) {
+            _setProposalValidationStrategy(_proposalValidationStrategy);
+            emit ProposalValidationStrategyUpdated(_proposalValidationStrategy);
+        }
 
-        _addAuthenticators(_authenticatorsToAdd);
-        emit AuthenticatorsAdded(_authenticatorsToAdd);
+        if (_authenticatorsToAdd.length > 0) {
+            _addAuthenticators(_authenticatorsToAdd);
+            emit AuthenticatorsAdded(_authenticatorsToAdd);
+        }
 
-        _removeAuthenticators(_authenticatorsToRemove);
-        emit AuthenticatorsRemoved(_authenticatorsToRemove);
+        if (_authenticatorsToRemove.length > 0) {
+            _removeAuthenticators(_authenticatorsToRemove);
+            emit AuthenticatorsRemoved(_authenticatorsToRemove);
+        }
 
-        _addVotingStrategies(_votingStrategiesToAdd);
-        emit VotingStrategiesAdded(_votingStrategiesToAdd, _votingStrategyMetadataURIsToAdd);
+        if (_votingStrategiesToAdd.length > 0) {
+            _addVotingStrategies(_votingStrategiesToAdd);
+            emit VotingStrategiesAdded(_votingStrategiesToAdd, _votingStrategyMetadataURIsToAdd);
+        }
 
-        _removeVotingStrategies(_votingIndicesToRemove);
-        emit VotingStrategiesRemoved(_votingIndicesToRemove);
+        if (_votingIndicesToRemove.length > 0) {
+            _removeVotingStrategies(_votingIndicesToRemove);
+            emit VotingStrategiesRemoved(_votingIndicesToRemove);
+        }
     }
 
     function updateSettings(
@@ -344,22 +295,35 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         uint32 _votingDelay,
         string calldata _metadataURI
     ) external override onlyOwner {
-        // Check that min and max VotingDuration are valid
-        // We don't use the internal `_setMinVotingDuration` and `_setMaxVotingDuration` functions because
-        // it would revert when `_minVotingDuration > maxVotingDuration` (when the new `_min` is
-        // bigger than the current `max`).
-        if (_minVotingDuration > _maxVotingDuration) revert InvalidDuration(_minVotingDuration, _maxVotingDuration);
+        if ((_minVotingDuration != NO_UPDATE_DURATION) && (_maxVotingDuration != NO_UPDATE_DURATION)) {
+            // Check that min and max VotingDuration are valid
+            // We don't use the internal `_setMinVotingDuration` and `_setMaxVotingDuration` functions because
+            // it would revert when `_minVotingDuration > maxVotingDuration` (when the new `_min` is
+            // bigger than the current `max`).
+            if (_minVotingDuration > _maxVotingDuration) revert InvalidDuration(_minVotingDuration, _maxVotingDuration);
 
-        minVotingDuration = _minVotingDuration;
-        emit MinVotingDurationUpdated(_minVotingDuration);
+            minVotingDuration = _minVotingDuration;
+            emit MinVotingDurationUpdated(_minVotingDuration);
 
-        maxVotingDuration = _maxVotingDuration;
-        emit MaxVotingDurationUpdated(_maxVotingDuration);
+            maxVotingDuration = _maxVotingDuration;
+            emit MaxVotingDurationUpdated(_maxVotingDuration);
+        } else if (_minVotingDuration != NO_UPDATE_DURATION) {
+            _setMinVotingDuration(_minVotingDuration);
+            emit MinVotingDurationUpdated(_minVotingDuration);
+        } else if (_maxVotingDuration != NO_UPDATE_DURATION) {
+            _setMaxVotingDuration(_maxVotingDuration);
+            emit MaxVotingDurationUpdated(_maxVotingDuration);
+        }
+        // else: nothing to update
 
-        _setVotingDelay(_votingDelay);
-        emit VotingDelayUpdated(_votingDelay);
+        if (_votingDelay != NO_UPDATE_DURATION) {
+            _setVotingDelay(_votingDelay);
+            emit VotingDelayUpdated(_votingDelay);
+        }
 
-        emit MetadataURIUpdated(_metadataURI);
+        if (keccak256(abi.encodePacked(_metadataURI)) != NO_UPDATE_METADATA_URI) {
+            emit MetadataURIUpdated(_metadataURI);
+        }
     }
 
     // ------------------------------------

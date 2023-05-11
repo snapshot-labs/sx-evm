@@ -17,7 +17,7 @@ contract UpdateProposalTest is SpaceTest {
 
         // Set the votingDelay to 10.
         votingDelay = 10;
-        space.setVotingDelay(votingDelay);
+        space.updateSettings(NO_UPDATE_DURATION, NO_UPDATE_DURATION, votingDelay, NO_UPDATE_METADATA_URI);
     }
 
     function _updateProposal(

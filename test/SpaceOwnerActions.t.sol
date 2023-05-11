@@ -81,6 +81,26 @@ contract SpaceOwnerActionsTest is SpaceTest {
         space.cancel(proposalId);
     }
 
+    // ------- Update Unauthorized -------
+    function testUpdateSettingsUnauthorized() public {
+        vm.expectRevert("Ownable: caller is not the owner");
+        vm.prank(unauthorized);
+        space.updateSettings(NO_UPDATE_DURATION, 2000, NO_UPDATE_DURATION, NO_UPDATE_METADATA_URI);
+    }
+
+    function testUpdateStrategiesUnauthorized() public {
+        vm.expectRevert("Ownable: caller is not the owner");
+        vm.prank(unauthorized);
+        space.updateStrategies(
+            NO_UPDATE_PROPOSAL_STRATEGY,
+            NO_UPDATE_ADDRESSES,
+            NO_UPDATE_ADDRESSES,
+            NO_UPDATE_STRATEGIES,
+            NO_UPDATE_STRINGS,
+            NO_UPDATE_UINT8S
+        );
+    }
+
     // ------- MaxVotingDuration ----
 
     function testSetMaxVotingDuration() public {
@@ -88,23 +108,17 @@ contract SpaceOwnerActionsTest is SpaceTest {
         vm.expectEmit(true, true, true, true);
         emit MaxVotingDurationUpdated(nextDuration);
         vm.prank(owner);
-        space.setMaxVotingDuration(nextDuration);
+        space.updateSettings(NO_UPDATE_DURATION, nextDuration, NO_UPDATE_DURATION, NO_UPDATE_METADATA_URI);
 
         assertEq(space.maxVotingDuration(), nextDuration, "Max Voting Duration did not get updated");
     }
 
-    function testSetMaxVotingDurationUnauthorized() public {
-        vm.expectRevert("Ownable: caller is not the owner");
-        vm.prank(unauthorized);
-        space.setMaxVotingDuration(2000);
-    }
-
     function testSetMaxVotingDurationInvalid() public {
-        space.setMinVotingDuration(1);
+        space.updateSettings(1, NO_UPDATE_DURATION, NO_UPDATE_DURATION, NO_UPDATE_METADATA_URI);
 
         vm.expectRevert(abi.encodeWithSelector(InvalidDuration.selector, 1, 0));
         vm.prank(owner);
-        space.setMaxVotingDuration(0);
+        space.updateSettings(NO_UPDATE_DURATION, 0, NO_UPDATE_DURATION, NO_UPDATE_METADATA_URI);
     }
 
     // ------- MinVotingDuration ----
@@ -114,21 +128,15 @@ contract SpaceOwnerActionsTest is SpaceTest {
         vm.expectEmit(true, true, true, true);
         emit MinVotingDurationUpdated(nextDuration);
         vm.prank(owner);
-        space.setMinVotingDuration(nextDuration);
+        space.updateSettings(nextDuration, NO_UPDATE_DURATION, NO_UPDATE_DURATION, NO_UPDATE_METADATA_URI);
 
         assertEq(space.minVotingDuration(), nextDuration, "Min Voting Duration did not get updated");
-    }
-
-    function testSetMinVotingDurationUnauthorized() public {
-        vm.expectRevert("Ownable: caller is not the owner");
-        vm.prank(unauthorized);
-        space.setMinVotingDuration(2000);
     }
 
     function testSetMinVotingDurationInvalid() public {
         vm.expectRevert(abi.encodeWithSelector(InvalidDuration.selector, maxVotingDuration + 1, maxVotingDuration));
         vm.prank(owner);
-        space.setMinVotingDuration(maxVotingDuration + 1);
+        space.updateSettings(maxVotingDuration + 1, NO_UPDATE_DURATION, NO_UPDATE_DURATION, NO_UPDATE_METADATA_URI);
     }
 
     // ------- MetadataURI ----
@@ -137,16 +145,9 @@ contract SpaceOwnerActionsTest is SpaceTest {
         string memory newMetadataURI = "All your bases are belong to us";
         vm.expectEmit(true, true, true, true);
         emit MetadataURIUpdated(newMetadataURI);
-        space.setMetadataURI(newMetadataURI);
+        space.updateSettings(NO_UPDATE_DURATION, NO_UPDATE_DURATION, NO_UPDATE_DURATION, newMetadataURI);
 
         // Metadata URI is not stored in the contract state so we can't check it
-    }
-
-    function testSetMetadataURIUnauthorized() public {
-        string memory newMetadataURI = "All your bases are belong to us";
-        vm.expectRevert("Ownable: caller is not the owner");
-        vm.prank(unauthorized);
-        space.setMetadataURI(newMetadataURI);
     }
 
     // ------- ProposalValidationStrategy ----
@@ -156,7 +157,14 @@ contract SpaceOwnerActionsTest is SpaceTest {
         vm.expectEmit(true, true, true, true);
         emit ProposalValidationStrategyUpdated(nextProposalValidationStrategy);
         vm.prank(owner);
-        space.setProposalValidationStrategy(nextProposalValidationStrategy);
+        space.updateStrategies(
+            nextProposalValidationStrategy,
+            NO_UPDATE_ADDRESSES,
+            NO_UPDATE_ADDRESSES,
+            NO_UPDATE_STRATEGIES,
+            NO_UPDATE_STRINGS,
+            NO_UPDATE_UINT8S
+        );
 
         Strategy memory newStrat = Strategy(address(42), new bytes(0));
         assertEq(
@@ -166,13 +174,6 @@ contract SpaceOwnerActionsTest is SpaceTest {
         );
     }
 
-    function testSetProposalValidationStrategyUnauthorized() public {
-        Strategy memory nextStrat = Strategy(address(42), new bytes(0));
-        vm.expectRevert("Ownable: caller is not the owner");
-        vm.prank(unauthorized);
-        space.setProposalValidationStrategy(nextStrat);
-    }
-
     // ------- VotingDelay ----
 
     function testSetVotingDelay() public {
@@ -180,16 +181,9 @@ contract SpaceOwnerActionsTest is SpaceTest {
         vm.expectEmit(true, true, true, true);
         emit VotingDelayUpdated(nextDelay);
         vm.prank(owner);
-        space.setVotingDelay(nextDelay);
+        space.updateSettings(NO_UPDATE_DURATION, NO_UPDATE_DURATION, nextDelay, NO_UPDATE_METADATA_URI);
 
         assertEq(space.votingDelay(), nextDelay, "Voting Delay did not get updated");
-    }
-
-    function testSetVotingDelayUnauthorized() public {
-        uint32 nextDelay = 10;
-        vm.expectRevert("Ownable: caller is not the owner");
-        vm.prank(unauthorized);
-        space.setVotingDelay(nextDelay);
     }
 
     // ------- VotingStrategies ----
@@ -212,7 +206,14 @@ contract SpaceOwnerActionsTest is SpaceTest {
         vm.expectEmit(true, true, true, true);
         emit VotingStrategiesAdded(newVotingStrategies, votingStrategyMetadataURIs);
         vm.prank(owner);
-        space.addVotingStrategies(newVotingStrategies, votingStrategyMetadataURIs);
+        space.updateStrategies(
+            NO_UPDATE_PROPOSAL_STRATEGY,
+            NO_UPDATE_ADDRESSES,
+            NO_UPDATE_ADDRESSES,
+            newVotingStrategies,
+            votingStrategyMetadataURIs,
+            NO_UPDATE_UINT8S
+        );
 
         // Create a proposal using the default proposal validation strategy
         uint256 proposalId1 = _createProposal(author, proposalMetadataURI, executionStrategy, new bytes(0));
@@ -222,7 +223,14 @@ contract SpaceOwnerActionsTest is SpaceTest {
         // Remove the voting strategies
         vm.expectEmit(true, true, true, true);
         emit VotingStrategiesRemoved(newIndices);
-        space.removeVotingStrategies(newIndices);
+        space.updateStrategies(
+            NO_UPDATE_PROPOSAL_STRATEGY,
+            NO_UPDATE_ADDRESSES,
+            NO_UPDATE_ADDRESSES,
+            NO_UPDATE_STRATEGIES,
+            NO_UPDATE_STRINGS,
+            newIndices
+        );
 
         // Create a proposal using the default proposal validation strategy
         uint256 proposalId2 = _createProposal(author, proposalMetadataURI, executionStrategy, new bytes(0));
@@ -241,43 +249,49 @@ contract SpaceOwnerActionsTest is SpaceTest {
         uint8[] memory indices = new uint8[](1);
         indices[0] = 0;
         vm.expectRevert(NoActiveVotingStrategies.selector);
-        space.removeVotingStrategies(indices);
+        space.updateStrategies(
+            NO_UPDATE_PROPOSAL_STRATEGY,
+            NO_UPDATE_ADDRESSES,
+            NO_UPDATE_ADDRESSES,
+            NO_UPDATE_STRATEGIES,
+            NO_UPDATE_STRINGS,
+            indices
+        );
     }
 
     function testAddVotingStrategiesOverflow() public {
         Strategy[] memory newVotingStrategies = new Strategy[](1);
         newVotingStrategies[0] = votingStrategies[0];
 
-        string[] memory votingStrategyMetadataURIs = new string[](0);
+        string[] memory newVotingStrategyMetadataURIs = new string[](1);
+        newVotingStrategyMetadataURIs[0] = "fourty two";
 
-        // Adding the maximum number of voting strategies (256)
-        // Note: We start at 1 because the first strategy is added in the setup
-        for (uint256 i = 1; i < 255; i++) {
-            space.addVotingStrategies(newVotingStrategies, votingStrategyMetadataURIs);
+        // Adding the maximum number of voting strategies (254, see the comments in `_addVotingStrategies`).
+        for (uint256 i = 0; i < 254; i++) {
+            space.updateStrategies(
+                NO_UPDATE_PROPOSAL_STRATEGY,
+                NO_UPDATE_ADDRESSES,
+                NO_UPDATE_ADDRESSES,
+                newVotingStrategies,
+                newVotingStrategyMetadataURIs,
+                NO_UPDATE_UINT8S
+            );
         }
 
         // There are now 256 strategies added to the space, Try adding one more
         vm.expectRevert(abi.encodeWithSelector(ExceedsStrategyLimit.selector));
-        space.addVotingStrategies(newVotingStrategies, votingStrategyMetadataURIs);
-    }
-
-    function testAddVotingStrategiesUnauthorized() public {
-        vm.expectRevert("Ownable: caller is not the owner");
-        vm.prank(unauthorized);
-        string[] memory votingStrategyMetadataURIs = new string[](0);
-
-        space.addVotingStrategies(votingStrategies, votingStrategyMetadataURIs);
-    }
-
-    function testRemoveVotingStrategiesUnauthorized() public {
-        vm.expectRevert("Ownable: caller is not the owner");
-        vm.prank(unauthorized);
-        uint8[] memory empty = new uint8[](0);
-        space.removeVotingStrategies(empty);
+        space.updateStrategies(
+            NO_UPDATE_PROPOSAL_STRATEGY,
+            NO_UPDATE_ADDRESSES,
+            NO_UPDATE_ADDRESSES,
+            newVotingStrategies,
+            votingStrategyMetadataURIs,
+            NO_UPDATE_UINT8S
+        );
     }
 
     // ------- Authenticators ----
-    function testAddAndRemoveAuthenticator() public {
+    function testAddAndRemoveAuthenticators() public {
         address[] memory newAuths = new address[](1);
 
         // Using this test contract as a mock authenticator
@@ -285,30 +299,32 @@ contract SpaceOwnerActionsTest is SpaceTest {
 
         vm.expectEmit(true, true, true, true);
         emit AuthenticatorsAdded(newAuths);
-        space.addAuthenticators(newAuths);
+        space.updateStrategies(
+            NO_UPDATE_PROPOSAL_STRATEGY,
+            newAuths,
+            NO_UPDATE_ADDRESSES,
+            NO_UPDATE_STRATEGIES,
+            NO_UPDATE_STRINGS,
+            NO_UPDATE_UINT8S
+        );
 
         // The new authenticator is this contract so we can call `propose` directly.
         space.propose(author, proposalMetadataURI, executionStrategy, abi.encode(userVotingStrategies));
 
         vm.expectEmit(true, true, true, true);
         emit AuthenticatorsRemoved(newAuths);
-        space.removeAuthenticators(newAuths);
+        space.updateStrategies(
+            NO_UPDATE_PROPOSAL_STRATEGY,
+            NO_UPDATE_ADDRESSES,
+            newAuths,
+            NO_UPDATE_STRATEGIES,
+            NO_UPDATE_STRINGS,
+            NO_UPDATE_UINT8S
+        );
 
         // Ensure we can't propose with this authenticator anymore
         vm.expectRevert(abi.encodeWithSelector(AuthenticatorNotWhitelisted.selector, address(this)));
         space.propose(author, proposalMetadataURI, executionStrategy, abi.encode(userVotingStrategies));
-    }
-
-    function testAddAuthenticatorsUnauthorized() public {
-        vm.expectRevert("Ownable: caller is not the owner");
-        vm.prank(unauthorized);
-        space.removeAuthenticators(authenticators);
-    }
-
-    function testRemoveAuthenticatorsUnauthorized() public {
-        vm.expectRevert("Ownable: caller is not the owner");
-        vm.prank(unauthorized);
-        space.removeAuthenticators(authenticators);
     }
 
     function testUpdateAuthenticators() public {
@@ -316,7 +332,14 @@ contract SpaceOwnerActionsTest is SpaceTest {
         newAuths[0] = address(111);
         newAuths[1] = address(222);
 
-        space.updateAuthenticators(newAuths, authenticators);
+        space.updateStrategies(
+            NO_UPDATE_PROPOSAL_STRATEGY,
+            newAuths,
+            authenticators,
+            NO_UPDATE_STRATEGIES,
+            NO_UPDATE_STRINGS,
+            NO_UPDATE_UINT8S
+        );
 
         // Ensure authenticators were correctly updated
         assertEq(space.authenticators(newAuths[0]), true);
@@ -336,7 +359,14 @@ contract SpaceOwnerActionsTest is SpaceTest {
         uint8[] memory _indicesToRemove = new uint8[](1);
         _indicesToRemove[0] = 0;
 
-        space.updateVotingStrategies(_votingStrategiesToAdd, _votingStrategyMetadataURIsToAdd, _indicesToRemove);
+        space.updateStrategies(
+            NO_UPDATE_PROPOSAL_STRATEGY,
+            NO_UPDATE_ADDRESSES,
+            NO_UPDATE_ADDRESSES,
+            _votingStrategiesToAdd,
+            _votingStrategyMetadataURIsToAdd,
+            _indicesToRemove
+        );
         // Ensure voting strategies were correctly updated
         assertEq(space.activeVotingStrategies().isBitSet(0), false);
         assertEq(space.activeVotingStrategies().isBitSet(1), true);
