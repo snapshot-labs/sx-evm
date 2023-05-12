@@ -362,13 +362,6 @@ contract SpaceOwnerActionsTest is SpaceTest {
         assertEq(space.authenticators(authenticators[0]), false);
     }
 
-    // SCOTT
-    // function testAddAuthenticatorsEmptyArray() public {
-    //     address[] memory emptyArray = new address[](0);
-    //     vm.expectRevert(EmptyArray.selector);
-    //     space.addAuthenticators(emptyArray);
-    // }
-
     function testUpdateVotingStrategies() public {
         Strategy[] memory _votingStrategiesToAdd = new Strategy[](2);
         _votingStrategiesToAdd[0] = Strategy(address(0xc), new bytes(0));
