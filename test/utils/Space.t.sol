@@ -58,10 +58,10 @@ abstract contract SpaceTest is Test, GasSnapshot, ISpaceEvents, ISpaceErrors, IE
     uint8[] internal NO_UPDATE_UINT8S;
 
     // Vanity address
-    address internal VANITY_ADDRESS = 0x1337133713371337133713371337133713371337;
-    Strategy internal NO_UPDATE_PROPOSAL_STRATEGY = Strategy(VANITY_ADDRESS, new bytes(0));
-    uint32 internal NO_UPDATE_DURATION = 2 ** 32 - 1;
-    string internal NO_UPDATE_METADATA_URI = "I do not want to update the metadataURI";
+    address internal NO_UPDATE_ADDRESS = address(bytes20(keccak256(abi.encodePacked("No update"))));
+    Strategy internal NO_UPDATE_PROPOSAL_STRATEGY = Strategy(NO_UPDATE_ADDRESS, new bytes(0));
+    uint32 internal NO_UPDATE_DURATION = uint32(bytes4(keccak256(abi.encodePacked("No update"))));
+    string internal NO_UPDATE_METADATA_URI = "No update";
 
     // Initial space parameters
     uint32 public votingDelay;

@@ -23,14 +23,13 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
     using SXUtils for IndexedStrategy[];
 
     /// @dev Placeholder value to indicate the user does not want to update the metadataURI.
-    bytes32 private constant NO_UPDATE_METADATA_URI_HASH =
-        keccak256(abi.encodePacked("I do not want to update the metadataURI"));
+    bytes32 private constant NO_UPDATE_METADATA_URI_HASH = keccak256(abi.encodePacked("No update"));
 
     /// @dev Placeholder value to indicate the user does not want to update an address.
-    address private constant NO_UPDATE_PROPOSAL_STRATEGY = 0x1337133713371337133713371337133713371337;
+    address private constant NO_UPDATE_PROPOSAL_STRATEGY = address(bytes20(keccak256(abi.encodePacked("No update"))));
 
     /// @dev Placeholder value to indicate the user does not want to update an duration (or, generally, a uint32).
-    uint32 private constant NO_UPDATE_DURATION = 2 ** 32 - 1;
+    uint32 private constant NO_UPDATE_DURATION = uint32(bytes4(keccak256(abi.encodePacked("No update"))));
 
     /// @inheritdoc ISpaceState
     uint32 public override maxVotingDuration;
