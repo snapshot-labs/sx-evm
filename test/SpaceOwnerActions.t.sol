@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: UNLICENSED
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.18;
 
 import { SpaceV2 } from "./mocks/SpaceV2.sol";
@@ -290,6 +290,21 @@ contract SpaceOwnerActionsTest is SpaceTest {
         );
     }
 
+    function testAddVotingStrategiesInvalidAddress() public {
+        Strategy[] memory newVotingStrategies = new Strategy[](1);
+        string[] memory votingStrategyMetadataURIs = new string[](0);
+        newVotingStrategies[0] = Strategy(address(0), new bytes(0));
+        vm.expectRevert(ZeroAddress.selector);
+        space.updateStrategies(
+            NO_UPDATE_PROPOSAL_STRATEGY,
+            NO_UPDATE_ADDRESSES,
+            NO_UPDATE_ADDRESSES,
+            newVotingStrategies,
+            votingStrategyMetadataURIs,
+            NO_UPDATE_UINT8S
+        );
+    }
+
     // ------- Authenticators ----
     function testAddAndRemoveAuthenticators() public {
         address[] memory newAuths = new address[](1);
@@ -323,7 +338,7 @@ contract SpaceOwnerActionsTest is SpaceTest {
         );
 
         // Ensure we can't propose with this authenticator anymore
-        vm.expectRevert(abi.encodeWithSelector(AuthenticatorNotWhitelisted.selector, address(this)));
+        vm.expectRevert(abi.encodeWithSelector(AuthenticatorNotWhitelisted.selector));
         space.propose(author, proposalMetadataURI, executionStrategy, abi.encode(userVotingStrategies));
     }
 
@@ -346,6 +361,13 @@ contract SpaceOwnerActionsTest is SpaceTest {
         assertEq(space.authenticators(newAuths[1]), true);
         assertEq(space.authenticators(authenticators[0]), false);
     }
+
+    // SCOTT
+    // function testAddAuthenticatorsEmptyArray() public {
+    //     address[] memory emptyArray = new address[](0);
+    //     vm.expectRevert(EmptyArray.selector);
+    //     space.addAuthenticators(emptyArray);
+    // }
 
     function testUpdateVotingStrategies() public {
         Strategy[] memory _votingStrategiesToAdd = new Strategy[](2);

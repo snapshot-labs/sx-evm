@@ -4,27 +4,45 @@ pragma solidity ^0.8.18;
 
 import { SpaceTest } from "./utils/Space.t.sol";
 import { Choice, Enum, IndexedStrategy, MetaTransaction, ProposalStatus, Strategy, Proposal } from "../src/types.sol";
-import { TimelockExecutionStrategy } from "../src/execution-strategies/TimelockExecutionStrategy.sol";
+import {
+    CompTimelockCompatibleExecutionStrategy
+} from "../src/execution-strategies/CompTimelockCompatibleExecutionStrategy.sol";
 import { MockImplementation } from "./mocks/MockImplementation.sol";
 import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import { TestERC1155 } from "./mocks/TestERC1155.sol";
 import { TestERC721 } from "./mocks/TestERC721.sol";
-import { IERC1155Receiver } from "@openzeppelin/contracts/interfaces/IERC1155Receiver.sol";
-import { IERC721Receiver } from "@openzeppelin/contracts/interfaces/IERC721Receiver.sol";
+import { CompTimelock } from "./mocks/CompTimelock.sol";
 
-abstract contract TimelockExecutionStrategyTest is SpaceTest {
+abstract contract CompTimelockExecutionStrategyTest is SpaceTest {
     error InvalidSpace();
     error TimelockDelayNotMet();
     error ProposalNotQueued();
     error DuplicateExecutionPayloadHash();
     error OnlyVetoGuardian();
+    error InvalidTransaction();
     event TransactionQueued(MetaTransaction transaction, uint256 executionTime);
     event ProposalVetoed(bytes32 executionPayloadHash);
     event VetoGuardianSet(address vetoGuardian, address newVetoGuardian);
 
-    TimelockExecutionStrategy public timelockExecutionStrategy;
+    CompTimelockCompatibleExecutionStrategy public timelockExecutionStrategy;
+    CompTimelock public timelock = new CompTimelock(address(this), 1000);
 
     address private recipient = address(0xc0ffee);
+
+    function finishSetUp() public {
+        vm.deal(address(owner), 1000);
+        payable(timelock).transfer(1000);
+
+        bytes memory callData = abi.encodeWithSignature("setPendingAdmin(address)", address(timelockExecutionStrategy));
+        uint256 eta = block.timestamp + 1000;
+        timelock.queueTransaction(address(timelock), 0, "", callData, eta);
+
+        vm.warp(block.timestamp + 1000);
+
+        timelock.executeTransaction(address(timelock), 0, "", callData, eta);
+
+        timelockExecutionStrategy.acceptAdmin();
+    }
 
     function testQueueingFromUnauthorizedSpace() external {
         timelockExecutionStrategy.disableSpace(address(space));
@@ -61,7 +79,7 @@ abstract contract TimelockExecutionStrategyTest is SpaceTest {
         space.execute(proposalId, abi.encode(transactions));
     }
 
-    function testQueueingFailedProposal() external {
+    function testQueueingRejectedProposal() external {
         MetaTransaction[] memory transactions = new MetaTransaction[](1);
         transactions[0] = MetaTransaction(recipient, 1, "", Enum.Operation.Call, 0);
         uint256 proposalId = _createProposal(
@@ -72,7 +90,7 @@ abstract contract TimelockExecutionStrategyTest is SpaceTest {
         );
         vm.warp(block.timestamp + space.maxVotingDuration());
 
-        vm.expectRevert();
+        vm.expectRevert(abi.encodeWithSelector(InvalidProposalStatus.selector, ProposalStatus.Rejected));
         space.execute(proposalId, abi.encode(transactions));
     }
 
@@ -92,7 +110,7 @@ abstract contract TimelockExecutionStrategyTest is SpaceTest {
         emit TransactionQueued(transactions[0], block.timestamp + 1000);
         space.execute(proposalId, abi.encode(transactions));
 
-        vm.expectRevert();
+        vm.expectRevert(abi.encodeWithSelector(InvalidProposalStatus.selector, ProposalStatus.Executed));
         space.execute(proposalId, abi.encode(transactions));
     }
 
@@ -207,7 +225,7 @@ abstract contract TimelockExecutionStrategyTest is SpaceTest {
 
         vm.warp(block.timestamp + timelockExecutionStrategy.timelockDelay());
 
-        vm.expectRevert(ExecutionFailed.selector);
+        vm.expectRevert("Timelock::executeTransaction: Transaction execution reverted.");
         timelockExecutionStrategy.executeQueuedProposal(abi.encode(transactions));
     }
 
@@ -313,16 +331,8 @@ abstract contract TimelockExecutionStrategyTest is SpaceTest {
         _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataURI);
         vm.warp(block.timestamp + space.maxVotingDuration());
 
-        vm.expectEmit(true, true, true, true);
-        emit TransactionQueued(transactions[0], block.timestamp + 1000);
+        vm.expectRevert(InvalidTransaction.selector);
         space.execute(proposalId, abi.encode(transactions));
-
-        assertEq(recipient.balance, 0);
-
-        vm.warp(block.timestamp + timelockExecutionStrategy.timelockDelay());
-        timelockExecutionStrategy.executeQueuedProposal(abi.encode(transactions));
-
-        assertEq(recipient.balance, 1);
     }
 
     function testVetoProposal() external {
@@ -348,32 +358,11 @@ abstract contract TimelockExecutionStrategyTest is SpaceTest {
         vm.prank(vetoGuardian);
         vm.expectEmit(true, true, true, true);
         emit ProposalVetoed(keccak256(abi.encode(transactions)));
-        timelockExecutionStrategy.veto(keccak256(abi.encode(transactions)));
+        timelockExecutionStrategy.veto(abi.encode(transactions));
 
         vm.warp(block.timestamp + timelockExecutionStrategy.timelockDelay());
         vm.expectRevert(ProposalNotQueued.selector);
         timelockExecutionStrategy.executeQueuedProposal(abi.encode(transactions));
-    }
-
-    function testVetoUnqueuedProposal() external {
-        MetaTransaction[] memory transactions = new MetaTransaction[](1);
-        transactions[0] = MetaTransaction(recipient, 1, "", Enum.Operation.Call, 0);
-        uint256 proposalId = _createProposal(
-            author,
-            proposalMetadataURI,
-            Strategy(address(timelockExecutionStrategy), abi.encode(transactions)),
-            new bytes(0)
-        );
-        _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataURI);
-        vm.warp(block.timestamp + space.maxVotingDuration());
-
-        // Set veto guardian
-        address vetoGuardian = address(0x7e20);
-        timelockExecutionStrategy.setVetoGuardian(vetoGuardian);
-
-        vm.prank(vetoGuardian);
-        vm.expectRevert(ProposalNotQueued.selector);
-        timelockExecutionStrategy.veto(keccak256(abi.encode(transactions)));
     }
 
     function testVetoOnlyGuardian() external {
@@ -393,51 +382,52 @@ abstract contract TimelockExecutionStrategyTest is SpaceTest {
         address vetoGuardian = address(0x7e20);
         vm.prank(vetoGuardian);
         vm.expectRevert(OnlyVetoGuardian.selector);
-        timelockExecutionStrategy.veto(keccak256(abi.encode(transactions)));
+        timelockExecutionStrategy.veto(abi.encode(transactions));
+    }
+
+    function testSetVetoGuardian() external {
+        timelockExecutionStrategy.setVetoGuardian(address(0));
+
+        vm.prank(voter);
+        vm.expectRevert("Ownable: caller is not the owner");
+        timelockExecutionStrategy.setVetoGuardian(address(1));
+    }
+
+    function testVetoProposalNotQueued() external {
+        MetaTransaction[] memory transactions = new MetaTransaction[](1);
+        transactions[0] = MetaTransaction(recipient, 1, "", Enum.Operation.Call, 0);
+        uint256 proposalId = _createProposal(
+            author,
+            proposalMetadataURI,
+            Strategy(address(timelockExecutionStrategy), abi.encode(transactions)),
+            new bytes(0)
+        );
+        _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataURI);
+
+        // Set veto guardian
+        address vetoGuardian = address(0x7e20);
+        vm.expectEmit(true, true, true, true);
+        emit VetoGuardianSet(address(0), vetoGuardian);
+        timelockExecutionStrategy.setVetoGuardian(vetoGuardian);
+
+        vm.prank(vetoGuardian);
+        vm.expectRevert(ProposalNotQueued.selector);
+        timelockExecutionStrategy.veto(abi.encode(transactions));
     }
 
     function testExecuteNFTs() external {
-        TestERC1155 erc1155 = new TestERC1155();
         TestERC721 erc721 = new TestERC721();
 
         vm.startPrank(author);
         erc721.mint(author, 1);
-        erc721.safeTransferFrom(author, address(timelockExecutionStrategy), 1);
-
-        erc1155.mint(author, 1, 1);
-        erc1155.safeTransferFrom(author, address(timelockExecutionStrategy), 1, 1, "");
-
-        erc1155.mint(author, 2, 8);
-        erc1155.mint(author, 3, 8);
-        uint256[] memory ids = new uint256[](2);
-        ids[0] = 2;
-        ids[1] = 3;
-        uint256[] memory amounts = new uint256[](2);
-        amounts[0] = 8;
-        amounts[1] = 8;
-        erc1155.safeBatchTransferFrom(author, address(timelockExecutionStrategy), ids, amounts, "");
-
+        erc721.transferFrom(author, address(timelock), 1);
         vm.stopPrank();
 
         MetaTransaction[] memory transactions = new MetaTransaction[](2);
         transactions[0] = MetaTransaction(
             address(erc721),
             0,
-            abi.encodeWithSelector(erc721.transferFrom.selector, address(timelockExecutionStrategy), author, 1),
-            Enum.Operation.Call,
-            0
-        );
-        transactions[1] = MetaTransaction(
-            address(erc1155),
-            0,
-            abi.encodeWithSelector(
-                erc1155.safeTransferFrom.selector,
-                address(timelockExecutionStrategy),
-                author,
-                1,
-                1,
-                ""
-            ),
+            abi.encodeWithSelector(erc721.transferFrom.selector, address(timelock), author, 1),
             Enum.Operation.Call,
             0
         );
@@ -455,56 +445,62 @@ abstract contract TimelockExecutionStrategyTest is SpaceTest {
         emit TransactionQueued(transactions[0], block.timestamp + 1000);
         space.execute(proposalId, abi.encode(transactions));
 
-        assertEq(erc721.ownerOf(1), address(timelockExecutionStrategy));
-        assertEq(erc1155.balanceOf(author, 1), 0);
+        assertEq(erc721.ownerOf(1), address(timelock));
 
         vm.warp(block.timestamp + timelockExecutionStrategy.timelockDelay());
         timelockExecutionStrategy.executeQueuedProposal(abi.encode(transactions));
 
         assertEq(erc721.ownerOf(1), address(author));
-        assertEq(erc1155.balanceOf(author, 1), 1);
     }
 
-    function testCheckViewFunctions() public {
-        assertTrue(timelockExecutionStrategy.supportsInterface(type(IERC721Receiver).interfaceId));
-        assertTrue(timelockExecutionStrategy.supportsInterface(type(IERC1155Receiver).interfaceId));
-        assertEq(timelockExecutionStrategy.getStrategyType(), "SimpleQuorumTimelock");
+    function testViewFunctions() public {
+        assertEq(timelockExecutionStrategy.getStrategyType(), "CompTimelockCompatibleSimpleQuorum");
     }
 }
 
-contract TimelockExecutionStrategyTestDirect is TimelockExecutionStrategyTest {
+contract CompTimelockExecutionStrategyTestDirect is CompTimelockExecutionStrategyTest {
     function setUp() public override {
         super.setUp();
 
         address[] memory spaces = new address[](1);
         spaces[0] = address(space);
 
-        timelockExecutionStrategy = new TimelockExecutionStrategy(owner, spaces, 1000, quorum);
-        vm.deal(address(owner), 1000);
-        payable(timelockExecutionStrategy).transfer(1000);
+        timelockExecutionStrategy = new CompTimelockCompatibleExecutionStrategy(
+            owner,
+            spaces,
+            quorum,
+            address(timelock)
+        );
+
+        finishSetUp();
     }
 }
 
-contract TimelockExecutionStrategyTestProxy is TimelockExecutionStrategyTest {
+contract CompTimelockExecutionStrategyTestProxy is CompTimelockExecutionStrategyTest {
     function setUp() public override {
         super.setUp();
 
         address[] memory spaces = new address[](1);
         spaces[0] = address(space);
-        TimelockExecutionStrategy masterExecutionStrategy = new TimelockExecutionStrategy(owner, spaces, 1000, quorum);
+        CompTimelockCompatibleExecutionStrategy masterExecutionStrategy = new CompTimelockCompatibleExecutionStrategy(
+            owner,
+            spaces,
+            quorum,
+            address(timelock)
+        );
 
-        timelockExecutionStrategy = TimelockExecutionStrategy(
+        timelockExecutionStrategy = CompTimelockCompatibleExecutionStrategy(
             payable(
                 new ERC1967Proxy(
                     address(masterExecutionStrategy),
                     abi.encodeWithSelector(
-                        TimelockExecutionStrategy.setUp.selector,
-                        abi.encode(owner, spaces, 1000, quorum)
+                        CompTimelockCompatibleExecutionStrategy.setUp.selector,
+                        abi.encode(owner, spaces, quorum, address(timelock))
                     )
                 )
             )
         );
-        vm.deal(address(owner), 1000);
-        payable(timelockExecutionStrategy).transfer(1000);
+
+        finishSetUp();
     }
 }
