@@ -75,6 +75,9 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         _setMinVotingDuration(_minVotingDuration);
         _setProposalValidationStrategy(_proposalValidationStrategy);
         _setVotingDelay(_votingDelay);
+
+        if (_votingStrategies.length == 0) revert EmptyArray();
+        if (_authenticators.length == 0) revert EmptyArray();
         _addVotingStrategies(_votingStrategies);
         _addAuthenticators(_authenticators);
 
@@ -360,7 +363,6 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
 
     /// @dev Adds an array of voting strategies.
     function _addVotingStrategies(Strategy[] memory _votingStrategies) internal {
-        if (_votingStrategies.length == 0) revert EmptyArray();
         uint256 cachedActiveVotingStrategies = activeVotingStrategies;
         uint8 cachedNextVotingStrategyIndex = nextVotingStrategyIndex;
         if (cachedNextVotingStrategyIndex >= 256 - _votingStrategies.length) revert ExceedsStrategyLimit();
@@ -376,7 +378,6 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
 
     /// @dev Removes an array of voting strategies, specified by their indices.
     function _removeVotingStrategies(uint8[] memory _votingStrategyIndices) internal {
-        if (_votingStrategyIndices.length == 0) revert EmptyArray();
         for (uint8 i = 0; i < _votingStrategyIndices.length; i++) {
             activeVotingStrategies = activeVotingStrategies.setBit(_votingStrategyIndices[i], false);
         }
@@ -386,7 +387,6 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
 
     /// @dev Adds an array of authenticators.
     function _addAuthenticators(address[] memory _authenticators) internal {
-        if (_authenticators.length == 0) revert EmptyArray();
         for (uint256 i = 0; i < _authenticators.length; i++) {
             authenticators[_authenticators[i]] = true;
         }
@@ -394,7 +394,6 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
 
     /// @dev Removes an array of authenticators.
     function _removeAuthenticators(address[] memory _authenticators) internal {
-        if (_authenticators.length == 0) revert EmptyArray();
         for (uint256 i = 0; i < _authenticators.length; i++) {
             authenticators[_authenticators[i]] = false;
         }
