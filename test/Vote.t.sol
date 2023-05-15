@@ -3,7 +3,7 @@
 pragma solidity ^0.8.18;
 
 import { SpaceTest } from "./utils/Space.t.sol";
-import { Choice, IndexedStrategy, Strategy } from "../src/types.sol";
+import { Choice, IndexedStrategy, Strategy, UpdateSettingsInput } from "../src/types.sol";
 import { VanillaVotingStrategy } from "../src/voting-strategies/VanillaVotingStrategy.sol";
 
 contract VoteTest is SpaceTest {
@@ -58,7 +58,21 @@ contract VoteTest is SpaceTest {
     }
 
     function testVoteVotingPeriodHasNotStarted() public {
-        space.updateSettings(NO_UPDATE_UINT32, NO_UPDATE_UINT32, 100, NO_UPDATE_STRING);
+        space.updateSettings(
+            UpdateSettingsInput(
+                NO_UPDATE_UINT32,
+                NO_UPDATE_UINT32,
+                100,
+                NO_UPDATE_STRING,
+                NO_UPDATE_STRATEGY,
+                NO_UPDATE_STRING,
+                NO_UPDATE_ADDRESSES,
+                NO_UPDATE_ADDRESSES,
+                NO_UPDATE_STRATEGIES,
+                NO_UPDATE_STRINGS,
+                NO_UPDATE_UINT8S
+            )
+        );
         uint256 proposalId = _createProposal(author, proposalMetadataURI, executionStrategy, new bytes(0));
 
         vm.expectRevert(abi.encodeWithSelector(VotingPeriodHasNotStarted.selector));
@@ -97,14 +111,20 @@ contract VoteTest is SpaceTest {
         // removing the voting strategy at index 0
         uint8[] memory removeIndices = new uint8[](1);
         removeIndices[0] = 0;
-        space.updateStrategies(
-            NO_UPDATE_STRATEGY,
-            "",
-            NO_UPDATE_ADDRESSES,
-            NO_UPDATE_ADDRESSES,
-            newVotingStrategies,
-            newVotingStrategyMetadataURIs,
-            removeIndices
+        space.updateSettings(
+            UpdateSettingsInput(
+                NO_UPDATE_UINT32,
+                NO_UPDATE_UINT32,
+                NO_UPDATE_UINT32,
+                NO_UPDATE_STRING,
+                NO_UPDATE_STRATEGY,
+                "",
+                NO_UPDATE_ADDRESSES,
+                NO_UPDATE_ADDRESSES,
+                newVotingStrategies,
+                newVotingStrategyMetadataURIs,
+                removeIndices
+            )
         );
 
         // casting a vote with the voting strategy that was just removed.
@@ -119,14 +139,20 @@ contract VoteTest is SpaceTest {
         Strategy[] memory newVotingStrategies = new Strategy[](1);
         newVotingStrategies[0] = votingStrategies[0];
         string[] memory newVotingStrategyMetadataURIs = new string[](0);
-        space.updateStrategies(
-            NO_UPDATE_STRATEGY,
-            "",
-            NO_UPDATE_ADDRESSES,
-            NO_UPDATE_ADDRESSES,
-            newVotingStrategies,
-            newVotingStrategyMetadataURIs,
-            NO_UPDATE_UINT8S
+        space.updateSettings(
+            UpdateSettingsInput(
+                NO_UPDATE_UINT32,
+                NO_UPDATE_UINT32,
+                NO_UPDATE_UINT32,
+                NO_UPDATE_STRING,
+                NO_UPDATE_STRATEGY,
+                "",
+                NO_UPDATE_ADDRESSES,
+                NO_UPDATE_ADDRESSES,
+                newVotingStrategies,
+                newVotingStrategyMetadataURIs,
+                NO_UPDATE_UINT8S
+            )
         );
 
         // attempting to use the new voting strategy to cast a vote.
@@ -165,14 +191,20 @@ contract VoteTest is SpaceTest {
         toAdd[1] = Strategy(address(strat3), new bytes(0));
         string[] memory newVotingStrategyMetadataURIs = new string[](0);
 
-        space.updateStrategies(
-            NO_UPDATE_STRATEGY,
-            "",
-            NO_UPDATE_ADDRESSES,
-            NO_UPDATE_ADDRESSES,
-            toAdd,
-            newVotingStrategyMetadataURIs,
-            NO_UPDATE_UINT8S
+        space.updateSettings(
+            UpdateSettingsInput(
+                NO_UPDATE_UINT32,
+                NO_UPDATE_UINT32,
+                NO_UPDATE_UINT32,
+                NO_UPDATE_STRING,
+                NO_UPDATE_STRATEGY,
+                "",
+                NO_UPDATE_ADDRESSES,
+                NO_UPDATE_ADDRESSES,
+                toAdd,
+                newVotingStrategyMetadataURIs,
+                NO_UPDATE_UINT8S
+            )
         );
 
         IndexedStrategy[] memory newVotingStrategies = new IndexedStrategy[](3);

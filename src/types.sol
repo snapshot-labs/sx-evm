@@ -77,3 +77,20 @@ struct MetaTransaction {
     // We require a salt so that the struct can always be unique and we can use its hash as a unique identifier.
     uint256 salt;
 }
+
+/// @notice Transaction struct that can be used to represent transactions inside a proposal.
+/// @dev    Structure used for the function `updateSettings` because of solidity's stack constraints.
+///         For more information, see `ISpaceOwnerActions.sol`.
+struct UpdateSettingsInput {
+    uint32 minVotingDuration;
+    uint32 maxVotingDuration;
+    uint32 votingDelay;
+    string metadataURI;
+    Strategy proposalValidationStrategy;
+    string proposalValidationStrategyMetadataURI;
+    address[] authenticatorsToAdd;
+    address[] authenticatorsToRemove;
+    Strategy[] votingStrategiesToAdd;
+    string[] votingStrategyMetadataURIsToAdd;
+    uint8[] votingStrategiesToRemove;
+}

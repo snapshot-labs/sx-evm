@@ -8,7 +8,15 @@ import { UUPSUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/utils
 import { ReentrancyGuard } from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
 import { ISpace, ISpaceActions, ISpaceState, ISpaceOwnerActions } from "src/interfaces/ISpace.sol";
-import { Choice, FinalizationStatus, IndexedStrategy, Proposal, ProposalStatus, Strategy } from "src/types.sol";
+import {
+    Choice,
+    FinalizationStatus,
+    IndexedStrategy,
+    Proposal,
+    ProposalStatus,
+    Strategy,
+    UpdateSettingsInput
+} from "src/types.sol";
 import { IVotingStrategy } from "src/interfaces/IVotingStrategy.sol";
 import { IExecutionStrategy } from "src/interfaces/IExecutionStrategy.sol";
 import { IProposalValidationStrategy } from "src/interfaces/IProposalValidationStrategy.sol";
@@ -105,76 +113,65 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
     // ------------------------------------
 
     /// @inheritdoc ISpaceOwnerActions
-    function updateStrategies(
-        Strategy calldata _proposalValidationStrategy,
-        string calldata _proposalValidationStrategyMetadataURI,
-        address[] calldata _authenticatorsToAdd,
-        address[] calldata _authenticatorsToRemove,
-        Strategy[] calldata _votingStrategiesToAdd,
-        string[] calldata _votingStrategyMetadataURIsToAdd,
-        uint8[] calldata _votingIndicesToRemove
-    ) external override onlyOwner {
-        if (_proposalValidationStrategy.addr != NO_UPDATE_ADDRESS) {
-            _setProposalValidationStrategy(_proposalValidationStrategy);
-            emit ProposalValidationStrategyUpdated(_proposalValidationStrategy, _proposalValidationStrategyMetadataURI);
-        }
-
-        if (_authenticatorsToAdd.length > 0) {
-            _addAuthenticators(_authenticatorsToAdd);
-            emit AuthenticatorsAdded(_authenticatorsToAdd);
-        }
-
-        if (_authenticatorsToRemove.length > 0) {
-            _removeAuthenticators(_authenticatorsToRemove);
-            emit AuthenticatorsRemoved(_authenticatorsToRemove);
-        }
-
-        if (_votingStrategiesToAdd.length > 0) {
-            _addVotingStrategies(_votingStrategiesToAdd);
-            emit VotingStrategiesAdded(_votingStrategiesToAdd, _votingStrategyMetadataURIsToAdd);
-        }
-
-        if (_votingIndicesToRemove.length > 0) {
-            _removeVotingStrategies(_votingIndicesToRemove);
-            emit VotingStrategiesRemoved(_votingIndicesToRemove);
-        }
-    }
-
-    /// @inheritdoc ISpaceOwnerActions
-    function updateSettings(
-        uint32 _minVotingDuration,
-        uint32 _maxVotingDuration,
-        uint32 _votingDelay,
-        string calldata _metadataURI
-    ) external override onlyOwner {
-        if ((_minVotingDuration != NO_UPDATE_UINT32) && (_maxVotingDuration != NO_UPDATE_UINT32)) {
+    // solhint-disable-next-line code-complexity
+    function updateSettings(UpdateSettingsInput calldata input) external override onlyOwner {
+        if ((input.minVotingDuration != NO_UPDATE_UINT32) && (input.maxVotingDuration != NO_UPDATE_UINT32)) {
             // Check that min and max VotingDuration are valid
             // We don't use the internal `_setMinVotingDuration` and `_setMaxVotingDuration` functions because
             // it would revert when `_minVotingDuration > maxVotingDuration` (when the new `_min` is
             // bigger than the current `max`).
-            if (_minVotingDuration > _maxVotingDuration) revert InvalidDuration(_minVotingDuration, _maxVotingDuration);
+            if (input.minVotingDuration > input.maxVotingDuration)
+                revert InvalidDuration(input.minVotingDuration, input.maxVotingDuration);
 
-            minVotingDuration = _minVotingDuration;
-            emit MinVotingDurationUpdated(_minVotingDuration);
+            minVotingDuration = input.minVotingDuration;
+            emit MinVotingDurationUpdated(input.minVotingDuration);
 
-            maxVotingDuration = _maxVotingDuration;
-            emit MaxVotingDurationUpdated(_maxVotingDuration);
-        } else if (_minVotingDuration != NO_UPDATE_UINT32) {
-            _setMinVotingDuration(_minVotingDuration);
-            emit MinVotingDurationUpdated(_minVotingDuration);
-        } else if (_maxVotingDuration != NO_UPDATE_UINT32) {
-            _setMaxVotingDuration(_maxVotingDuration);
-            emit MaxVotingDurationUpdated(_maxVotingDuration);
+            maxVotingDuration = input.maxVotingDuration;
+            emit MaxVotingDurationUpdated(input.maxVotingDuration);
+        } else if (input.minVotingDuration != NO_UPDATE_UINT32) {
+            _setMinVotingDuration(input.minVotingDuration);
+            emit MinVotingDurationUpdated(input.minVotingDuration);
+        } else if (input.maxVotingDuration != NO_UPDATE_UINT32) {
+            _setMaxVotingDuration(input.maxVotingDuration);
+            emit MaxVotingDurationUpdated(input.maxVotingDuration);
         }
         // else: nothing to update
 
-        if (_votingDelay != NO_UPDATE_UINT32) {
-            _setVotingDelay(_votingDelay);
-            emit VotingDelayUpdated(_votingDelay);
+        if (input.votingDelay != NO_UPDATE_UINT32) {
+            _setVotingDelay(input.votingDelay);
+            emit VotingDelayUpdated(input.votingDelay);
         }
 
-        if (keccak256(abi.encodePacked(_metadataURI)) != NO_UPDATE_HASH) {
-            emit MetadataURIUpdated(_metadataURI);
+        if (keccak256(abi.encodePacked(input.metadataURI)) != NO_UPDATE_HASH) {
+            emit MetadataURIUpdated(input.metadataURI);
+        }
+
+        if (input.proposalValidationStrategy.addr != NO_UPDATE_ADDRESS) {
+            _setProposalValidationStrategy(input.proposalValidationStrategy);
+            emit ProposalValidationStrategyUpdated(
+                input.proposalValidationStrategy,
+                input.proposalValidationStrategyMetadataURI
+            );
+        }
+
+        if (input.authenticatorsToAdd.length > 0) {
+            _addAuthenticators(input.authenticatorsToAdd);
+            emit AuthenticatorsAdded(input.authenticatorsToAdd);
+        }
+
+        if (input.authenticatorsToRemove.length > 0) {
+            _removeAuthenticators(input.authenticatorsToRemove);
+            emit AuthenticatorsRemoved(input.authenticatorsToRemove);
+        }
+
+        if (input.votingStrategiesToAdd.length > 0) {
+            _addVotingStrategies(input.votingStrategiesToAdd);
+            emit VotingStrategiesAdded(input.votingStrategiesToAdd, input.votingStrategyMetadataURIsToAdd);
+        }
+
+        if (input.votingStrategiesToRemove.length > 0) {
+            _removeVotingStrategies(input.votingStrategiesToRemove);
+            emit VotingStrategiesRemoved(input.votingStrategiesToRemove);
         }
     }
 
