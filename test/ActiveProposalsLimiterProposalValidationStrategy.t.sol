@@ -18,14 +18,11 @@ contract ActiveProposalsLimterTest is SpaceTest {
         maxActive = 5;
         cooldown = 1 weeks;
 
-        activeProposalsLimiterProposalValidationStrategy = new ActiveProposalsLimiterProposalValidationStrategy(
-            1 weeks,
-            5
-        );
+        activeProposalsLimiterProposalValidationStrategy = new ActiveProposalsLimiterProposalValidationStrategy();
 
         Strategy memory newProposalStrategy = Strategy(
             address(activeProposalsLimiterProposalValidationStrategy),
-            new bytes(0)
+            abi.encode(cooldown, maxActive)
         );
         space.updateStrategies(
             newProposalStrategy,
