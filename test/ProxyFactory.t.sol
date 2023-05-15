@@ -104,9 +104,7 @@ contract SpaceFactoryTest is Test, IProxyFactoryEvents, IProxyFactoryErrors, ISp
                 metadataURI,
                 votingStrategies,
                 votingStrategyMetadataURIs,
-                authenticators,
-                executionStrategies,
-                executionStrategyMetadataURIs
+                authenticators
             ),
             salt
         );
@@ -124,9 +122,7 @@ contract SpaceFactoryTest is Test, IProxyFactoryEvents, IProxyFactoryErrors, ISp
                 metadataURI,
                 votingStrategies,
                 votingStrategyMetadataURIs,
-                authenticators,
-                executionStrategies,
-                executionStrategyMetadataURIs
+                authenticators
             ),
             salt
         );
@@ -148,9 +144,7 @@ contract SpaceFactoryTest is Test, IProxyFactoryEvents, IProxyFactoryErrors, ISp
                 metadataURI,
                 votingStrategies,
                 votingStrategyMetadataURIs,
-                authenticators,
-                executionStrategies,
-                executionStrategyMetadataURIs
+                authenticators
             ),
             salt
         );
