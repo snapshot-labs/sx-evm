@@ -29,6 +29,7 @@ contract ActiveProposalsLimterTest is SpaceTest {
         );
         space.updateStrategies(
             newProposalStrategy,
+            "",
             NO_UPDATE_ADDRESSES,
             NO_UPDATE_ADDRESSES,
             NO_UPDATE_STRATEGIES,

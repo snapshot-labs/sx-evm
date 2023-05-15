@@ -38,6 +38,7 @@ contract PropositionPowerProposalValidationTest is SpaceTest {
         );
         space.updateStrategies(
             propositionPowerProposalValidationStrategy,
+            "",
             NO_UPDATE_ADDRESSES,
             NO_UPDATE_ADDRESSES,
             NO_UPDATE_STRATEGIES,
@@ -105,6 +106,7 @@ contract PropositionPowerProposalValidationTest is SpaceTest {
         );
         space.updateStrategies(
             propositionPowerProposalValidationStrategy,
+            "",
             NO_UPDATE_ADDRESSES,
             NO_UPDATE_ADDRESSES,
             NO_UPDATE_STRATEGIES,

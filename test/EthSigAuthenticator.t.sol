@@ -33,6 +33,7 @@ contract EthSigAuthenticatorTest is SpaceTest, SigUtils {
 
         space.updateStrategies(
             NO_UPDATE_PROPOSAL_STRATEGY,
+            "",
             newAuths,
             NO_UPDATE_ADDRESSES,
             NO_UPDATE_STRATEGIES,

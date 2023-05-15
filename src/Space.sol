@@ -63,6 +63,7 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         uint32 _minVotingDuration,
         uint32 _maxVotingDuration,
         Strategy memory _proposalValidationStrategy,
+        string memory _proposalValidationStrategyMetadataURI,
         string memory _metadataURI,
         Strategy[] memory _votingStrategies,
         string[] memory _votingStrategyMetadataURIs,
@@ -89,6 +90,7 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
             _minVotingDuration,
             _maxVotingDuration,
             _proposalValidationStrategy,
+            _proposalValidationStrategyMetadataURI,
             _metadataURI,
             _votingStrategies,
             _votingStrategyMetadataURIs,
@@ -105,6 +107,7 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
     /// @inheritdoc ISpaceOwnerActions
     function updateStrategies(
         Strategy calldata _proposalValidationStrategy,
+        string calldata _proposalValidationStrategyMetadataURI,
         address[] calldata _authenticatorsToAdd,
         address[] calldata _authenticatorsToRemove,
         Strategy[] calldata _votingStrategiesToAdd,
@@ -113,7 +116,7 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
     ) external override onlyOwner {
         if (_proposalValidationStrategy.addr != NO_UPDATE_PROPOSAL_STRATEGY) {
             _setProposalValidationStrategy(_proposalValidationStrategy);
-            emit ProposalValidationStrategyUpdated(_proposalValidationStrategy);
+            emit ProposalValidationStrategyUpdated(_proposalValidationStrategy, _proposalValidationStrategyMetadataURI);
         }
 
         if (_authenticatorsToAdd.length > 0) {

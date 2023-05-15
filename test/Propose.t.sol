@@ -76,6 +76,7 @@ contract ProposeTest is SpaceTest {
         Strategy memory validationStrategy = Strategy(address(stupidProposalValidationStrategy), new bytes(0));
         space.updateStrategies(
             validationStrategy,
+            "",
             NO_UPDATE_ADDRESSES,
             NO_UPDATE_ADDRESSES,
             NO_UPDATE_STRATEGIES,

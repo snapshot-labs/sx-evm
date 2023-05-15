@@ -99,6 +99,7 @@ contract VoteTest is SpaceTest {
         removeIndices[0] = 0;
         space.updateStrategies(
             NO_UPDATE_PROPOSAL_STRATEGY,
+            "",
             NO_UPDATE_ADDRESSES,
             NO_UPDATE_ADDRESSES,
             newVotingStrategies,
@@ -120,6 +121,7 @@ contract VoteTest is SpaceTest {
         string[] memory newVotingStrategyMetadataURIs = new string[](0);
         space.updateStrategies(
             NO_UPDATE_PROPOSAL_STRATEGY,
+            "",
             NO_UPDATE_ADDRESSES,
             NO_UPDATE_ADDRESSES,
             newVotingStrategies,
@@ -165,6 +167,7 @@ contract VoteTest is SpaceTest {
 
         space.updateStrategies(
             NO_UPDATE_PROPOSAL_STRATEGY,
+            "",
             NO_UPDATE_ADDRESSES,
             NO_UPDATE_ADDRESSES,
             toAdd,

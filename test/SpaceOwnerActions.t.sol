@@ -93,6 +93,7 @@ contract SpaceOwnerActionsTest is SpaceTest {
         vm.prank(unauthorized);
         space.updateStrategies(
             NO_UPDATE_PROPOSAL_STRATEGY,
+            "",
             NO_UPDATE_ADDRESSES,
             NO_UPDATE_ADDRESSES,
             NO_UPDATE_STRATEGIES,
@@ -155,10 +156,11 @@ contract SpaceOwnerActionsTest is SpaceTest {
     function testSetProposalValidationStrategy() public {
         Strategy memory nextProposalValidationStrategy = Strategy(address(42), new bytes(0));
         vm.expectEmit(true, true, true, true);
-        emit ProposalValidationStrategyUpdated(nextProposalValidationStrategy);
+        emit ProposalValidationStrategyUpdated(nextProposalValidationStrategy, "");
         vm.prank(owner);
         space.updateStrategies(
             nextProposalValidationStrategy,
+            "",
             NO_UPDATE_ADDRESSES,
             NO_UPDATE_ADDRESSES,
             NO_UPDATE_STRATEGIES,
@@ -208,6 +210,7 @@ contract SpaceOwnerActionsTest is SpaceTest {
         vm.prank(owner);
         space.updateStrategies(
             NO_UPDATE_PROPOSAL_STRATEGY,
+            "",
             NO_UPDATE_ADDRESSES,
             NO_UPDATE_ADDRESSES,
             newVotingStrategies,
@@ -225,6 +228,7 @@ contract SpaceOwnerActionsTest is SpaceTest {
         emit VotingStrategiesRemoved(newIndices);
         space.updateStrategies(
             NO_UPDATE_PROPOSAL_STRATEGY,
+            "",
             NO_UPDATE_ADDRESSES,
             NO_UPDATE_ADDRESSES,
             NO_UPDATE_STRATEGIES,
@@ -251,6 +255,7 @@ contract SpaceOwnerActionsTest is SpaceTest {
         vm.expectRevert(NoActiveVotingStrategies.selector);
         space.updateStrategies(
             NO_UPDATE_PROPOSAL_STRATEGY,
+            "",
             NO_UPDATE_ADDRESSES,
             NO_UPDATE_ADDRESSES,
             NO_UPDATE_STRATEGIES,
@@ -270,6 +275,7 @@ contract SpaceOwnerActionsTest is SpaceTest {
         for (uint256 i = 0; i < 254; i++) {
             space.updateStrategies(
                 NO_UPDATE_PROPOSAL_STRATEGY,
+                "",
                 NO_UPDATE_ADDRESSES,
                 NO_UPDATE_ADDRESSES,
                 newVotingStrategies,
@@ -282,6 +288,7 @@ contract SpaceOwnerActionsTest is SpaceTest {
         vm.expectRevert(abi.encodeWithSelector(ExceedsStrategyLimit.selector));
         space.updateStrategies(
             NO_UPDATE_PROPOSAL_STRATEGY,
+            "",
             NO_UPDATE_ADDRESSES,
             NO_UPDATE_ADDRESSES,
             newVotingStrategies,
@@ -297,6 +304,7 @@ contract SpaceOwnerActionsTest is SpaceTest {
         vm.expectRevert(ZeroAddress.selector);
         space.updateStrategies(
             NO_UPDATE_PROPOSAL_STRATEGY,
+            "",
             NO_UPDATE_ADDRESSES,
             NO_UPDATE_ADDRESSES,
             newVotingStrategies,
@@ -316,6 +324,7 @@ contract SpaceOwnerActionsTest is SpaceTest {
         emit AuthenticatorsAdded(newAuths);
         space.updateStrategies(
             NO_UPDATE_PROPOSAL_STRATEGY,
+            "",
             newAuths,
             NO_UPDATE_ADDRESSES,
             NO_UPDATE_STRATEGIES,
@@ -330,6 +339,7 @@ contract SpaceOwnerActionsTest is SpaceTest {
         emit AuthenticatorsRemoved(newAuths);
         space.updateStrategies(
             NO_UPDATE_PROPOSAL_STRATEGY,
+            "",
             NO_UPDATE_ADDRESSES,
             newAuths,
             NO_UPDATE_STRATEGIES,
@@ -349,6 +359,7 @@ contract SpaceOwnerActionsTest is SpaceTest {
 
         space.updateStrategies(
             NO_UPDATE_PROPOSAL_STRATEGY,
+            "",
             newAuths,
             authenticators,
             NO_UPDATE_STRATEGIES,
@@ -376,6 +387,7 @@ contract SpaceOwnerActionsTest is SpaceTest {
 
         space.updateStrategies(
             NO_UPDATE_PROPOSAL_STRATEGY,
+            "",
             NO_UPDATE_ADDRESSES,
             NO_UPDATE_ADDRESSES,
             _votingStrategiesToAdd,
@@ -408,6 +420,7 @@ contract SpaceOwnerActionsTest is SpaceTest {
 
         space.updateStrategies(
             _proposalValidationStrategy,
+            "",
             newAuths,
             authenticators,
             _votingStrategiesToAdd,

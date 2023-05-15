@@ -16,6 +16,7 @@ interface ISpaceOwnerActions {
     /// @notice Updates the different strategies.
     /// @param _proposalValidationStrategy The new proposal validation strategy to use. Set
     ///                                    to `NO_UPDATE_PROPOSAL_STRATEGY` to ignore.
+    /// @param _proposalValidationStrategyMetadataURI The new metadata URI for the proposal validation strategy.
     /// @param _authenticatorsToAdd The authenticators to add. Set to an empty array to ignore.
     /// @param _authenticatorsToRemove The authenticators to remove. Set to an empty array to ignore.
     /// @param _votingStrategiesToAdd The voting strategies to add. Set to an empty array to ignore.
@@ -23,6 +24,7 @@ interface ISpaceOwnerActions {
     ///                                         an empty array to ignore.
     function updateStrategies(
         Strategy calldata _proposalValidationStrategy,
+        string calldata _proposalValidationStrategyMetadataURI,
         address[] calldata _authenticatorsToAdd,
         address[] calldata _authenticatorsToRemove,
         Strategy[] calldata _votingStrategiesToAdd,
