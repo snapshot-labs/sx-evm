@@ -32,7 +32,7 @@ contract EthSigAuthenticatorTest is SpaceTest, SigUtils {
         newAuths[0] = address(ethSigAuth);
 
         space.updateStrategies(
-            NO_UPDATE_PROPOSAL_STRATEGY,
+            NO_UPDATE_STRATEGY,
             "",
             newAuths,
             NO_UPDATE_ADDRESSES,
@@ -326,7 +326,7 @@ contract EthSigAuthenticatorTest is SpaceTest, SigUtils {
     function testAuthenticateUpdateProposal() public {
         uint256 salt = 0;
 
-        space.updateSettings(NO_UPDATE_DURATION, NO_UPDATE_DURATION, 10, NO_UPDATE_METADATA_URI);
+        space.updateSettings(NO_UPDATE_UINT32, NO_UPDATE_UINT32, 10, NO_UPDATE_STRING);
         uint256 proposalId = _createProposal(author, proposalMetadataURI, executionStrategy, new bytes(0));
 
         bytes32 digest = _getUpdateProposalDigest(
@@ -356,7 +356,7 @@ contract EthSigAuthenticatorTest is SpaceTest, SigUtils {
     function testAuthenticateUpdateProposalInvalidSignature() public {
         uint256 salt = 0;
 
-        space.updateSettings(NO_UPDATE_DURATION, NO_UPDATE_DURATION, 10, NO_UPDATE_METADATA_URI);
+        space.updateSettings(NO_UPDATE_UINT32, NO_UPDATE_UINT32, 10, NO_UPDATE_STRING);
         uint256 proposalId = _createProposal(author, proposalMetadataURI, executionStrategy, new bytes(0));
 
         bytes32 digest = _getUpdateProposalDigest(

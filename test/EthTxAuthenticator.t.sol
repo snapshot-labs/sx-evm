@@ -25,7 +25,7 @@ contract EthTxAuthenticatorTest is SpaceTest {
         address[] memory newAuths = new address[](1);
         newAuths[0] = address(ethTxAuth);
         space.updateStrategies(
-            NO_UPDATE_PROPOSAL_STRATEGY,
+            NO_UPDATE_STRATEGY,
             "",
             newAuths,
             NO_UPDATE_ADDRESSES,
@@ -110,7 +110,7 @@ contract EthTxAuthenticatorTest is SpaceTest {
 
     function testAuthenticateTxUpdateProposal() public {
         uint32 votingDelay = 10;
-        space.updateSettings(NO_UPDATE_DURATION, NO_UPDATE_DURATION, votingDelay, NO_UPDATE_METADATA_URI);
+        space.updateSettings(NO_UPDATE_UINT32, NO_UPDATE_UINT32, votingDelay, NO_UPDATE_STRING);
         uint256 proposalId = _createProposal(author, proposalMetadataURI, executionStrategy, new bytes(0));
 
         vm.prank(author);

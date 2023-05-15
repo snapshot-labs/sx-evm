@@ -23,13 +23,13 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
     using SXUtils for IndexedStrategy[];
 
     /// @dev Placeholder value to indicate the user does not want to update the metadataURI.
-    bytes32 private constant NO_UPDATE_METADATA_URI_HASH = keccak256(abi.encodePacked("No update"));
+    bytes32 private constant NO_UPDATE_HASH = keccak256(abi.encodePacked("No update"));
 
     /// @dev Placeholder value to indicate the user does not want to update an address.
-    address private constant NO_UPDATE_PROPOSAL_STRATEGY = address(bytes20(keccak256(abi.encodePacked("No update"))));
+    address private constant NO_UPDATE_ADDRESS = address(bytes20(keccak256(abi.encodePacked("No update"))));
 
     /// @dev Placeholder value to indicate the user does not want to update an duration (or, generally, a uint32).
-    uint32 private constant NO_UPDATE_DURATION = uint32(bytes4(keccak256(abi.encodePacked("No update"))));
+    uint32 private constant NO_UPDATE_UINT32 = uint32(bytes4(keccak256(abi.encodePacked("No update"))));
 
     /// @inheritdoc ISpaceState
     uint32 public override maxVotingDuration;
@@ -114,7 +114,7 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         string[] calldata _votingStrategyMetadataURIsToAdd,
         uint8[] calldata _votingIndicesToRemove
     ) external override onlyOwner {
-        if (_proposalValidationStrategy.addr != NO_UPDATE_PROPOSAL_STRATEGY) {
+        if (_proposalValidationStrategy.addr != NO_UPDATE_ADDRESS) {
             _setProposalValidationStrategy(_proposalValidationStrategy);
             emit ProposalValidationStrategyUpdated(_proposalValidationStrategy, _proposalValidationStrategyMetadataURI);
         }
@@ -147,7 +147,7 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         uint32 _votingDelay,
         string calldata _metadataURI
     ) external override onlyOwner {
-        if ((_minVotingDuration != NO_UPDATE_DURATION) && (_maxVotingDuration != NO_UPDATE_DURATION)) {
+        if ((_minVotingDuration != NO_UPDATE_UINT32) && (_maxVotingDuration != NO_UPDATE_UINT32)) {
             // Check that min and max VotingDuration are valid
             // We don't use the internal `_setMinVotingDuration` and `_setMaxVotingDuration` functions because
             // it would revert when `_minVotingDuration > maxVotingDuration` (when the new `_min` is
@@ -159,21 +159,21 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
 
             maxVotingDuration = _maxVotingDuration;
             emit MaxVotingDurationUpdated(_maxVotingDuration);
-        } else if (_minVotingDuration != NO_UPDATE_DURATION) {
+        } else if (_minVotingDuration != NO_UPDATE_UINT32) {
             _setMinVotingDuration(_minVotingDuration);
             emit MinVotingDurationUpdated(_minVotingDuration);
-        } else if (_maxVotingDuration != NO_UPDATE_DURATION) {
+        } else if (_maxVotingDuration != NO_UPDATE_UINT32) {
             _setMaxVotingDuration(_maxVotingDuration);
             emit MaxVotingDurationUpdated(_maxVotingDuration);
         }
         // else: nothing to update
 
-        if (_votingDelay != NO_UPDATE_DURATION) {
+        if (_votingDelay != NO_UPDATE_UINT32) {
             _setVotingDelay(_votingDelay);
             emit VotingDelayUpdated(_votingDelay);
         }
 
-        if (keccak256(abi.encodePacked(_metadataURI)) != NO_UPDATE_METADATA_URI_HASH) {
+        if (keccak256(abi.encodePacked(_metadataURI)) != NO_UPDATE_HASH) {
             emit MetadataURIUpdated(_metadataURI);
         }
     }

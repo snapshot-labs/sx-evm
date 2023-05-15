@@ -60,7 +60,7 @@ contract GasSnapshotsTest is SpaceTest, SigUtils {
 
         // Update contract's voting strategies.
         space.updateStrategies(
-            NO_UPDATE_PROPOSAL_STRATEGY,
+            NO_UPDATE_STRATEGY,
             "",
             NO_UPDATE_ADDRESSES,
             NO_UPDATE_ADDRESSES,
@@ -100,7 +100,7 @@ contract GasSnapshotsTest is SpaceTest, SigUtils {
         newAuths[0] = address(ethSigAuth);
         newAuths[1] = address(ethTxAuth);
         space.updateStrategies(
-            NO_UPDATE_PROPOSAL_STRATEGY,
+            NO_UPDATE_STRATEGY,
             "",
             newAuths,
             authenticators,

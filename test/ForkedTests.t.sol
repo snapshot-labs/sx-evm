@@ -66,7 +66,7 @@ contract ForkedTest is SpaceTest, SigUtils {
 
         // Update contract's voting strategies.
         space.updateStrategies(
-            NO_UPDATE_PROPOSAL_STRATEGY,
+            NO_UPDATE_STRATEGY,
             "",
             NO_UPDATE_ADDRESSES,
             NO_UPDATE_ADDRESSES,
@@ -108,7 +108,7 @@ contract ForkedTest is SpaceTest, SigUtils {
         newAuths[0] = address(ethSigAuth);
         newAuths[1] = address(ethTxAuth);
         space.updateStrategies(
-            NO_UPDATE_PROPOSAL_STRATEGY,
+            NO_UPDATE_STRATEGY,
             "",
             newAuths,
             authenticators,
@@ -131,7 +131,7 @@ contract ForkedTest is SpaceTest, SigUtils {
         // Using the current active strategies in the space as the allowed strategies for proposal.
         space.updateStrategies(
             Strategy(address(validationStrategy), abi.encode(TOKEN_AMOUNT, currentVotingStrategies)),
-            NO_UPDATE_METADATA_URI,
+            NO_UPDATE_STRING,
             NO_UPDATE_ADDRESSES,
             NO_UPDATE_ADDRESSES,
             NO_UPDATE_STRATEGIES,

@@ -59,9 +59,9 @@ abstract contract SpaceTest is Test, GasSnapshot, ISpaceEvents, ISpaceErrors, IE
 
     // Vanity address
     address internal NO_UPDATE_ADDRESS = address(bytes20(keccak256(abi.encodePacked("No update"))));
-    Strategy internal NO_UPDATE_PROPOSAL_STRATEGY = Strategy(NO_UPDATE_ADDRESS, new bytes(0));
-    uint32 internal NO_UPDATE_DURATION = uint32(bytes4(keccak256(abi.encodePacked("No update"))));
-    string internal NO_UPDATE_METADATA_URI = "No update";
+    Strategy internal NO_UPDATE_STRATEGY = Strategy(NO_UPDATE_ADDRESS, new bytes(0));
+    uint32 internal NO_UPDATE_UINT32 = uint32(bytes4(keccak256(abi.encodePacked("No update"))));
+    string internal NO_UPDATE_STRING = "No update";
 
     // Initial space parameters
     uint32 public votingDelay;

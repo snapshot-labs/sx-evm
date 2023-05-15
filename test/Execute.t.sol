@@ -40,7 +40,7 @@ contract ExecuteTest is SpaceTest {
     }
 
     function testExecuteMinDurationNotElapsed() public {
-        space.updateSettings(100, NO_UPDATE_DURATION, NO_UPDATE_DURATION, NO_UPDATE_METADATA_URI);
+        space.updateSettings(100, NO_UPDATE_UINT32, NO_UPDATE_UINT32, NO_UPDATE_STRING);
         uint256 proposalId = _createProposal(author, proposalMetadataURI, executionStrategy, new bytes(0));
         _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataURI);
 

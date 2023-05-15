@@ -15,7 +15,7 @@ interface ISpaceOwnerActions {
 
     /// @notice Updates the different strategies.
     /// @param _proposalValidationStrategy The new proposal validation strategy to use. Set
-    ///                                    to `NO_UPDATE_PROPOSAL_STRATEGY` to ignore.
+    ///                                    to `NO_UPDATE_STRATEGY` to ignore.
     /// @param _proposalValidationStrategyMetadataURI The new metadata URI for the proposal validation strategy.
     /// @param _authenticatorsToAdd The authenticators to add. Set to an empty array to ignore.
     /// @param _authenticatorsToRemove The authenticators to remove. Set to an empty array to ignore.
@@ -33,10 +33,10 @@ interface ISpaceOwnerActions {
     ) external;
 
     /// @notice Updates the settings.
-    /// @param _minVotingDuration The new minimum voting duration. Set to `NO_UPDATE_DURATION` to ignore.
-    /// @param _maxVotingDuration The new maximum voting duration. Set to `NO_UPDATE_DURATION` to ignore.
-    /// @param _votingDelay The new voting delay. Set to `NO_UPDATE_DURATION` to ignore.
-    /// @param _metadataURI The new metadataURI. Set to `NO_UPDATE_METADATA_URI` to ignore.
+    /// @param _minVotingDuration The new minimum voting duration. Set to `NO_UPDATE_UINT32` to ignore.
+    /// @param _maxVotingDuration The new maximum voting duration. Set to `NO_UPDATE_UINT32` to ignore.
+    /// @param _votingDelay The new voting delay. Set to `NO_UPDATE_UINT32` to ignore.
+    /// @param _metadataURI The new metadataURI. Set to `NO_UPDATE_STRING` to ignore.
     function updateSettings(
         uint32 _minVotingDuration,
         uint32 _maxVotingDuration,
