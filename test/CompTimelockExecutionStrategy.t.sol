@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: UNLICENSED
+// SPDX-License-Identifier: MIT
 
 pragma solidity ^0.8.18;
 
@@ -451,6 +451,10 @@ abstract contract CompTimelockExecutionStrategyTest is SpaceTest {
         timelockExecutionStrategy.executeQueuedProposal(abi.encode(transactions));
 
         assertEq(erc721.ownerOf(1), address(author));
+    }
+
+    function testViewFunctions() public {
+        assertEq(timelockExecutionStrategy.getStrategyType(), "CompTimelockCompatibleSimpleQuorum");
     }
 }
 
