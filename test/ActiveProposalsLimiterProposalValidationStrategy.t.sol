@@ -21,7 +21,8 @@ contract ActiveProposalsLimterTest is SpaceTest {
         activeProposalsLimiterProposalValidationStrategy = new ActiveProposalsLimiterProposalValidationStrategy();
 
         space.setProposalValidationStrategy(
-            Strategy(address(activeProposalsLimiterProposalValidationStrategy), abi.encode(cooldown, maxActive))
+            Strategy(address(activeProposalsLimiterProposalValidationStrategy), abi.encode(cooldown, maxActive)),
+            ""
         );
     }
 

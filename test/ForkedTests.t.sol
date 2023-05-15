@@ -120,7 +120,8 @@ contract ForkedTest is SpaceTest, SigUtils {
         validationStrategy = new PropositionPowerAndActiveProposalsLimiterValidationStrategy();
         // Using the current active strategies in the space as the allowed strategies for proposal.
         space.setProposalValidationStrategy(
-            Strategy(address(validationStrategy), abi.encode(864000, 5, TOKEN_AMOUNT, currentVotingStrategies))
+            Strategy(address(validationStrategy), abi.encode(864000, 5, TOKEN_AMOUNT, currentVotingStrategies)),
+            ""
         );
     }
 
