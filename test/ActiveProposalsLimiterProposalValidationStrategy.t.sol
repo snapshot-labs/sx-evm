@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: UNLICENSED
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.18;
 
 import { SpaceTest } from "./utils/Space.t.sol";
@@ -18,13 +18,11 @@ contract ActiveProposalsLimterTest is SpaceTest {
         maxActive = 5;
         cooldown = 1 weeks;
 
-        activeProposalsLimiterProposalValidationStrategy = new ActiveProposalsLimiterProposalValidationStrategy(
-            1 weeks,
-            5
-        );
+        activeProposalsLimiterProposalValidationStrategy = new ActiveProposalsLimiterProposalValidationStrategy();
 
         space.setProposalValidationStrategy(
-            Strategy(address(activeProposalsLimiterProposalValidationStrategy), new bytes(0))
+            Strategy(address(activeProposalsLimiterProposalValidationStrategy), abi.encode(cooldown, maxActive)),
+            ""
         );
     }
 

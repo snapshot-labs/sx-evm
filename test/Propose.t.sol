@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: UNLICENSED
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.18;
 
 import { SpaceTest } from "./utils/Space.t.sol";
@@ -67,14 +67,14 @@ contract ProposeTest is SpaceTest {
 
     function testProposeInvalidAuth() public {
         //  Using this contract as an authenticator, which is not whitelisted
-        vm.expectRevert(abi.encodeWithSelector(AuthenticatorNotWhitelisted.selector, address(this)));
+        vm.expectRevert(abi.encodeWithSelector(AuthenticatorNotWhitelisted.selector));
         space.propose(author, proposalMetadataURI, executionStrategy, abi.encode(userVotingStrategies));
     }
 
     function testProposeRefusedValidation() public {
         StupidProposalValidationStrategy stupidProposalValidationStrategy = new StupidProposalValidationStrategy();
         Strategy memory validationStrategy = Strategy(address(stupidProposalValidationStrategy), new bytes(0));
-        space.setProposalValidationStrategy(validationStrategy);
+        space.setProposalValidationStrategy(validationStrategy, "");
 
         vm.expectRevert(FailedToPassProposalValidation.selector);
         _createProposal(author, proposalMetadataURI, executionStrategy, new bytes(0));

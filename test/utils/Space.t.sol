@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: UNLICENSED
+// SPDX-License-Identifier: MIT
 
 pragma solidity ^0.8.18;
 
@@ -62,10 +62,11 @@ abstract contract SpaceTest is Test, GasSnapshot, ISpaceEvents, ISpaceErrors, IE
     Strategy public executionStrategy;
 
     // Dummy metadata URIs
+    string public daoURI = "SOC Test DAO";
     string public spaceMetadataURI = "SOC Test Space";
     string public proposalMetadataURI = "SOC Test Proposal";
     string[] public votingStrategyMetadataURIs;
-    string[] public executionStrategyMetadataURIs;
+    string public proposalValidationStrategyMetadataURI;
 
     function setUp() public virtual {
         masterSpace = new Space();
@@ -97,6 +98,8 @@ abstract contract SpaceTest is Test, GasSnapshot, ISpaceEvents, ISpaceErrors, IE
                         minVotingDuration,
                         maxVotingDuration,
                         proposalValidationStrategy,
+                        proposalValidationStrategyMetadataURI,
+                        daoURI,
                         spaceMetadataURI,
                         votingStrategies,
                         votingStrategyMetadataURIs,
