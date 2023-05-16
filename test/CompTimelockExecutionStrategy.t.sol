@@ -27,7 +27,7 @@ abstract contract CompTimelockExecutionStrategyTest is SpaceTest {
     CompTimelockCompatibleExecutionStrategy public timelockExecutionStrategy;
     CompTimelock public timelock = new CompTimelock(address(this), 1000);
 
-    address public vetoGuardian = address(0xdeadbeef);
+    address public vetoGuardian = address(0);
     address public recipient = address(0xc0ffee);
 
     function finishSetUp() public {
@@ -484,12 +484,13 @@ contract CompTimelockExecutionStrategyTestProxy is CompTimelockExecutionStrategy
 
         address[] memory spaces = new address[](1);
         spaces[0] = address(space);
+        address[] memory emptyArray = new address[](1);
         CompTimelockCompatibleExecutionStrategy masterExecutionStrategy = new CompTimelockCompatibleExecutionStrategy(
-            owner,
-            vetoGuardian,
-            spaces,
-            quorum,
-            address(timelock)
+            address(1),
+            address(0),
+            emptyArray,
+            0,
+            address(0)
         );
 
         timelockExecutionStrategy = CompTimelockCompatibleExecutionStrategy(
@@ -498,7 +499,7 @@ contract CompTimelockExecutionStrategyTestProxy is CompTimelockExecutionStrategy
                     address(masterExecutionStrategy),
                     abi.encodeWithSelector(
                         CompTimelockCompatibleExecutionStrategy.setUp.selector,
-                        abi.encode(owner, spaces, quorum, address(timelock))
+                        abi.encode(owner, vetoGuardian, spaces, quorum, address(timelock))
                     )
                 )
             )
