@@ -22,6 +22,13 @@ contract CompTimelockCompatibleExecutionStrategy is SimpleQuorumExecutionStrateg
     /// @notice Thrown if the transaction is invalid.
     error InvalidTransaction();
 
+    event CompTimelockCompatibleExecutionStrategySetUp(
+        address owner,
+        address vetoGuardian,
+        address[] spaces,
+        uint256 quorum,
+        address timelock
+    );
     event TransactionQueued(MetaTransaction transaction, uint256 executionTime);
     event TransactionExecuted(MetaTransaction transaction);
     event TransactionVetoed(MetaTransaction transaction);
@@ -56,8 +63,8 @@ contract CompTimelockCompatibleExecutionStrategy is SimpleQuorumExecutionStrateg
         vetoGuardian = _vetoGuardian;
         __SpaceManager_init(_spaces);
         __SimpleQuorumExecutionStrategy_init(_quorum);
-
         timelock = ICompTimelock(_timelock);
+        emit CompTimelockCompatibleExecutionStrategySetUp(_owner, _vetoGuardian, _spaces, _quorum, _timelock);
     }
 
     /// @notice Accepts admin role of the timelock contract. Must be called before using the timelock.
