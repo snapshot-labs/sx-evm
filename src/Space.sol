@@ -56,6 +56,7 @@ contract Space is ISpace, Initializable, IERC4824, UUPSUpgradeable, OwnableUpgra
         uint32 _minVotingDuration,
         uint32 _maxVotingDuration,
         Strategy memory _proposalValidationStrategy,
+        string memory _proposalValidationStrategyMetadataURI,
         string memory _daoURI,
         string memory _metadataURI,
         Strategy[] memory _votingStrategies,
@@ -81,6 +82,7 @@ contract Space is ISpace, Initializable, IERC4824, UUPSUpgradeable, OwnableUpgra
             _minVotingDuration,
             _maxVotingDuration,
             _proposalValidationStrategy,
+            _proposalValidationStrategyMetadataURI,
             _daoURI,
             _metadataURI,
             _votingStrategies,
@@ -119,9 +121,12 @@ contract Space is ISpace, Initializable, IERC4824, UUPSUpgradeable, OwnableUpgra
     }
 
     /// @inheritdoc ISpaceOwnerActions
-    function setProposalValidationStrategy(Strategy calldata _proposalValidationStrategy) external override onlyOwner {
+    function setProposalValidationStrategy(
+        Strategy calldata _proposalValidationStrategy,
+        string calldata proposalValidationStrategyMetadataURI
+    ) external override onlyOwner {
         _setProposalValidationStrategy(_proposalValidationStrategy);
-        emit ProposalValidationStrategyUpdated(_proposalValidationStrategy);
+        emit ProposalValidationStrategyUpdated(_proposalValidationStrategy, proposalValidationStrategyMetadataURI);
     }
 
     /// @inheritdoc ISpaceOwnerActions

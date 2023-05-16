@@ -37,6 +37,7 @@ contract SpaceFactoryTest is Test, IProxyFactoryEvents, IProxyFactoryErrors, ISp
     string public daoURI;
     string public metadataURI = "SX-EVM";
     string[] public votingStrategyMetadataURIs;
+    string public proposalValidationStrategyMetadataURI;
 
     function setUp() public {
         masterSpace = new Space();
@@ -78,6 +79,7 @@ contract SpaceFactoryTest is Test, IProxyFactoryEvents, IProxyFactoryErrors, ISp
                 minVotingDuration,
                 maxVotingDuration,
                 proposalValidationStrategy,
+                proposalValidationStrategyMetadataURI,
                 daoURI,
                 metadataURI,
                 votingStrategies,
@@ -161,6 +163,7 @@ contract SpaceFactoryTest is Test, IProxyFactoryEvents, IProxyFactoryErrors, ISp
                 minVotingDuration,
                 maxVotingDuration,
                 proposalValidationStrategy,
+                proposalValidationStrategyMetadataURI,
                 daoURI,
                 metadataURI,
                 votingStrategies,
@@ -181,6 +184,7 @@ contract SpaceFactoryTest is Test, IProxyFactoryEvents, IProxyFactoryErrors, ISp
                 minVotingDuration,
                 maxVotingDuration,
                 proposalValidationStrategy,
+                proposalValidationStrategyMetadataURI,
                 daoURI,
                 metadataURI,
                 votingStrategies,
@@ -202,6 +206,7 @@ contract SpaceFactoryTest is Test, IProxyFactoryEvents, IProxyFactoryErrors, ISp
                 minVotingDuration,
                 maxVotingDuration,
                 proposalValidationStrategy,
+                proposalValidationStrategyMetadataURI,
                 daoURI,
                 metadataURI,
                 votingStrategies,
@@ -220,6 +225,7 @@ contract SpaceFactoryTest is Test, IProxyFactoryEvents, IProxyFactoryErrors, ISp
             minVotingDuration,
             maxVotingDuration,
             proposalValidationStrategy,
+            proposalValidationStrategyMetadataURI,
             daoURI,
             metadataURI,
             votingStrategies,
