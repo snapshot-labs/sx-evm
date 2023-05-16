@@ -41,19 +41,19 @@ contract CompTimelockCompatibleExecutionStrategy is SimpleQuorumExecutionStrateg
 
     /// @notice Constructor
     /// @param _owner Address of the owner of this contract.
+    /// @param _vetoGuardian Address of the veto guardian.
     /// @param _spaces Array of whitelisted space contracts.
     /// @param _quorum The quorum required to execute a proposal.
-    constructor(address _owner, address[] memory _spaces, uint256 _quorum, address _timelock) {
-        setUp(abi.encode(_owner, _spaces, _quorum, _timelock));
+    constructor(address _owner, address _vetoGuardian, address[] memory _spaces, uint256 _quorum, address _timelock) {
+        setUp(abi.encode(_owner, _vetoGuardian, _spaces, _quorum, _timelock));
     }
 
     function setUp(bytes memory initializeParams) public initializer {
-        (address _owner, address[] memory _spaces, uint256 _quorum, address _timelock) = abi.decode(
-            initializeParams,
-            (address, address[], uint256, address)
-        );
+        (address _owner, address _vetoGuardian, address[] memory _spaces, uint256 _quorum, address _timelock) = abi
+            .decode(initializeParams, (address, address, address[], uint256, address));
         __Ownable_init();
         transferOwnership(_owner);
+        vetoGuardian = _vetoGuardian;
         __SpaceManager_init(_spaces);
         __SimpleQuorumExecutionStrategy_init(_quorum);
 
