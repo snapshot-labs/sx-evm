@@ -20,6 +20,13 @@ abstract contract CompTimelockExecutionStrategyTest is SpaceTest {
     error DuplicateExecutionPayloadHash();
     error OnlyVetoGuardian();
     error InvalidTransaction();
+    event CompTimelockCompatibleExecutionStrategySetUp(
+        address owner,
+        address vetoGuardian,
+        address[] spaces,
+        uint256 quorum,
+        address timelock
+    );
     event TransactionQueued(MetaTransaction transaction, uint256 executionTime);
     event ProposalVetoed(bytes32 executionPayloadHash);
     event VetoGuardianSet(address vetoGuardian, address newVetoGuardian);
@@ -456,6 +463,24 @@ abstract contract CompTimelockExecutionStrategyTest is SpaceTest {
 
     function testViewFunctions() public {
         assertEq(timelockExecutionStrategy.getStrategyType(), "CompTimelockCompatibleSimpleQuorum");
+    }
+
+    function testSetUp() public {
+        address[] memory spaces = new address[](1);
+        spaces[0] = address(space);
+        timelockExecutionStrategy = new CompTimelockCompatibleExecutionStrategy(
+            owner,
+            vetoGuardian,
+            spaces,
+            quorum,
+            address(timelock)
+        );
+
+        assertEq(timelockExecutionStrategy.owner(), owner);
+        assertEq(timelockExecutionStrategy.vetoGuardian(), vetoGuardian);
+        assertEq(timelockExecutionStrategy.quorum(), quorum);
+        assertEq(address(timelockExecutionStrategy.timelock()), address(timelock));
+        assertEq(timelockExecutionStrategy.isSpaceEnabled(address(space)), true);
     }
 }
 
