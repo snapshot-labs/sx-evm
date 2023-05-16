@@ -24,7 +24,8 @@ abstract contract TimelockExecutionStrategyTest is SpaceTest {
 
     TimelockExecutionStrategy public timelockExecutionStrategy;
 
-    address private recipient = address(0xc0ffee);
+    address public vetoGuardian = address(0xdeadbeef);
+    address public recipient = address(0xc0ffee);
 
     function testQueueingFromUnauthorizedSpace() external {
         timelockExecutionStrategy.disableSpace(address(space));
@@ -479,7 +480,7 @@ contract TimelockExecutionStrategyTestDirect is TimelockExecutionStrategyTest {
         address[] memory spaces = new address[](1);
         spaces[0] = address(space);
 
-        timelockExecutionStrategy = new TimelockExecutionStrategy(owner, spaces, 1000, quorum);
+        timelockExecutionStrategy = new TimelockExecutionStrategy(owner, vetoGuardian, spaces, 1000, quorum);
         vm.deal(address(owner), 1000);
         payable(timelockExecutionStrategy).transfer(1000);
     }
@@ -491,7 +492,13 @@ contract TimelockExecutionStrategyTestProxy is TimelockExecutionStrategyTest {
 
         address[] memory spaces = new address[](1);
         spaces[0] = address(space);
-        TimelockExecutionStrategy masterExecutionStrategy = new TimelockExecutionStrategy(owner, spaces, 1000, quorum);
+        TimelockExecutionStrategy masterExecutionStrategy = new TimelockExecutionStrategy(
+            owner,
+            vetoGuardian,
+            spaces,
+            1000,
+            quorum
+        );
 
         timelockExecutionStrategy = TimelockExecutionStrategy(
             payable(

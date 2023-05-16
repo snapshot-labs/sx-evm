@@ -27,7 +27,8 @@ abstract contract CompTimelockExecutionStrategyTest is SpaceTest {
     CompTimelockCompatibleExecutionStrategy public timelockExecutionStrategy;
     CompTimelock public timelock = new CompTimelock(address(this), 1000);
 
-    address private recipient = address(0xc0ffee);
+    address public vetoGuardian = address(0xdeadbeef);
+    address public recipient = address(0xc0ffee);
 
     function finishSetUp() public {
         vm.deal(address(owner), 1000);
@@ -467,6 +468,7 @@ contract CompTimelockExecutionStrategyTestDirect is CompTimelockExecutionStrateg
 
         timelockExecutionStrategy = new CompTimelockCompatibleExecutionStrategy(
             owner,
+            vetoGuardian,
             spaces,
             quorum,
             address(timelock)
@@ -484,6 +486,7 @@ contract CompTimelockExecutionStrategyTestProxy is CompTimelockExecutionStrategy
         spaces[0] = address(space);
         CompTimelockCompatibleExecutionStrategy masterExecutionStrategy = new CompTimelockCompatibleExecutionStrategy(
             owner,
+            vetoGuardian,
             spaces,
             quorum,
             address(timelock)
