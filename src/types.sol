@@ -78,7 +78,6 @@ struct MetaTransaction {
     uint256 salt;
 }
 
-/// @notice Transaction struct that can be used to represent transactions inside a proposal.
 /// @dev    Structure used for the function `updateSettings` because of solidity's stack constraints.
 ///         For more information, see `ISpaceOwnerActions.sol`.
 struct UpdateSettingsInput {
