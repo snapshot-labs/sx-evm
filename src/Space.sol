@@ -31,11 +31,11 @@ contract Space is ISpace, Initializable, IERC4824, UUPSUpgradeable, OwnableUpgra
     using SXUtils for IndexedStrategy[];
 
     /// @dev Placeholder value to indicate the user does not want to update the metadataURI.
-    /// @dev Evalutes to: `0xf2cda9b13ed04e585461605c0d6e804933ca828111bd94d4e6a96c75e8b048ba`.
+    /// @dev Evaluates to: `0xf2cda9b13ed04e585461605c0d6e804933ca828111bd94d4e6a96c75e8b048ba`.
     bytes32 private constant NO_UPDATE_HASH = keccak256(abi.encodePacked("No update"));
 
     /// @dev Placeholder value to indicate the user does not want to update an address.
-    /// @dev Evalutes to: `0xf2cda9b13ed04e585461605c0d6e804933ca8281`.
+    /// @dev Evaluates to: `0xf2cda9b13ed04e585461605c0d6e804933ca8281`.
     address private constant NO_UPDATE_ADDRESS = address(bytes20(keccak256(abi.encodePacked("No update"))));
 
     /// @dev Placeholder value to indicate the user does not want to update an duration (or, generally, a uint32).
