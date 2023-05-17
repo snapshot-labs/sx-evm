@@ -135,7 +135,6 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
             _setMaxVotingDuration(input.maxVotingDuration);
             emit MaxVotingDurationUpdated(input.maxVotingDuration);
         }
-        // else: nothing to update
 
         if (input.votingDelay != NO_UPDATE_UINT32) {
             _setVotingDelay(input.votingDelay);
