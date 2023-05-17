@@ -80,6 +80,7 @@ contract ProposeTest is SpaceTest {
                 NO_UPDATE_UINT32,
                 NO_UPDATE_UINT32,
                 NO_UPDATE_STRING,
+                NO_UPDATE_STRING,
                 validationStrategy,
                 "",
                 NO_UPDATE_ADDRESSES,

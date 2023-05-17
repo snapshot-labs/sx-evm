@@ -46,6 +46,7 @@ contract ExecuteTest is SpaceTest {
                 NO_UPDATE_UINT32,
                 NO_UPDATE_UINT32,
                 NO_UPDATE_STRING,
+                NO_UPDATE_STRING,
                 NO_UPDATE_STRATEGY,
                 NO_UPDATE_STRING,
                 NO_UPDATE_ADDRESSES,

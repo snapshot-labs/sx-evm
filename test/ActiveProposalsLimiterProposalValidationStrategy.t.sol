@@ -30,6 +30,7 @@ contract ActiveProposalsLimterTest is SpaceTest {
                 NO_UPDATE_UINT32,
                 NO_UPDATE_UINT32,
                 NO_UPDATE_STRING,
+                NO_UPDATE_STRING,
                 newProposalStrategy,
                 "",
                 NO_UPDATE_ADDRESSES,

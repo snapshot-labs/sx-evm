@@ -20,6 +20,7 @@ interface ISpaceOwnerActions {
     ///     maxVotingDuration The new maximum voting duration. Set to `NO_UPDATE_UINT32` to ignore.
     ///     votingDelay The new voting delay. Set to `NO_UPDATE_UINT32` to ignore.
     ///     metadataURI The new metadataURI. Set to `NO_UPDATE_STRING` to ignore.
+    ///     daoURI The new daoURI. Set to `NO_UPDATE_STRING` to ignore.
     ///     proposalValidationStrategy The new proposal validation strategy to use. Set
     ///                 to `NO_UPDATE_STRATEGY` to ignore.
     ///     proposalValidationStrategyMetadataURI The new metadata URI for the proposal validation strategy.

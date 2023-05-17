@@ -91,6 +91,7 @@ contract SpaceOwnerActionsTest is SpaceTest {
                 2000,
                 NO_UPDATE_UINT32,
                 NO_UPDATE_STRING,
+                NO_UPDATE_STRING,
                 NO_UPDATE_STRATEGY,
                 NO_UPDATE_STRING,
                 NO_UPDATE_ADDRESSES,
@@ -110,6 +111,7 @@ contract SpaceOwnerActionsTest is SpaceTest {
                 NO_UPDATE_UINT32,
                 NO_UPDATE_UINT32,
                 NO_UPDATE_UINT32,
+                NO_UPDATE_STRING,
                 NO_UPDATE_STRING,
                 NO_UPDATE_STRATEGY,
                 "",
@@ -135,6 +137,7 @@ contract SpaceOwnerActionsTest is SpaceTest {
                 nextDuration,
                 NO_UPDATE_UINT32,
                 NO_UPDATE_STRING,
+                NO_UPDATE_STRING,
                 NO_UPDATE_STRATEGY,
                 NO_UPDATE_STRING,
                 NO_UPDATE_ADDRESSES,
@@ -155,6 +158,7 @@ contract SpaceOwnerActionsTest is SpaceTest {
                 NO_UPDATE_UINT32,
                 NO_UPDATE_UINT32,
                 NO_UPDATE_STRING,
+                NO_UPDATE_STRING,
                 NO_UPDATE_STRATEGY,
                 NO_UPDATE_STRING,
                 NO_UPDATE_ADDRESSES,
@@ -172,6 +176,7 @@ contract SpaceOwnerActionsTest is SpaceTest {
                 NO_UPDATE_UINT32,
                 0,
                 NO_UPDATE_UINT32,
+                NO_UPDATE_STRING,
                 NO_UPDATE_STRING,
                 NO_UPDATE_STRATEGY,
                 NO_UPDATE_STRING,
@@ -197,6 +202,7 @@ contract SpaceOwnerActionsTest is SpaceTest {
                 NO_UPDATE_UINT32,
                 NO_UPDATE_UINT32,
                 NO_UPDATE_STRING,
+                NO_UPDATE_STRING,
                 NO_UPDATE_STRATEGY,
                 NO_UPDATE_STRING,
                 NO_UPDATE_ADDRESSES,
@@ -219,6 +225,7 @@ contract SpaceOwnerActionsTest is SpaceTest {
                 NO_UPDATE_UINT32,
                 NO_UPDATE_UINT32,
                 NO_UPDATE_STRING,
+                NO_UPDATE_STRING,
                 NO_UPDATE_STRATEGY,
                 NO_UPDATE_STRING,
                 NO_UPDATE_ADDRESSES,
@@ -228,6 +235,31 @@ contract SpaceOwnerActionsTest is SpaceTest {
                 NO_UPDATE_UINT8S
             )
         );
+    }
+
+    // ------- DaoURI ----
+    function testSetDaoURI() public {
+        string memory newDaoURI = "All your bases are belong to us";
+        vm.expectEmit(true, true, true, true);
+        emit DaoURIUpdated(newDaoURI);
+
+        space.updateSettings(
+            UpdateSettingsInput(
+                NO_UPDATE_UINT32,
+                NO_UPDATE_UINT32,
+                NO_UPDATE_UINT32,
+                NO_UPDATE_STRING,
+                newDaoURI,
+                NO_UPDATE_STRATEGY,
+                NO_UPDATE_STRING,
+                NO_UPDATE_ADDRESSES,
+                NO_UPDATE_ADDRESSES,
+                NO_UPDATE_STRATEGIES,
+                NO_UPDATE_STRINGS,
+                NO_UPDATE_UINT8S
+            )
+        );
+        assertEq(space.daoURI(), newDaoURI);
     }
 
     // ------- MetadataURI ----
@@ -242,6 +274,7 @@ contract SpaceOwnerActionsTest is SpaceTest {
                 NO_UPDATE_UINT32,
                 NO_UPDATE_UINT32,
                 newMetadataURI,
+                NO_UPDATE_STRING,
                 NO_UPDATE_STRATEGY,
                 NO_UPDATE_STRING,
                 NO_UPDATE_ADDRESSES,
@@ -267,6 +300,7 @@ contract SpaceOwnerActionsTest is SpaceTest {
                 NO_UPDATE_UINT32,
                 NO_UPDATE_UINT32,
                 NO_UPDATE_UINT32,
+                NO_UPDATE_STRING,
                 NO_UPDATE_STRING,
                 nextProposalValidationStrategy,
                 "",
@@ -298,6 +332,7 @@ contract SpaceOwnerActionsTest is SpaceTest {
                 NO_UPDATE_UINT32,
                 NO_UPDATE_UINT32,
                 nextDelay,
+                NO_UPDATE_STRING,
                 NO_UPDATE_STRING,
                 NO_UPDATE_STRATEGY,
                 NO_UPDATE_STRING,
@@ -338,6 +373,7 @@ contract SpaceOwnerActionsTest is SpaceTest {
                 NO_UPDATE_UINT32,
                 NO_UPDATE_UINT32,
                 NO_UPDATE_STRING,
+                NO_UPDATE_STRING,
                 NO_UPDATE_STRATEGY,
                 "",
                 NO_UPDATE_ADDRESSES,
@@ -361,6 +397,7 @@ contract SpaceOwnerActionsTest is SpaceTest {
                 NO_UPDATE_UINT32,
                 NO_UPDATE_UINT32,
                 NO_UPDATE_UINT32,
+                NO_UPDATE_STRING,
                 NO_UPDATE_STRING,
                 NO_UPDATE_STRATEGY,
                 "",
@@ -395,6 +432,7 @@ contract SpaceOwnerActionsTest is SpaceTest {
                 NO_UPDATE_UINT32,
                 NO_UPDATE_UINT32,
                 NO_UPDATE_STRING,
+                NO_UPDATE_STRING,
                 NO_UPDATE_STRATEGY,
                 "",
                 NO_UPDATE_ADDRESSES,
@@ -421,6 +459,7 @@ contract SpaceOwnerActionsTest is SpaceTest {
                     NO_UPDATE_UINT32,
                     NO_UPDATE_UINT32,
                     NO_UPDATE_STRING,
+                    NO_UPDATE_STRING,
                     NO_UPDATE_STRATEGY,
                     "",
                     NO_UPDATE_ADDRESSES,
@@ -439,6 +478,7 @@ contract SpaceOwnerActionsTest is SpaceTest {
                 NO_UPDATE_UINT32,
                 NO_UPDATE_UINT32,
                 NO_UPDATE_UINT32,
+                NO_UPDATE_STRING,
                 NO_UPDATE_STRING,
                 NO_UPDATE_STRATEGY,
                 "",
@@ -461,6 +501,7 @@ contract SpaceOwnerActionsTest is SpaceTest {
                 NO_UPDATE_UINT32,
                 NO_UPDATE_UINT32,
                 NO_UPDATE_UINT32,
+                NO_UPDATE_STRING,
                 NO_UPDATE_STRING,
                 NO_UPDATE_STRATEGY,
                 "",
@@ -488,6 +529,7 @@ contract SpaceOwnerActionsTest is SpaceTest {
                 NO_UPDATE_UINT32,
                 NO_UPDATE_UINT32,
                 NO_UPDATE_STRING,
+                NO_UPDATE_STRING,
                 NO_UPDATE_STRATEGY,
                 "",
                 newAuths,
@@ -508,6 +550,7 @@ contract SpaceOwnerActionsTest is SpaceTest {
                 NO_UPDATE_UINT32,
                 NO_UPDATE_UINT32,
                 NO_UPDATE_UINT32,
+                NO_UPDATE_STRING,
                 NO_UPDATE_STRING,
                 NO_UPDATE_STRATEGY,
                 "",
@@ -534,6 +577,7 @@ contract SpaceOwnerActionsTest is SpaceTest {
                 NO_UPDATE_UINT32,
                 NO_UPDATE_UINT32,
                 NO_UPDATE_UINT32,
+                NO_UPDATE_STRING,
                 NO_UPDATE_STRING,
                 NO_UPDATE_STRATEGY,
                 "",
@@ -568,6 +612,7 @@ contract SpaceOwnerActionsTest is SpaceTest {
                 NO_UPDATE_UINT32,
                 NO_UPDATE_UINT32,
                 NO_UPDATE_UINT32,
+                NO_UPDATE_STRING,
                 NO_UPDATE_STRING,
                 NO_UPDATE_STRATEGY,
                 "",
@@ -608,6 +653,7 @@ contract SpaceOwnerActionsTest is SpaceTest {
                 NO_UPDATE_UINT32,
                 NO_UPDATE_UINT32,
                 NO_UPDATE_STRING,
+                NO_UPDATE_STRING,
                 _proposalValidationStrategy,
                 "",
                 newAuths,
@@ -638,6 +684,7 @@ contract SpaceOwnerActionsTest is SpaceTest {
         uint32 _maxVotingDuration = maxVotingDuration + 1;
         uint32 _minVotingDuration = minVotingDuration + 1;
         string memory _metadataURI = "test123";
+        string memory _daoURI = "daoURI";
         uint32 _votingDelay = 42;
 
         vm.expectEmit(true, true, true, true);
@@ -648,6 +695,7 @@ contract SpaceOwnerActionsTest is SpaceTest {
                 _maxVotingDuration,
                 _votingDelay,
                 _metadataURI,
+                _daoURI,
                 NO_UPDATE_STRATEGY,
                 NO_UPDATE_STRING,
                 NO_UPDATE_ADDRESSES,
@@ -658,12 +706,15 @@ contract SpaceOwnerActionsTest is SpaceTest {
             )
         );
 
-        // Ensure durations were correctly updated
+        // Ensure durations were correctly updated.
         assertEq(space.maxVotingDuration(), _maxVotingDuration);
         assertEq(space.minVotingDuration(), _minVotingDuration);
 
-        // Ensure voting delay was correctly updated
+        // Ensure voting delay was correctly updated.
         assertEq(space.votingDelay(), _votingDelay);
+
+        // Ensure daoURI was correcly updated.
+        assertEq(space.daoURI(), _daoURI);
     }
 
     // ------- Upgrading a Space ----

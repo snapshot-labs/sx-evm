@@ -85,6 +85,7 @@ struct UpdateSettingsInput {
     uint32 maxVotingDuration;
     uint32 votingDelay;
     string metadataURI;
+    string daoURI;
     Strategy proposalValidationStrategy;
     string proposalValidationStrategyMetadataURI;
     address[] authenticatorsToAdd;

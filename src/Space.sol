@@ -6,7 +6,7 @@ import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/O
 import { Initializable } from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import { UUPSUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import { ReentrancyGuard } from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
-
+import { IERC4824 } from "src/interfaces/IERC4824.sol";
 import { ISpace, ISpaceActions, ISpaceState, ISpaceOwnerActions } from "src/interfaces/ISpace.sol";
 import {
     Choice,
@@ -26,7 +26,7 @@ import { BitPacker } from "./utils/BitPacker.sol";
 /// @title Space Contract
 /// @notice The core contract for Snapshot X.
 ///         A proxy of this contract should be deployed with the Proxy Factory.
-contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, ReentrancyGuard {
+contract Space is ISpace, Initializable, IERC4824, UUPSUpgradeable, OwnableUpgradeable, ReentrancyGuard {
     using BitPacker for uint256;
     using SXUtils for IndexedStrategy[];
 
@@ -42,6 +42,8 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
     /// @dev Evaluates to: `0xf2cda9b1`.
     uint32 private constant NO_UPDATE_UINT32 = uint32(bytes4(keccak256(abi.encodePacked("No update"))));
 
+    /// @inheritdoc IERC4824
+    string public daoURI;
     /// @inheritdoc ISpaceState
     uint32 public override maxVotingDuration;
     /// @inheritdoc ISpaceState
@@ -75,6 +77,7 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         uint32 _maxVotingDuration,
         Strategy memory _proposalValidationStrategy,
         string memory _proposalValidationStrategyMetadataURI,
+        string memory _daoURI,
         string memory _metadataURI,
         Strategy[] memory _votingStrategies,
         string[] memory _votingStrategyMetadataURIs,
@@ -82,6 +85,7 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
     ) public initializer {
         __Ownable_init();
         transferOwnership(_owner);
+        _setDaoURI(_daoURI);
         _setMaxVotingDuration(_maxVotingDuration);
         _setMinVotingDuration(_minVotingDuration);
         _setProposalValidationStrategy(_proposalValidationStrategy);
@@ -102,6 +106,7 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
             _maxVotingDuration,
             _proposalValidationStrategy,
             _proposalValidationStrategyMetadataURI,
+            _daoURI,
             _metadataURI,
             _votingStrategies,
             _votingStrategyMetadataURIs,
@@ -146,6 +151,11 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
 
         if (keccak256(abi.encodePacked(input.metadataURI)) != NO_UPDATE_HASH) {
             emit MetadataURIUpdated(input.metadataURI);
+        }
+
+        if (keccak256(abi.encodePacked(input.daoURI)) != NO_UPDATE_HASH) {
+            _setDaoURI(input.daoURI);
+            emit DaoURIUpdated(input.daoURI);
         }
 
         if (input.proposalValidationStrategy.addr != NO_UPDATE_ADDRESS) {
@@ -360,6 +370,11 @@ contract Space is ISpace, Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
     /// @dev Sets the voting delay.
     function _setVotingDelay(uint32 _votingDelay) internal {
         votingDelay = _votingDelay;
+    }
+
+    /// @dev Sets the DAO URI.
+    function _setDaoURI(string memory _daoURI) internal {
+        daoURI = _daoURI;
     }
 
     /// @dev Adds an array of voting strategies.
