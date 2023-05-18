@@ -169,6 +169,38 @@ contract EmergencyQuorumTest is SpaceTest {
         space.execute(proposalId, emergencyStrategy.params);
     }
 
+    function testEmergencyQuorumCancelled() public {
+        uint256 proposalId = _createProposal(
+            author,
+            proposalMetadataURI,
+            emergencyStrategy,
+            abi.encode(userVotingStrategies)
+        );
+        _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataURI); // 1
+
+        space.cancel(proposalId);
+
+        vm.expectRevert(abi.encodeWithSelector(InvalidProposalStatus.selector, uint8(ProposalStatus.Cancelled)));
+        space.execute(proposalId, emergencyStrategy.params);
+    }
+
+    function testEmergencyQuorumAlreadyExecuted() public {
+        uint256 proposalId = _createProposal(
+            author,
+            proposalMetadataURI,
+            emergencyStrategy,
+            abi.encode(userVotingStrategies)
+        );
+        _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataURI); // 1
+
+        vm.warp(block.timestamp + minVotingDuration);
+
+        space.execute(proposalId, emergencyStrategy.params);
+
+        vm.expectRevert(abi.encodeWithSelector(InvalidProposalStatus.selector, uint8(ProposalStatus.Executed)));
+        space.execute(proposalId, emergencyStrategy.params);
+    }
+
     function testGetStrategyType() public {
         assertEq(emergency.getStrategyType(), "EmergencyQuorumExecution");
     }
