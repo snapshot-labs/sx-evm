@@ -169,6 +169,24 @@ contract EmergencyQuorumTest is SpaceTest {
         space.execute(proposalId, emergencyStrategy.params);
     }
 
+    function testEmergencyQuorumVotingPeriod() public {
+        uint256 proposalId = _createProposal(
+            author,
+            proposalMetadataURI,
+            emergencyStrategy,
+            abi.encode(userVotingStrategies)
+        );
+
+        // Cast two votes AGAINST
+        _vote(author, proposalId, Choice.Against, userVotingStrategies, voteMetadataURI); // 1
+        _vote(address(42), proposalId, Choice.Against, userVotingStrategies, voteMetadataURI); // 2
+
+        // EmergencyQuorum should've been reached but with only `AGAINST` votes, so proposal status should be
+        // `VotingPeriod`.
+        vm.expectRevert(abi.encodeWithSelector(InvalidProposalStatus.selector, uint8(ProposalStatus.VotingPeriod)));
+        space.execute(proposalId, emergencyStrategy.params);
+    }
+
     function testEmergencyQuorumCancelled() public {
         uint256 proposalId = _createProposal(
             author,
