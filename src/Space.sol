@@ -85,6 +85,7 @@ contract Space is ISpace, Initializable, IERC4824, UUPSUpgradeable, OwnableUpgra
     ) public initializer {
         if (_votingStrategies.length == 0) revert EmptyArray();
         if (_authenticators.length == 0) revert EmptyArray();
+        if (_votingStrategies.length != _votingStrategyMetadataURIs.length) revert ArrayLengthMismatch();
 
         __Ownable_init();
         transferOwnership(_owner);
@@ -177,6 +178,8 @@ contract Space is ISpace, Initializable, IERC4824, UUPSUpgradeable, OwnableUpgra
         }
 
         if (input.votingStrategiesToAdd.length > 0) {
+            if (input.votingStrategiesToAdd.length != input.votingStrategyMetadataURIsToAdd.length)
+                revert ArrayLengthMismatch();
             _addVotingStrategies(input.votingStrategiesToAdd);
             emit VotingStrategiesAdded(input.votingStrategiesToAdd, input.votingStrategyMetadataURIsToAdd);
         }
