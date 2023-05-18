@@ -83,6 +83,9 @@ contract Space is ISpace, Initializable, IERC4824, UUPSUpgradeable, OwnableUpgra
         string[] memory _votingStrategyMetadataURIs,
         address[] memory _authenticators
     ) public initializer {
+        if (_votingStrategies.length == 0) revert EmptyArray();
+        if (_authenticators.length == 0) revert EmptyArray();
+
         __Ownable_init();
         transferOwnership(_owner);
         _setDaoURI(_daoURI);
@@ -90,9 +93,6 @@ contract Space is ISpace, Initializable, IERC4824, UUPSUpgradeable, OwnableUpgra
         _setMinVotingDuration(_minVotingDuration);
         _setProposalValidationStrategy(_proposalValidationStrategy);
         _setVotingDelay(_votingDelay);
-
-        if (_votingStrategies.length == 0) revert EmptyArray();
-        if (_authenticators.length == 0) revert EmptyArray();
         _addVotingStrategies(_votingStrategies);
         _addAuthenticators(_authenticators);
 
