@@ -3,7 +3,7 @@
 pragma solidity ^0.8.18;
 
 import { SpaceTest } from "./utils/Space.t.sol";
-import { Choice, IndexedStrategy, Proposal, ProposalStatus, Strategy } from "../src/types.sol";
+import { Choice, IndexedStrategy, Proposal, ProposalStatus, Strategy, UpdateSettingsInput } from "../src/types.sol";
 import { EmergencyQuorumStrategy } from "../src/execution-strategies/EmergencyQuorumStrategy.sol";
 
 contract EmergencyQuorumExec is EmergencyQuorumStrategy {
@@ -45,7 +45,22 @@ contract EmergencyQuorumTest is SpaceTest {
         emergencyStrategy = Strategy(address(emergency), new bytes(0));
 
         minVotingDuration = 100;
-        space.setMinVotingDuration(minVotingDuration); // Min voting duration of 100
+        space.updateSettings(
+            UpdateSettingsInput(
+                minVotingDuration,
+                NO_UPDATE_UINT32,
+                NO_UPDATE_UINT32,
+                NO_UPDATE_STRING,
+                NO_UPDATE_STRING,
+                NO_UPDATE_STRATEGY,
+                NO_UPDATE_STRING,
+                NO_UPDATE_ADDRESSES,
+                NO_UPDATE_ADDRESSES,
+                NO_UPDATE_STRATEGIES,
+                NO_UPDATE_STRINGS,
+                NO_UPDATE_UINT8S
+            )
+        );
     }
 
     function testEmergencyQuorum() public {
@@ -134,10 +149,10 @@ contract EmergencyQuorumTest is SpaceTest {
         space.execute(proposalId, emergencyStrategy.params);
     }
 
-    function testEmergencyLowerThanQuorum() public {
-        EmergencyQuorumExec lowerThanQuorum = new EmergencyQuorumExec(quorum, quorum - 1);
+    function testEmergencyQuorumLowerThanQuorum() public {
+        EmergencyQuorumExec emergencyQuorumExec = new EmergencyQuorumExec(quorum, quorum - 1);
 
-        emergencyStrategy = Strategy(address(lowerThanQuorum), new bytes(0));
+        emergencyStrategy = Strategy(address(emergencyQuorumExec), new bytes(0));
 
         // Create proposal and vote
         uint256 proposalId = _createProposal(
@@ -152,5 +167,9 @@ contract EmergencyQuorumTest is SpaceTest {
         vm.expectEmit(true, true, true, true);
         emit ProposalExecuted(proposalId);
         space.execute(proposalId, emergencyStrategy.params);
+    }
+
+    function testGetStrategyType() public {
+        assertEq(emergency.getStrategyType(), "EmergencyQuorumExecution");
     }
 }
