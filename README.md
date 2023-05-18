@@ -47,3 +47,29 @@ src
 └─ Space.sol - "The base contract for each Snapshot X space"
 └─ types.sol - "Definitions for Snapshot X custom types"
 ```
+
+## Usage
+
+### Build
+
+Build the contracts:
+
+```sh
+$ forge build
+```
+
+### Test
+
+Run the tests:
+
+```sh
+$ forge test
+```
+
+### Coverage
+
+Get a test coverage report:
+
+```sh
+$ forge coverage
+```
