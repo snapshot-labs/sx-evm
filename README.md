@@ -18,12 +18,13 @@ src
 ├─ voting-strategies
 │  ├─ CompVotingStrategy.sol - "Strategy that uses delegated balances of Comp tokens as voting power"
 │  ├─ OZVotesVotingStrategy.sol - "Strategy that uses delegated balances of OZ Votes tokens as voting power"
-│  ├─ WhitelistVotingStrategy — "Strategy that gives predetermined voting power for members in a whitelist, otherwise zero"
+│  ├─ WhitelistVotingStrategy.sol — "Strategy that gives predetermined voting power for members in a whitelist, otherwise zero"
 │  └─ VanillaVotingStrategy.sol — "Vanilla Strategy"
 ├─ execution-strategies
 │  ├─ AvatarExecutionStrategy.sol - "Strategy that allows proposal transactions to be executed from an Avatar contract"
 │  ├─ TimelockExecutionStrategy.sol - "Strategy that can be used to execute proposal transactions according to a timelock delay"
 │  ├─ CompTimelockCompatibleExecutionStrategy.sol - "Strategy that provides compatibility with existing Comp Timelock contracts"
+│  ├─ EmergencyQuorumExecutionStrategy.sol - "Base Strategy that uses an additional Emergency Quorum to determine the status of a proposal"
 │  ├─ OptimisticQuorumExecutionStrategy.sol - "Base Strategy that uses an Optimistic Quorum to determine the status of a proposal"
 │  ├─ SimpleQuorumExecutionStrategy.sol - "Base Strategy that uses a Simple Quorum to determine the status of a proposal"
 │  └─ VanillaExecutionStrategy.sol - "Vanilla Strategy"
