@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: UNLICENSED
+// SPDX-License-Identifier: MIT
 
 pragma solidity ^0.8.18;
 
@@ -7,8 +7,9 @@ import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy
 import { Avatar } from "./mocks/Avatar.sol";
 import { AvatarExecutionStrategy } from "../src/execution-strategies/AvatarExecutionStrategy.sol";
 import { Choice, Enum, IndexedStrategy, MetaTransaction, ProposalStatus, Strategy } from "../src/types.sol";
+import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
-contract AvatarExecutionStrategyTest is SpaceTest {
+abstract contract AvatarExecutionStrategyTest is SpaceTest {
     error InvalidSpace();
 
     event AvatarExecutionStrategySetUp(address _owner, address _target, address[] _spaces);
@@ -22,17 +23,11 @@ contract AvatarExecutionStrategyTest is SpaceTest {
 
     address private recipient = address(0xc0ffee);
 
-    function setUp() public override {
+    function setUp() public virtual override {
         super.setUp();
 
         avatar = new Avatar();
         vm.deal(address(avatar), 1000);
-
-        // Deploy and activate the execution strategy on the avatar
-        address[] memory spaces = new address[](1);
-        spaces[0] = address(space);
-        avatarExecutionStrategy = new AvatarExecutionStrategy(owner, address(avatar), spaces, quorum);
-        avatar.enableModule(address(avatarExecutionStrategy));
     }
 
     function testExecution() public {
@@ -42,7 +37,7 @@ contract AvatarExecutionStrategyTest is SpaceTest {
             author,
             proposalMetadataURI,
             Strategy(address(avatarExecutionStrategy), abi.encode(transactions)),
-            userVotingStrategies
+            new bytes(0)
         );
         _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataURI);
         vm.warp(block.timestamp + space.maxVotingDuration());
@@ -56,6 +51,39 @@ contract AvatarExecutionStrategyTest is SpaceTest {
         assertEq(uint8(space.getProposalStatus(proposalId)), uint8(ProposalStatus.Executed));
     }
 
+    function testExecutionProposalNotAccepted() public {
+        MetaTransaction[] memory transactions = new MetaTransaction[](1);
+        transactions[0] = MetaTransaction(recipient, 1, "", Enum.Operation.Call, 0);
+        uint256 proposalId = _createProposal(
+            author,
+            proposalMetadataURI,
+            Strategy(address(avatarExecutionStrategy), abi.encode(transactions)),
+            new bytes(0)
+        );
+        vm.warp(block.timestamp + space.maxVotingDuration());
+
+        vm.expectRevert(abi.encodeWithSelector(InvalidProposalStatus.selector, ProposalStatus.Rejected));
+        space.execute(proposalId, abi.encode(transactions));
+    }
+
+    function testExecutionInvalidPayload() public {
+        MetaTransaction[] memory transactions = new MetaTransaction[](1);
+        transactions[0] = MetaTransaction(recipient, 1, "", Enum.Operation.Call, 0);
+        uint256 proposalId = _createProposal(
+            author,
+            proposalMetadataURI,
+            Strategy(address(avatarExecutionStrategy), abi.encode(transactions)),
+            new bytes(0)
+        );
+        _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataURI);
+        vm.warp(block.timestamp + space.maxVotingDuration());
+
+        transactions[0] = MetaTransaction(recipient, 2, "", Enum.Operation.Call, 0);
+
+        vm.expectRevert(InvalidPayload.selector);
+        space.execute(proposalId, abi.encode(transactions));
+    }
+
     function testInvalidTx() public {
         // This transaction will fail because the avatar does not have enough funds
         MetaTransaction[] memory transactions = new MetaTransaction[](1);
@@ -64,7 +92,7 @@ contract AvatarExecutionStrategyTest is SpaceTest {
             author,
             proposalMetadataURI,
             Strategy(address(avatarExecutionStrategy), abi.encode(transactions)),
-            userVotingStrategies
+            new bytes(0)
         );
         _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataURI);
         vm.warp(block.timestamp + space.maxVotingDuration());
@@ -88,7 +116,7 @@ contract AvatarExecutionStrategyTest is SpaceTest {
             author,
             proposalMetadataURI,
             Strategy(address(avatarExecutionStrategy), abi.encode(transactions)),
-            userVotingStrategies
+            new bytes(0)
         );
         _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataURI);
         vm.warp(block.timestamp + space.maxVotingDuration());
@@ -115,7 +143,7 @@ contract AvatarExecutionStrategyTest is SpaceTest {
             author,
             proposalMetadataURI,
             Strategy(address(avatarExecutionStrategy), abi.encode(transactions)),
-            userVotingStrategies
+            new bytes(0)
         );
         _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataURI);
         vm.warp(block.timestamp + space.maxVotingDuration());
@@ -208,7 +236,7 @@ contract AvatarExecutionStrategyTest is SpaceTest {
             author,
             proposalMetadataURI,
             Strategy(address(avatarExecutionStrategy), abi.encode(transactions)),
-            userVotingStrategies
+            new bytes(0)
         );
         _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataURI);
         vm.warp(block.timestamp + space.maxVotingDuration());
@@ -229,5 +257,48 @@ contract AvatarExecutionStrategyTest is SpaceTest {
         vm.prank(unauthorized);
         vm.expectRevert("Ownable: caller is not the owner");
         avatarExecutionStrategy.disableSpace(address(space));
+    }
+
+    function testGetStrategyType() external {
+        assertEq(avatarExecutionStrategy.getStrategyType(), "SimpleQuorumAvatar");
+    }
+}
+
+contract AvatarExecutionStrategyTestDirect is AvatarExecutionStrategyTest {
+    function setUp() public override {
+        super.setUp();
+
+        address[] memory spaces = new address[](1);
+        spaces[0] = address(space);
+        avatarExecutionStrategy = new AvatarExecutionStrategy(owner, address(avatar), spaces, quorum);
+        avatar.enableModule(address(avatarExecutionStrategy));
+    }
+}
+
+contract AvatarExecutionStrategyTestProxy is AvatarExecutionStrategyTest {
+    function setUp() public override {
+        super.setUp();
+
+        address[] memory spaces = new address[](1);
+        spaces[0] = address(space);
+        AvatarExecutionStrategy masterAvatarExecutionStrategy = new AvatarExecutionStrategy(
+            owner,
+            address(avatar),
+            spaces,
+            quorum
+        );
+
+        avatarExecutionStrategy = AvatarExecutionStrategy(
+            address(
+                new ERC1967Proxy(
+                    address(masterAvatarExecutionStrategy),
+                    abi.encodeWithSelector(
+                        AvatarExecutionStrategy.setUp.selector,
+                        abi.encode(owner, address(avatar), spaces, quorum)
+                    )
+                )
+            )
+        );
+        avatar.enableModule(address(avatarExecutionStrategy));
     }
 }

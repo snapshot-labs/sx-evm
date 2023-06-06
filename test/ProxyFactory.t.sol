@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: UNLICENSED
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.18;
 
 import { Test } from "forge-std/Test.sol";
@@ -6,19 +6,24 @@ import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy
 import { VanillaAuthenticator } from "../src/authenticators/VanillaAuthenticator.sol";
 import { VanillaVotingStrategy } from "../src/voting-strategies/VanillaVotingStrategy.sol";
 import { VanillaExecutionStrategy } from "../src/execution-strategies/VanillaExecutionStrategy.sol";
+import {
+    VanillaProposalValidationStrategy
+} from "../src/proposal-validation-strategies/VanillaProposalValidationStrategy.sol";
 import { ProxyFactory } from "../src/ProxyFactory.sol";
 import { Space } from "../src/Space.sol";
+import { ISpaceEvents } from "../src/interfaces/space/ISpaceEvents.sol";
 import { IProxyFactoryEvents } from "../src/interfaces/factory/IProxyFactoryEvents.sol";
 import { IProxyFactoryErrors } from "../src/interfaces/factory/IProxyFactoryErrors.sol";
 import { Strategy } from "../src/types.sol";
 
 // solhint-disable-next-line max-states-count
-contract SpaceFactoryTest is Test, IProxyFactoryEvents, IProxyFactoryErrors {
+contract SpaceFactoryTest is Test, IProxyFactoryEvents, IProxyFactoryErrors, ISpaceEvents {
     Space public masterSpace;
     ProxyFactory public factory;
     VanillaVotingStrategy public vanillaVotingStrategy;
     VanillaAuthenticator public vanillaAuthenticator;
     VanillaExecutionStrategy public vanillaExecutionStrategy;
+    VanillaProposalValidationStrategy public vanillaProposalValidationStrategy;
     Strategy[] public votingStrategies;
     address[] public authenticators;
     Strategy[] public executionStrategies;
@@ -27,12 +32,12 @@ contract SpaceFactoryTest is Test, IProxyFactoryEvents, IProxyFactoryErrors {
     uint32 public votingDelay;
     uint32 public minVotingDuration;
     uint32 public maxVotingDuration;
-    uint256 public proposalThreshold;
     Strategy public proposalValidationStrategy;
     uint32 public quorum;
+    string public daoURI;
     string public metadataURI = "SX-EVM";
     string[] public votingStrategyMetadataURIs;
-    string[] public executionStrategyMetadataURIs;
+    string public proposalValidationStrategyMetadataURI;
 
     function setUp() public {
         masterSpace = new Space();
@@ -40,15 +45,22 @@ contract SpaceFactoryTest is Test, IProxyFactoryEvents, IProxyFactoryErrors {
         vanillaVotingStrategy = new VanillaVotingStrategy();
         vanillaAuthenticator = new VanillaAuthenticator();
         vanillaExecutionStrategy = new VanillaExecutionStrategy(quorum);
+        vanillaProposalValidationStrategy = new VanillaProposalValidationStrategy();
+
         owner = address(1);
         votingDelay = 0;
         minVotingDuration = 0;
         maxVotingDuration = 1000;
-        proposalThreshold = 1;
+        uint256 proposalThreshold = 1;
         quorum = 1;
         votingStrategies.push(Strategy(address(vanillaVotingStrategy), new bytes(0)));
+        votingStrategyMetadataURIs.push("VanillaVotingStrategy");
         authenticators.push(address(vanillaAuthenticator));
         executionStrategies.push(Strategy(address(vanillaExecutionStrategy), new bytes(0)));
+        proposalValidationStrategy = Strategy(
+            address(vanillaProposalValidationStrategy),
+            abi.encode(proposalThreshold, votingStrategies)
+        );
     }
 
     function testCreateSpace() public {
@@ -58,6 +70,7 @@ contract SpaceFactoryTest is Test, IProxyFactoryEvents, IProxyFactoryErrors {
 
         vm.expectEmit(true, true, true, true);
         emit ProxyDeployed(address(masterSpace), spaceProxy);
+
         factory.deployProxy(
             address(masterSpace),
             abi.encodeWithSelector(
@@ -66,13 +79,75 @@ contract SpaceFactoryTest is Test, IProxyFactoryEvents, IProxyFactoryErrors {
                 votingDelay,
                 minVotingDuration,
                 maxVotingDuration,
-                proposalThreshold,
+                proposalValidationStrategy,
+                proposalValidationStrategyMetadataURI,
+                daoURI,
                 metadataURI,
                 votingStrategies,
                 votingStrategyMetadataURIs,
-                authenticators,
-                executionStrategies,
-                executionStrategyMetadataURIs
+                authenticators
+            ),
+            salt
+        );
+    }
+
+    function testCreateSpaceInvalidImplementation() public {
+        bytes32 salt = bytes32(keccak256(abi.encodePacked("random salt")));
+
+        vm.expectRevert(InvalidImplementation.selector);
+        factory.deployProxy(
+            address(0),
+            abi.encodeWithSelector(
+                Space.initialize.selector,
+                owner,
+                votingDelay,
+                minVotingDuration,
+                maxVotingDuration,
+                proposalValidationStrategy,
+                metadataURI,
+                votingStrategies,
+                votingStrategyMetadataURIs,
+                authenticators
+            ),
+            salt
+        );
+
+        vm.expectRevert(InvalidImplementation.selector);
+        factory.deployProxy(
+            address(0x123),
+            abi.encodeWithSelector(
+                Space.initialize.selector,
+                owner,
+                votingDelay,
+                minVotingDuration,
+                maxVotingDuration,
+                proposalValidationStrategy,
+                metadataURI,
+                votingStrategies,
+                votingStrategyMetadataURIs,
+                authenticators
+            ),
+            salt
+        );
+    }
+
+    function testCreateSpaceFailedInitialization() public {
+        bytes32 salt = bytes32(keccak256(abi.encodePacked("random salt")));
+
+        vm.expectRevert(FailedInitialization.selector);
+        factory.deployProxy(
+            address(masterSpace),
+            abi.encodeWithSelector(
+                Space.initialize.selector,
+                owner,
+                votingDelay,
+                maxVotingDuration,
+                minVotingDuration,
+                proposalValidationStrategy,
+                metadataURI,
+                votingStrategies,
+                votingStrategyMetadataURIs,
+                authenticators
             ),
             salt
         );
@@ -88,13 +163,13 @@ contract SpaceFactoryTest is Test, IProxyFactoryEvents, IProxyFactoryErrors {
                 votingDelay,
                 minVotingDuration,
                 maxVotingDuration,
-                proposalThreshold,
+                proposalValidationStrategy,
+                proposalValidationStrategyMetadataURI,
+                daoURI,
                 metadataURI,
                 votingStrategies,
                 votingStrategyMetadataURIs,
-                authenticators,
-                executionStrategies,
-                executionStrategyMetadataURIs
+                authenticators
             ),
             salt
         );
@@ -109,13 +184,13 @@ contract SpaceFactoryTest is Test, IProxyFactoryEvents, IProxyFactoryErrors {
                 votingDelay,
                 minVotingDuration,
                 maxVotingDuration,
-                proposalThreshold,
+                proposalValidationStrategy,
+                proposalValidationStrategyMetadataURI,
+                daoURI,
                 metadataURI,
                 votingStrategies,
                 votingStrategyMetadataURIs,
-                authenticators,
-                executionStrategies,
-                executionStrategyMetadataURIs
+                authenticators
             ),
             salt
         );
@@ -131,13 +206,13 @@ contract SpaceFactoryTest is Test, IProxyFactoryEvents, IProxyFactoryErrors {
                 votingDelay,
                 minVotingDuration,
                 maxVotingDuration,
-                proposalThreshold,
+                proposalValidationStrategy,
+                proposalValidationStrategyMetadataURI,
+                daoURI,
                 metadataURI,
                 votingStrategies,
                 votingStrategyMetadataURIs,
-                authenticators,
-                executionStrategies,
-                executionStrategyMetadataURIs
+                authenticators
             ),
             salt
         );
@@ -151,6 +226,8 @@ contract SpaceFactoryTest is Test, IProxyFactoryEvents, IProxyFactoryErrors {
             minVotingDuration,
             maxVotingDuration,
             proposalValidationStrategy,
+            proposalValidationStrategyMetadataURI,
+            daoURI,
             metadataURI,
             votingStrategies,
             votingStrategyMetadataURIs,
@@ -175,7 +252,7 @@ contract SpaceFactoryTest is Test, IProxyFactoryEvents, IProxyFactoryErrors {
         return
             address(
                 uint160(
-                    uint(
+                    uint256(
                         keccak256(
                             abi.encodePacked(
                                 bytes1(0xff),

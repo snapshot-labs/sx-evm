@@ -1,45 +1,65 @@
-// SPDX-License-Identifier: UNLICENSED
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.18;
 
 import { SpaceTest } from "./utils/Space.t.sol";
-import { FinalizationStatus, IndexedStrategy, Proposal, Strategy } from "../src/types.sol";
+import { FinalizationStatus, IndexedStrategy, Proposal, Strategy, UpdateSettingsInput } from "../src/types.sol";
 import { VanillaVotingStrategy } from "../src/voting-strategies/VanillaVotingStrategy.sol";
 import { IExecutionStrategy } from "src/interfaces/IExecutionStrategy.sol";
 import { StupidProposalValidationStrategy } from "./mocks/StupidProposalValidation.sol";
 
 contract ProposeTest is SpaceTest {
     error DuplicateFound(uint8 index);
-    error InvalidStrategyIndex(uint256 index);
 
     function testPropose() public {
         uint256 proposalId = space.nextProposalId();
 
-        bytes32 executionHash = keccak256(abi.encodePacked(executionStrategy.params));
-        uint32 snapshotTimestamp = uint32(block.timestamp);
-        uint32 startTimestamp = uint32(snapshotTimestamp + votingDelay);
-        uint32 minEndTimestamp = uint32(startTimestamp + minVotingDuration);
-        uint32 maxEndTimestamp = uint32(startTimestamp + maxVotingDuration);
+        // There is only one voting strategy, so the `activeVotingStrategies` bit array should be ..001 = 1
+        uint256 activeVotingStrategies = 1;
 
         // Expected content of the proposal struct
         Proposal memory proposal = Proposal(
-            snapshotTimestamp,
-            startTimestamp,
-            minEndTimestamp,
-            maxEndTimestamp,
-            executionHash,
-            IExecutionStrategy(executionStrategy.addy),
+            uint32(block.timestamp),
+            uint32(block.timestamp + votingDelay),
+            uint32(block.timestamp + votingDelay + minVotingDuration),
+            uint32(block.timestamp + votingDelay + maxVotingDuration),
+            keccak256(abi.encodePacked(executionStrategy.params)),
+            IExecutionStrategy(executionStrategy.addr),
             author,
             FinalizationStatus.Pending,
-            votingStrategies
+            activeVotingStrategies
         );
 
         vm.expectEmit(true, true, true, true);
         emit ProposalCreated(proposalId, author, proposal, proposalMetadataURI, executionStrategy.params);
 
-        _createProposal(author, proposalMetadataURI, executionStrategy, userVotingStrategies);
+        _createProposal(author, proposalMetadataURI, executionStrategy, new bytes(0));
 
         // Actual content of the proposal struct
-        Proposal memory _proposal = space.getProposal(proposalId);
+        (
+            uint32 _snapshotTimestamp,
+            uint32 _startTimestamp,
+            uint32 _minEndTimestamp,
+            uint32 _maxEndTimestamp,
+            bytes32 _executionPayloadHash,
+            IExecutionStrategy _executionStrategy,
+            address _author,
+            FinalizationStatus _finalizationStatus,
+            uint256 _activeVotingStrategies
+        ) = space.proposals(proposalId);
+
+        Proposal memory _proposal = Proposal(
+            _snapshotTimestamp,
+            _startTimestamp,
+            _minEndTimestamp,
+            _maxEndTimestamp,
+            _executionPayloadHash,
+            IExecutionStrategy(_executionStrategy),
+            _author,
+            _finalizationStatus,
+            _activeVotingStrategies
+        );
+
+        // Proposal memory _proposal = space.proposalRegistry(proposalId);
 
         // Checking expectations and actual values match
         assertEq(keccak256(abi.encode(_proposal)), keccak256(abi.encode(proposal)));
@@ -47,53 +67,31 @@ contract ProposeTest is SpaceTest {
 
     function testProposeInvalidAuth() public {
         //  Using this contract as an authenticator, which is not whitelisted
-        vm.expectRevert(abi.encodeWithSelector(AuthenticatorNotWhitelisted.selector, address(this)));
+        vm.expectRevert(abi.encodeWithSelector(AuthenticatorNotWhitelisted.selector));
         space.propose(author, proposalMetadataURI, executionStrategy, abi.encode(userVotingStrategies));
-    }
-
-    function testProposeInvalidUserVotingStrategy() public {
-        IndexedStrategy[] memory invalidUsedStrategies = new IndexedStrategy[](1);
-        invalidUsedStrategies[0] = IndexedStrategy(42, new bytes(0));
-
-        // out of bounds revert
-        vm.expectRevert();
-        _createProposal(author, proposalMetadataURI, executionStrategy, invalidUsedStrategies);
     }
 
     function testProposeRefusedValidation() public {
         StupidProposalValidationStrategy stupidProposalValidationStrategy = new StupidProposalValidationStrategy();
         Strategy memory validationStrategy = Strategy(address(stupidProposalValidationStrategy), new bytes(0));
-        space.setProposalValidationStrategy(validationStrategy);
+        space.updateSettings(
+            UpdateSettingsInput(
+                NO_UPDATE_UINT32,
+                NO_UPDATE_UINT32,
+                NO_UPDATE_UINT32,
+                NO_UPDATE_STRING,
+                NO_UPDATE_STRING,
+                validationStrategy,
+                "",
+                NO_UPDATE_ADDRESSES,
+                NO_UPDATE_ADDRESSES,
+                NO_UPDATE_STRATEGIES,
+                NO_UPDATE_STRINGS,
+                NO_UPDATE_UINT8S
+            )
+        );
 
         vm.expectRevert(FailedToPassProposalValidation.selector);
-        _createProposal(author, proposalMetadataURI, executionStrategy, userVotingStrategies);
-    }
-
-    function testProposeDuplicateUserVotingStrategy() public {
-        IndexedStrategy[] memory invalidUsedStrategies = new IndexedStrategy[](4);
-        invalidUsedStrategies[0] = IndexedStrategy(0, new bytes(0));
-        invalidUsedStrategies[1] = IndexedStrategy(1, new bytes(0));
-        invalidUsedStrategies[2] = IndexedStrategy(2, new bytes(0));
-        invalidUsedStrategies[3] = IndexedStrategy(0, new bytes(0)); // Duplicate index
-
-        vm.expectRevert(abi.encodeWithSelector(DuplicateFound.selector, 0));
-        _createProposal(author, proposalMetadataURI, executionStrategy, invalidUsedStrategies);
-    }
-
-    function testProposeMultipleVotingStrategies() public {
-        VanillaVotingStrategy strat2 = new VanillaVotingStrategy();
-        Strategy[] memory toAdd = new Strategy[](2);
-        toAdd[0] = Strategy(address(strat2), new bytes(0));
-        toAdd[1] = Strategy(address(strat2), new bytes(0));
-        string[] memory newVotingStrategyMetadataURIs = new string[](2);
-
-        space.addVotingStrategies(toAdd, newVotingStrategyMetadataURIs);
-
-        IndexedStrategy[] memory newVotingStrategies = new IndexedStrategy[](3);
-        newVotingStrategies[0] = userVotingStrategies[0]; // base strat
-        newVotingStrategies[1] = IndexedStrategy(1, new bytes(0)); // strat2
-        newVotingStrategies[2] = IndexedStrategy(2, new bytes(0)); // strat3
-
-        _createProposal(author, proposalMetadataURI, executionStrategy, userVotingStrategies);
+        _createProposal(author, proposalMetadataURI, executionStrategy, new bytes(0));
     }
 }

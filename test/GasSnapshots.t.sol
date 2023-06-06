@@ -8,7 +8,10 @@ import { SpaceTest } from "./utils/Space.t.sol";
 import { SigUtils } from "./utils/SigUtils.sol";
 import { EthSigAuthenticator } from "../src/authenticators/EthSigAuthenticator.sol";
 import { EthTxAuthenticator } from "../src/authenticators/EthTxAuthenticator.sol";
-import { Choice, IndexedStrategy, Strategy } from "../src/types.sol";
+import {
+    PropositionPowerAndActiveProposalsLimiterValidationStrategy
+} from "../src/proposal-validation-strategies/PropositionPowerAndActiveProposalsLimiterValidationStrategy.sol";
+import { Choice, IndexedStrategy, Strategy, UpdateSettingsInput } from "../src/types.sol";
 
 contract GasSnapshotsTest is SpaceTest, SigUtils {
     CompVotingStrategy internal compVotingStrategy;
@@ -21,6 +24,7 @@ contract GasSnapshotsTest is SpaceTest, SigUtils {
 
     EthSigAuthenticator internal ethSigAuth;
     EthTxAuthenticator internal ethTxAuth;
+    PropositionPowerAndActiveProposalsLimiterValidationStrategy internal validationStrategy;
 
     uint256 internal key2;
     uint256 internal key3;
@@ -49,15 +53,28 @@ contract GasSnapshotsTest is SpaceTest, SigUtils {
         compVotingStrategy = new CompVotingStrategy();
         compToken = new CompToken();
         newVotingStrategies[0] = Strategy(address(compVotingStrategy), abi.encodePacked(address(compToken)));
-        string[] memory newVotingStrategyMetadataURIs = new string[](0);
+        string[] memory newVotingStrategyMetadataURIs = new string[](1);
+
+        uint8[] memory votingStrategiesToRemove = new uint8[](1);
+        votingStrategiesToRemove[0] = 0;
 
         // Update contract's voting strategies.
-        space.addVotingStrategies(newVotingStrategies, newVotingStrategyMetadataURIs);
-
-        uint8[] memory toRemove = new uint8[](1);
-        toRemove[0] = 0;
-        // Remove the vanilla voting strategy.
-        space.removeVotingStrategies(toRemove);
+        space.updateSettings(
+            UpdateSettingsInput(
+                NO_UPDATE_UINT32,
+                NO_UPDATE_UINT32,
+                NO_UPDATE_UINT32,
+                NO_UPDATE_STRING,
+                NO_UPDATE_STRING,
+                NO_UPDATE_STRATEGY,
+                "",
+                NO_UPDATE_ADDRESSES,
+                NO_UPDATE_ADDRESSES,
+                newVotingStrategies,
+                newVotingStrategyMetadataURIs,
+                votingStrategiesToRemove
+            )
+        );
 
         // Mint tokens for the users
         compToken.mint(author, TOKEN_AMOUNT);
@@ -89,23 +106,50 @@ contract GasSnapshotsTest is SpaceTest, SigUtils {
         address[] memory newAuths = new address[](2);
         newAuths[0] = address(ethSigAuth);
         newAuths[1] = address(ethTxAuth);
-        space.addAuthenticators(newAuths);
-
-        // Remove old one to make sure state is clean.
-        space.removeAuthenticators(authenticators);
+        space.updateSettings(
+            UpdateSettingsInput(
+                NO_UPDATE_UINT32,
+                NO_UPDATE_UINT32,
+                NO_UPDATE_UINT32,
+                NO_UPDATE_STRING,
+                NO_UPDATE_STRING,
+                NO_UPDATE_STRATEGY,
+                "",
+                newAuths,
+                authenticators,
+                NO_UPDATE_STRATEGIES,
+                NO_UPDATE_STRINGS,
+                NO_UPDATE_UINT8S
+            )
+        );
 
         // Replace with comp voting strategy which should be at index 1.
         userVotingStrategies[0] = IndexedStrategy(1, newVotingStrategies[0].params);
 
         Strategy[] memory currentVotingStrategies = new Strategy[](2);
-        (address addy0, bytes memory params0) = space.votingStrategies(0);
-        currentVotingStrategies[0] = Strategy(addy0, params0);
-        (address addy1, bytes memory params1) = space.votingStrategies(1);
-        currentVotingStrategies[1] = Strategy(addy1, params1);
+        (address addr0, bytes memory params0) = space.votingStrategies(0);
+        currentVotingStrategies[0] = Strategy(addr0, params0);
+        (address addr1, bytes memory params1) = space.votingStrategies(1);
+        currentVotingStrategies[1] = Strategy(addr1, params1);
 
-        // Udpdate the proposal validation params
-        space.setProposalValidationStrategy(
-            Strategy(address(votingPowerProposalValidationContract), abi.encode(TOKEN_AMOUNT, currentVotingStrategies))
+        // Set the proposal validation strategy to Comp token proposition power.
+        validationStrategy = new PropositionPowerAndActiveProposalsLimiterValidationStrategy();
+        // Using the current active strategies in the space as the allowed strategies for proposal.
+        space.updateSettings(
+            UpdateSettingsInput(
+                NO_UPDATE_UINT32,
+                NO_UPDATE_UINT32,
+                NO_UPDATE_UINT32,
+                NO_UPDATE_STRING,
+                NO_UPDATE_STRING,
+                Strategy(address(validationStrategy), abi.encode(TOKEN_AMOUNT, currentVotingStrategies)),
+                "",
+                NO_UPDATE_ADDRESSES,
+                NO_UPDATE_ADDRESSES,
+                NO_UPDATE_STRATEGIES,
+                NO_UPDATE_STRINGS,
+                NO_UPDATE_UINT8S
+            )
         );
     }
 

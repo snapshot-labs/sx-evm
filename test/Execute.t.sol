@@ -1,14 +1,14 @@
-// SPDX-License-Identifier: UNLICENSED
+// SPDX-License-Identifier: MIT
 
 pragma solidity ^0.8.18;
 
 import { SpaceTest } from "./utils/Space.t.sol";
-import { Choice, IndexedStrategy, ProposalStatus, Strategy } from "../src/types.sol";
+import { Choice, IndexedStrategy, ProposalStatus, Strategy, UpdateSettingsInput } from "../src/types.sol";
 import { VanillaExecutionStrategy } from "../src/execution-strategies/VanillaExecutionStrategy.sol";
 
 contract ExecuteTest is SpaceTest {
     function testExecute() public {
-        uint256 proposalId = _createProposal(author, proposalMetadataURI, executionStrategy, userVotingStrategies);
+        uint256 proposalId = _createProposal(author, proposalMetadataURI, executionStrategy, new bytes(0));
         _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataURI);
         vm.warp(block.timestamp + space.maxVotingDuration());
 
@@ -20,7 +20,7 @@ contract ExecuteTest is SpaceTest {
     }
 
     function testExecuteInvalidProposal() public {
-        uint256 proposalId = _createProposal(author, proposalMetadataURI, executionStrategy, userVotingStrategies);
+        uint256 proposalId = _createProposal(author, proposalMetadataURI, executionStrategy, new bytes(0));
         uint256 invalidProposalId = proposalId + 1;
         _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataURI);
         vm.warp(block.timestamp + space.maxVotingDuration());
@@ -30,7 +30,7 @@ contract ExecuteTest is SpaceTest {
     }
 
     function testExecuteAlreadyExecuted() public {
-        uint256 proposalId = _createProposal(author, proposalMetadataURI, executionStrategy, userVotingStrategies);
+        uint256 proposalId = _createProposal(author, proposalMetadataURI, executionStrategy, new bytes(0));
         _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataURI);
         vm.warp(block.timestamp + space.maxVotingDuration());
         space.execute(proposalId, executionStrategy.params);
@@ -40,8 +40,23 @@ contract ExecuteTest is SpaceTest {
     }
 
     function testExecuteMinDurationNotElapsed() public {
-        space.setMinVotingDuration(100);
-        uint256 proposalId = _createProposal(author, proposalMetadataURI, executionStrategy, userVotingStrategies);
+        space.updateSettings(
+            UpdateSettingsInput(
+                100,
+                NO_UPDATE_UINT32,
+                NO_UPDATE_UINT32,
+                NO_UPDATE_STRING,
+                NO_UPDATE_STRING,
+                NO_UPDATE_STRATEGY,
+                NO_UPDATE_STRING,
+                NO_UPDATE_ADDRESSES,
+                NO_UPDATE_ADDRESSES,
+                NO_UPDATE_STRATEGIES,
+                NO_UPDATE_STRINGS,
+                NO_UPDATE_UINT8S
+            )
+        );
+        uint256 proposalId = _createProposal(author, proposalMetadataURI, executionStrategy, new bytes(0));
         _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataURI);
 
         vm.expectRevert(abi.encodeWithSelector(InvalidProposalStatus.selector, ProposalStatus.VotingPeriod));
@@ -52,14 +67,14 @@ contract ExecuteTest is SpaceTest {
     }
 
     function testExecuteQuorumNotReachedYet() public {
-        uint256 proposalId = _createProposal(author, proposalMetadataURI, executionStrategy, userVotingStrategies);
+        uint256 proposalId = _createProposal(author, proposalMetadataURI, executionStrategy, new bytes(0));
 
         vm.expectRevert(abi.encodeWithSelector(InvalidProposalStatus.selector, ProposalStatus.VotingPeriod));
         space.execute(proposalId, executionStrategy.params);
     }
 
     function testExecuteQuorumNotReachedAtAll() public {
-        uint256 proposalId = _createProposal(author, proposalMetadataURI, executionStrategy, userVotingStrategies);
+        uint256 proposalId = _createProposal(author, proposalMetadataURI, executionStrategy, new bytes(0));
         vm.warp(block.timestamp + space.maxVotingDuration());
 
         vm.expectRevert(abi.encodeWithSelector(InvalidProposalStatus.selector, ProposalStatus.Rejected));
@@ -69,7 +84,7 @@ contract ExecuteTest is SpaceTest {
     }
 
     function testExecuteWithAgainstVote() public {
-        uint256 proposalId = _createProposal(author, proposalMetadataURI, executionStrategy, userVotingStrategies);
+        uint256 proposalId = _createProposal(author, proposalMetadataURI, executionStrategy, new bytes(0));
         _vote(author, proposalId, Choice.Against, userVotingStrategies, voteMetadataURI);
         vm.warp(block.timestamp + space.maxVotingDuration());
 
@@ -80,7 +95,7 @@ contract ExecuteTest is SpaceTest {
     }
 
     function testExecuteWithAbstainVote() public {
-        uint256 proposalId = _createProposal(author, proposalMetadataURI, executionStrategy, userVotingStrategies);
+        uint256 proposalId = _createProposal(author, proposalMetadataURI, executionStrategy, new bytes(0));
         _vote(author, proposalId, Choice.Abstain, userVotingStrategies, voteMetadataURI);
         vm.warp(block.timestamp + space.maxVotingDuration());
 
@@ -91,7 +106,7 @@ contract ExecuteTest is SpaceTest {
     }
 
     function testExecuteInvalidPayload() public {
-        uint256 proposalId = _createProposal(author, proposalMetadataURI, executionStrategy, userVotingStrategies);
+        uint256 proposalId = _createProposal(author, proposalMetadataURI, executionStrategy, new bytes(0));
         _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataURI);
 
         vm.expectRevert(abi.encodeWithSelector(InvalidPayload.selector));
@@ -99,16 +114,15 @@ contract ExecuteTest is SpaceTest {
     }
 
     function testExecuteInvalidExecutionStrategy() public {
-        uint256 proposalId = _createProposal(
-            author,
-            proposalMetadataURI,
-            Strategy(address(space), ""),
-            userVotingStrategies
-        );
+        uint256 proposalId = _createProposal(author, proposalMetadataURI, Strategy(address(space), ""), new bytes(0));
         _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataURI);
         vm.warp(block.timestamp + space.maxVotingDuration());
 
         vm.expectRevert();
         space.execute(proposalId, executionStrategy.params);
+    }
+
+    function testGetStrategyType() external {
+        assertEq(vanillaExecutionStrategy.getStrategyType(), "SimpleQuorumVanilla");
     }
 }

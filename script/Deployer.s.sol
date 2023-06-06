@@ -13,13 +13,19 @@ import { EthSigAuthenticator } from "../src/authenticators/EthSigAuthenticator.s
 import { EthTxAuthenticator } from "../src/authenticators/EthTxAuthenticator.sol";
 import { CompVotingStrategy } from "../src/voting-strategies/CompVotingStrategy.sol";
 import { OZVotesVotingStrategy } from "../src/voting-strategies/OZVotesVotingStrategy.sol";
-import { WhitelistStrategy } from "../src/voting-strategies/WhitelistStrategy.sol";
+import { WhitelistVotingStrategy } from "../src/voting-strategies/WhitelistVotingStrategy.sol";
 import {
     VanillaProposalValidationStrategy
 } from "../src/proposal-validation-strategies/VanillaProposalValidationStrategy.sol";
 import {
-    VotingPowerProposalValidationStrategy
-} from "../src/proposal-validation-strategies/VotingPowerProposalValidationStrategy.sol";
+    PropositionPowerProposalValidationStrategy
+} from "../src/proposal-validation-strategies/PropositionPowerProposalValidationStrategy.sol";
+import {
+    ActiveProposalsLimiterProposalValidationStrategy
+} from "../src/proposal-validation-strategies/ActiveProposalsLimiterProposalValidationStrategy.sol";
+import {
+    PropositionPowerAndActiveProposalsLimiterValidationStrategy
+} from "../src/proposal-validation-strategies/PropositionPowerAndActiveProposalsLimiterValidationStrategy.sol";
 import { ProxyFactory } from "../src/ProxyFactory.sol";
 import { Strategy } from "../src/types.sol";
 
@@ -65,7 +71,7 @@ contract Deployer is Script {
         (address timelockExecutionStrategy, ) = noRedeploy(
             abi.encodePacked(
                 type(TimelockExecutionStrategy).creationCode,
-                abi.encode(address(0x1), new address[](0), 0, 0)
+                abi.encode(address(0x1), address(0x1), new address[](0), 0, 0)
             )
         );
 
@@ -89,8 +95,8 @@ contract Deployer is Script {
         (address vanillaVotingStrategy, ) = noRedeploy(type(VanillaVotingStrategy).creationCode);
         deployments.serialize("VanillaVotingStrategy", vanillaVotingStrategy);
 
-        (address whitelistStrategy, ) = noRedeploy(type(WhitelistStrategy).creationCode);
-        deployments.serialize("WhitelistVotingStrategy", whitelistStrategy);
+        (address whitelistVotingStrategy, ) = noRedeploy(type(WhitelistVotingStrategy).creationCode);
+        deployments.serialize("WhitelistVotingStrategy", whitelistVotingStrategy);
 
         (address compVotingStrategy, ) = noRedeploy(type(CompVotingStrategy).creationCode);
         deployments.serialize("CompVotingStrategy", compVotingStrategy);
@@ -105,10 +111,28 @@ contract Deployer is Script {
         );
         deployments.serialize("VanillaProposalValidationStrategy", vanillaProposalValidationStrategy);
 
-        (address votingPowerProposalValidationStrategy, ) = noRedeploy(
-            type(VotingPowerProposalValidationStrategy).creationCode
+        (address propositionPowerProposalValidationStrategy, ) = noRedeploy(
+            type(PropositionPowerProposalValidationStrategy).creationCode
         );
-        deployments.serialize("VotingPowerProposalValidationStrategy", votingPowerProposalValidationStrategy);
+        deployments.serialize("PropositionPowerProposalValidationStrategy", propositionPowerProposalValidationStrategy);
+
+        (address activeProposalsLimiterProposalValidationStrategy, ) = noRedeploy(
+            type(ActiveProposalsLimiterProposalValidationStrategy).creationCode
+        );
+
+        deployments.serialize(
+            "ActiveProposalsLimiterProposalValidationStrategy",
+            activeProposalsLimiterProposalValidationStrategy
+        );
+
+        (address propositionPowerAndActiveProposalsLimiterValidationStrategy, ) = noRedeploy(
+            type(PropositionPowerAndActiveProposalsLimiterValidationStrategy).creationCode
+        );
+
+        deployments.serialize(
+            "PropositionPowerAndActiveProposalsLimiterValidationStrategy",
+            propositionPowerAndActiveProposalsLimiterValidationStrategy
+        );
 
         // ------- Factory -------
 
@@ -133,6 +157,8 @@ contract Deployer is Script {
                 1,
                 1,
                 Strategy(address(0x1), new bytes(0)),
+                "",
+                "",
                 "",
                 emptyStrategyArray,
                 emptyStringArray,

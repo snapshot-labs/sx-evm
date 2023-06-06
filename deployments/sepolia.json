@@ -1,15 +1,17 @@
 {
-  "VanillaAuthenticator": "0x6896120fDf2d791E4DC1c673D8BEcd54B14Dd607",
-  "VanillaProposalValidationStrategy": "0x80D9665e5761A778A97283dEc14581C4c0bF8d51",
-  "VotingPowerProposalValidationStrategy": "0x03d512E0165d6B53ED2753Df2f3184fBd2b52E48",
-  "TimelockExecutionStrategyImplementation": "0xd6eAc4fB6F92d97BAacE36F4064381616b61CEAb",
-  "EthSigAuthenticator": "0xc537d997dDc783E071F82CCBfAa0D768d310001b",
   "EthTxAuthenticator": "0xdDb36B865A1021524b936FB29FCbA5Fac073DB74",
-  "WhitelistVotingStrategy": "0xF50Bf15e9fE61e27625a4eCDfc23211297E8bE85",
-  "AvatarExecutionStrategyImplementation": "0x6F12C67cAd3e566B60A6AE0146761110F1Ea6Eb2",
-  "OZVotesVotingStrategy": "0x4aAa33b4367dc5657854bD40738201651eC0cC7B",
+  "VanillaProposalValidationStrategy": "0x80D9665e5761A778A97283dEc14581C4c0bF8d51",
+  "PropositionPowerProposalValidationStrategy": "0x8eFcc6975342a29cc09E47EF57C5E9219FCE37fA",
+  "WhitelistVotingStrategy": "0x54449c058bBf0B777745944ea1A7b79786FBC958",
   "CompVotingStrategy": "0x343Baf4b44F7f79b14301CFA8068E3F8BE7470De",
+  "PropositionPowerAndActiveProposalsLimiterValidationStrategy": "0x66a3e667C2568496Cb66FF659883e8A2E2Dc5De9",
+  "OZVotesVotingStrategy": "0x4aAa33b4367dc5657854bD40738201651eC0cC7B",
+  "VanillaVotingStrategy": "0xEBA53160c146CbF77A150e9a218d4C2dE5DB6B51",
+  "EthSigAuthenticator": "0x3e3A68e0e70dBF78051109a9f379B7A7adec82f4",
+  "ActiveProposalsLimiterProposalValidationStrategy": "0x4D85A54d54a1eDB90CA109d0a013667D451918B9",
   "ProxyFactory": "0x12A1FfFFfd70677939D61d641eA043bc9060c718",
-  "SpaceImplementation": "0xB5E5c8a9A999Da1AABb2b45DC9F72F2be042e204",
-  "VanillaVotingStrategy": "0xEBA53160c146CbF77A150e9a218d4C2dE5DB6B51"
+  "SpaceImplementation": "0x7cC62f8E9BF2b44ce704D2cdCd4aa8021d5A6f4B",
+  "VanillaAuthenticator": "0x6896120fDf2d791E4DC1c673D8BEcd54B14Dd607",
+  "TimelockExecutionStrategyImplementation": "0xdb86512e7E3a2d0B93b74b8FE3fFE8AD780791BE",
+  "AvatarExecutionStrategyImplementation": "0x177F163F8f789F0d9C5c7993728ADB106a7b12d4"
 }

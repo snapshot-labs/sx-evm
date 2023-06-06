@@ -1,10 +1,10 @@
-// SPDX-License-Identifier: UNLICENSED
+// SPDX-License-Identifier: MIT
 
 pragma solidity ^0.8.18;
 
 import { SpaceTest } from "./utils/Space.t.sol";
 import { VanillaExecutionStrategy } from "../src/execution-strategies/VanillaExecutionStrategy.sol";
-import { Choice, IndexedStrategy, Strategy } from "../src/types.sol";
+import { Choice, IndexedStrategy, Strategy, UpdateSettingsInput } from "../src/types.sol";
 
 contract UpdateProposalTest is SpaceTest {
     string internal newMetadataURI = "Testing123";
@@ -17,7 +17,22 @@ contract UpdateProposalTest is SpaceTest {
 
         // Set the votingDelay to 10.
         votingDelay = 10;
-        space.setVotingDelay(votingDelay);
+        space.updateSettings(
+            UpdateSettingsInput(
+                NO_UPDATE_UINT32,
+                NO_UPDATE_UINT32,
+                votingDelay,
+                NO_UPDATE_STRING,
+                NO_UPDATE_STRING,
+                NO_UPDATE_STRATEGY,
+                NO_UPDATE_STRING,
+                NO_UPDATE_ADDRESSES,
+                NO_UPDATE_ADDRESSES,
+                NO_UPDATE_STRATEGIES,
+                NO_UPDATE_STRINGS,
+                NO_UPDATE_UINT8S
+            )
+        );
     }
 
     function _updateProposal(
@@ -34,7 +49,7 @@ contract UpdateProposalTest is SpaceTest {
     }
 
     function testUpdateProposal() public {
-        uint256 proposalId = _createProposal(author, proposalMetadataURI, executionStrategy, userVotingStrategies);
+        uint256 proposalId = _createProposal(author, proposalMetadataURI, executionStrategy, new bytes(0));
 
         vm.expectEmit(true, true, true, true);
         emit ProposalUpdated(proposalId, newStrategy, newMetadataURI);
@@ -49,7 +64,7 @@ contract UpdateProposalTest is SpaceTest {
     }
 
     function testUpdateProposalAfterDelay() public {
-        uint256 proposalId = _createProposal(author, proposalMetadataURI, executionStrategy, userVotingStrategies);
+        uint256 proposalId = _createProposal(author, proposalMetadataURI, executionStrategy, new bytes(0));
         vm.warp(block.timestamp + votingDelay);
 
         vm.expectRevert(VotingDelayHasPassed.selector);
@@ -58,16 +73,16 @@ contract UpdateProposalTest is SpaceTest {
     }
 
     function testUpdateProposalInvalidCaller() public {
-        uint256 proposalId = _createProposal(author, proposalMetadataURI, executionStrategy, userVotingStrategies);
+        uint256 proposalId = _createProposal(author, proposalMetadataURI, executionStrategy, new bytes(0));
 
         vm.expectRevert(InvalidCaller.selector);
         _updateProposal(address(42), proposalId, newStrategy, newMetadataURI);
     }
 
     function testUpdateProposalUnauthenticated() public {
-        uint256 proposalId = _createProposal(author, proposalMetadataURI, executionStrategy, userVotingStrategies);
+        uint256 proposalId = _createProposal(author, proposalMetadataURI, executionStrategy, new bytes(0));
 
-        vm.expectRevert(abi.encodeWithSelector(AuthenticatorNotWhitelisted.selector, address(this)));
+        vm.expectRevert(abi.encodeWithSelector(AuthenticatorNotWhitelisted.selector));
         space.updateProposal(author, proposalId, newStrategy, newMetadataURI);
     }
 }

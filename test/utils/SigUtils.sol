@@ -18,8 +18,8 @@ abstract contract SigUtils {
     bytes32 private constant PROPOSE_TYPEHASH =
         keccak256(
             "Propose(address space,address author,string metadataURI,Strategy executionStrategy,"
-            "bytes userParams,uint256 salt)"
-            "Strategy(address addy,bytes params)"
+            "bytes userProposalValidationParams,uint256 salt)"
+            "Strategy(address addr,bytes params)"
         );
     bytes32 private constant VOTE_TYPEHASH =
         keccak256(
@@ -30,8 +30,8 @@ abstract contract SigUtils {
     bytes32 private constant UPDATE_PROPOSAL_TYPEHASH =
         keccak256(
             "updateProposal(address space,address author,uint256 proposalId,"
-            "Strategy executionStrategy,string metadataURI)"
-            "Strategy(address addy,bytes params)"
+            "Strategy executionStrategy,string metadataURI,uint256 salt)"
+            "Strategy(address addr,bytes params)"
         );
 
     constructor(string memory _name, string memory _version) {
@@ -45,7 +45,7 @@ abstract contract SigUtils {
         address author,
         string memory metadataURI,
         Strategy memory executionStrategy,
-        bytes memory userParams,
+        bytes memory userProposalValidationParams,
         uint256 salt
     ) internal view returns (bytes32) {
         bytes32 digest = keccak256(
@@ -67,13 +67,12 @@ abstract contract SigUtils {
                         author,
                         keccak256(bytes(metadataURI)),
                         executionStrategy.hash(),
-                        keccak256(userParams),
+                        keccak256(userProposalValidationParams),
                         salt
                     )
                 )
             )
         );
-
         return digest;
     }
 
@@ -121,7 +120,8 @@ abstract contract SigUtils {
         address author,
         uint256 proposalId,
         Strategy memory executionStrategy,
-        string memory metadataURI
+        string memory metadataURI,
+        uint256 salt
     ) internal view returns (bytes32) {
         bytes32 digest = keccak256(
             abi.encodePacked(
@@ -142,7 +142,8 @@ abstract contract SigUtils {
                         author,
                         proposalId,
                         executionStrategy.hash(),
-                        keccak256(bytes(metadataURI))
+                        keccak256(bytes(metadataURI)),
+                        salt
                     )
                 )
             )
