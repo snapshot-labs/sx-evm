@@ -6,7 +6,7 @@ pragma solidity ^0.8.18;
 /// @notice This module can be used to limit the number of active proposals per author.
 abstract contract ActiveProposalsLimiter {
     struct PackedData {
-        uint224 activeProposals;
+        uint32 activeProposals;
         uint32 lastUpdate;
     }
 
