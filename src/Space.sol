@@ -42,6 +42,9 @@ contract Space is ISpace, Initializable, IERC4824, UUPSUpgradeable, OwnableUpgra
     /// @dev Evaluates to: `0xf2cda9b1`.
     uint32 private constant NO_UPDATE_UINT32 = uint32(bytes4(keccak256(abi.encodePacked("No update"))));
 
+    /// @dev Buffer between when the voting period starts and when the proposal can be updated for the last time.
+    uint32 private PROPOSAL_MODIFICATION_BUFFER = 15 * 60;
+
     /// @inheritdoc IERC4824
     string public daoURI;
     /// @inheritdoc ISpaceState
@@ -335,7 +338,7 @@ contract Space is ISpace, Initializable, IERC4824, UUPSUpgradeable, OwnableUpgra
     ) external override onlyAuthenticator {
         Proposal storage proposal = proposals[proposalId];
         if (author != proposal.author) revert InvalidCaller();
-        if (block.timestamp >= proposal.startTimestamp) revert VotingDelayHasPassed();
+        if (block.timestamp >= proposal.startTimestamp - PROPOSAL_MODIFICATION_BUFFER) revert TooLateToUpdateProposal();
 
         proposal.executionPayloadHash = keccak256(executionStrategy.params);
         proposal.executionStrategy = IExecutionStrategy(executionStrategy.addr);

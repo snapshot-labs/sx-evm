@@ -67,7 +67,7 @@ contract UpdateProposalTest is SpaceTest {
         uint256 proposalId = _createProposal(author, proposalMetadataURI, executionStrategy, new bytes(0));
         vm.warp(block.timestamp + votingDelay);
 
-        vm.expectRevert(VotingDelayHasPassed.selector);
+        vm.expectRevert(TooLateToUpdateProposal.selector);
         // Try to update metadata. Should fail.
         _updateProposal(author, proposalId, newStrategy, newMetadataURI);
     }

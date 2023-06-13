@@ -50,8 +50,9 @@ interface ISpaceErrors {
     /// @notice Thrown if a user attempts to finalize (execute or cancel) a proposal that has already been finalized.
     error ProposalFinalized();
 
-    /// @notice Thrown if an author attempts to update their proposal after the voting delay has passed.
-    error VotingDelayHasPassed();
+    /// @notice Thrown if an author attempts to update their proposal after the voting delay has passed (or if
+    ///         if too close to when the voting starts).
+    error TooLateToUpdateProposal();
 
     /// @notice Thrown if a new proposal did not pass the proposal validation strategy for the space.
     error FailedToPassProposalValidation();
