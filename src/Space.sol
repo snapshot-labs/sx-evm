@@ -440,7 +440,7 @@ contract Space is ISpace, Initializable, IERC4824, UUPSUpgradeable, OwnableUpgra
         uint256 allowedStrategies
     ) internal returns (uint256) {
         // Ensure there are no duplicates to avoid an attack where people double count a strategy.
-        userStrategies.assertNoDuplicateIndices();
+        userStrategies.assertNoDuplicateIndicesCalldata();
 
         uint256 totalVotingPower;
         for (uint256 i = 0; i < userStrategies.length; ++i) {
