@@ -336,6 +336,7 @@ contract Space is ISpace, Initializable, IERC4824, UUPSUpgradeable, OwnableUpgra
         Proposal storage proposal = proposals[proposalId];
         if (author != proposal.author) revert InvalidCaller();
         if (block.timestamp >= proposal.startTimestamp) revert VotingDelayHasPassed();
+        _assertProposalExists(proposal);
 
         proposal.executionPayloadHash = keccak256(executionStrategy.params);
         proposal.executionStrategy = IExecutionStrategy(executionStrategy.addr);
