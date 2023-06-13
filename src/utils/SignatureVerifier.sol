@@ -45,7 +45,14 @@ abstract contract SignatureVerifier is EIP712 {
     constructor(string memory name, string memory version) EIP712(name, version) {}
 
     /// @dev Verifies an EIP712 signature for a propose call.
-    function _verifyProposeSig(uint8 v, bytes32 r, bytes32 s, uint256 salt, address space, bytes memory data) internal {
+    function _verifyProposeSig(
+        uint8 v,
+        bytes32 r,
+        bytes32 s,
+        uint256 salt,
+        address space,
+        bytes calldata data
+    ) internal {
         (
             address author,
             string memory metadataURI,
@@ -81,7 +88,7 @@ abstract contract SignatureVerifier is EIP712 {
     }
 
     /// @dev Verifies an EIP712 signature for a vote call.
-    function _verifyVoteSig(uint8 v, bytes32 r, bytes32 s, address space, bytes memory data) internal view {
+    function _verifyVoteSig(uint8 v, bytes32 r, bytes32 s, address space, bytes calldata data) internal view {
         (
             address voter,
             uint256 proposeId,
@@ -119,7 +126,7 @@ abstract contract SignatureVerifier is EIP712 {
         bytes32 s,
         uint256 salt,
         address space,
-        bytes memory data
+        bytes calldata data
     ) internal {
         (address author, uint256 proposalId, Strategy memory executionStrategy, string memory metadataURI) = abi.decode(
             data,

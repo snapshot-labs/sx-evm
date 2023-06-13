@@ -26,13 +26,13 @@ interface ISpaceActions {
         uint32 votingDelay,
         uint32 minVotingDuration,
         uint32 maxVotingDuration,
-        Strategy memory proposalValidationStrategy,
-        string memory proposalValidationStrategyMetadataURI,
-        string memory daoURI,
-        string memory metadataURI,
-        Strategy[] memory votingStrategies,
-        string[] memory votingStrategyMetadataURIs,
-        address[] memory authenticators
+        Strategy calldata proposalValidationStrategy,
+        string calldata proposalValidationStrategyMetadataURI,
+        string calldata daoURI,
+        string calldata metadataURI,
+        Strategy[] calldata votingStrategies,
+        string[] calldata votingStrategyMetadataURIs,
+        address[] calldata authenticators
     ) external;
 
     /// @notice  Creates a proposal.
