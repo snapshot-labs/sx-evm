@@ -6,18 +6,8 @@ import { IndexedStrategy, Proposal, Strategy, Choice, InitializeCalldata } from 
 /// @title Space Events
 interface ISpaceEvents {
     /// @notice Emitted when a space is created.
-    // / @param space The address of the space.
-    // / @param owner The address of the space owner (controller).
-    // / @param votingDelay The delay in seconds between the creation of a proposal and the start of voting.
-    // / @param minVotingDuration The minimum duration of the voting period.
-    // / @param maxVotingDuration The maximum duration of the voting period.
-    // / @param proposalValidationStrategy  The strategy to use to validate a proposal,
-    // /        consisting of a strategy address and an array of configuration parameters.
-    // / @param metadataURI The metadata URI for the space.
-    // / @param votingStrategies  The whitelisted voting strategies,
-    // /        each consisting of a strategy address and an array of configuration parameters.
-    // / @param votingStrategyMetadataURIs The metadata URIs for `votingStrategies`.
-    // / @param authenticators The whitelisted authenticator addresses.
+    /// @param space The address of the space.
+    /// @param input The space initialization parameters.
     event SpaceCreated(address space, InitializeCalldata input);
 
     /// @notice Emitted when a proposal is created.
