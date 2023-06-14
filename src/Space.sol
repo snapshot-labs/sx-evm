@@ -247,14 +247,14 @@ contract Space is ISpace, Initializable, IERC4824, UUPSUpgradeable, OwnableUpgra
         bytes32 executionPayloadHash = keccak256(executionStrategy.params);
 
         Proposal memory proposal = Proposal(
+            author,
             snapshotTimestamp,
             startTimestamp,
+            IExecutionStrategy(executionStrategy.addr),
             minEndTimestamp,
             maxEndTimestamp,
-            executionPayloadHash,
-            IExecutionStrategy(executionStrategy.addr),
-            author,
             FinalizationStatus.Pending,
+            executionPayloadHash,
             activeVotingStrategies
         );
 
