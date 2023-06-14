@@ -45,6 +45,7 @@ abstract contract SignatureVerifier is EIP712 {
     constructor(string memory name, string memory version) EIP712(name, version) {}
 
     /// @dev Verifies an EIP712 signature for a propose call.
+    ///      We use memory instead of calldata here for the `data` argument because of stack constraints.
     function _verifyProposeSig(uint8 v, bytes32 r, bytes32 s, uint256 salt, address space, bytes memory data) internal {
         (
             address author,
@@ -113,6 +114,7 @@ abstract contract SignatureVerifier is EIP712 {
     }
 
     /// @dev Verifies an EIP712 signature for an update proposal call.
+    ///      We use memory instead of calldata here for the `data` argument because of stack constraints.
     function _verifyUpdateProposalSig(
         uint8 v,
         bytes32 r,
