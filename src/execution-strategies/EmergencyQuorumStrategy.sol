@@ -10,6 +10,9 @@ abstract contract EmergencyQuorumStrategy is IExecutionStrategy, SpaceManager {
     uint256 public quorum;
     uint256 public emergencyQuorum;
 
+    event QuorumUpdated(uint256 _quorum);
+    event EmergencyQuorumUpdated(uint256 _emergencyQuorum);
+
     /// @dev Initializer
     // solhint-disable-next-line func-name-mixedcase
     function __EmergencyQuorumExecutionStrategy_init(
@@ -18,6 +21,16 @@ abstract contract EmergencyQuorumStrategy is IExecutionStrategy, SpaceManager {
     ) internal onlyInitializing {
         quorum = _quorum;
         emergencyQuorum = _emergencyQuorum;
+    }
+
+    function setQuorum(uint256 _quorum) external onlyOwner {
+        quorum = _quorum;
+        emit QuorumUpdated(_quorum);
+    }
+
+    function setEmergencyQuorum(uint256 _emergencyQuorum) external onlyOwner {
+        emergencyQuorum = _emergencyQuorum;
+        emit EmergencyQuorumUpdated(_emergencyQuorum);
     }
 
     function execute(

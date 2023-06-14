@@ -9,12 +9,17 @@ import { EmergencyQuorumStrategy } from "../src/execution-strategies/EmergencyQu
 contract EmergencyQuorumExec is EmergencyQuorumStrategy {
     uint256 internal numExecuted;
 
-    constructor(uint256 _quorum, uint256 _emergencyQuorum) {
-        setUp(abi.encode(_quorum, _emergencyQuorum));
+    constructor(address _owner, uint256 _quorum, uint256 _emergencyQuorum) {
+        setUp(abi.encode(_owner, _quorum, _emergencyQuorum));
     }
 
     function setUp(bytes memory initParams) public initializer {
-        (uint256 _quorum, uint256 _emergencyQuorum) = abi.decode(initParams, (uint256, uint256));
+        (address _owner, uint256 _quorum, uint256 _emergencyQuorum) = abi.decode(
+            initParams,
+            (address, uint256, uint256)
+        );
+        __Ownable_init();
+        transferOwnership(_owner);
         __EmergencyQuorumExecutionStrategy_init(_quorum, _emergencyQuorum);
     }
 
@@ -40,6 +45,9 @@ contract EmergencyQuorumExec is EmergencyQuorumStrategy {
 }
 
 contract EmergencyQuorumTest is SpaceTest {
+    event EmergencyQuorumUpdated(uint256 newEmergencyQuorum);
+    event QuorumUpdated(uint256 newQuorum);
+
     Strategy internal emergencyStrategy;
     uint256 internal emergencyQuorum = 2;
     EmergencyQuorumExec internal emergency;
@@ -47,7 +55,7 @@ contract EmergencyQuorumTest is SpaceTest {
     function setUp() public override {
         super.setUp();
 
-        emergency = new EmergencyQuorumExec(quorum, emergencyQuorum);
+        emergency = new EmergencyQuorumExec(owner, quorum, emergencyQuorum);
         emergencyStrategy = Strategy(address(emergency), new bytes(0));
 
         minVotingDuration = 100;
@@ -156,7 +164,7 @@ contract EmergencyQuorumTest is SpaceTest {
     }
 
     function testEmergencyQuorumLowerThanQuorum() public {
-        EmergencyQuorumExec emergencyQuorumExec = new EmergencyQuorumExec(quorum, quorum - 1);
+        EmergencyQuorumExec emergencyQuorumExec = new EmergencyQuorumExec(owner, quorum, quorum - 1);
 
         emergencyStrategy = Strategy(address(emergencyQuorumExec), new bytes(0));
 
@@ -227,5 +235,82 @@ contract EmergencyQuorumTest is SpaceTest {
 
     function testGetStrategyType() public {
         assertEq(emergency.getStrategyType(), "EmergencyQuorumExecution");
+    }
+
+    function testEmergencyQuorumSetEmergencyQuorum() public {
+        uint256 newEmergencyQuorum = 4; // emergencyQuorum * 2
+
+        vm.expectEmit(true, true, true, true);
+        emit EmergencyQuorumUpdated(newEmergencyQuorum);
+        emergency.setEmergencyQuorum(newEmergencyQuorum);
+
+        uint256 proposalId = _createProposal(
+            author,
+            proposalMetadataURI,
+            emergencyStrategy,
+            abi.encode(userVotingStrategies)
+        );
+        _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataURI); // 1
+        _vote(address(42), proposalId, Choice.For, userVotingStrategies, voteMetadataURI); // 2
+
+        // The proposal should not be executed because the new emergency quorum hasn't been reached yet.
+        vm.expectRevert(abi.encodeWithSelector(InvalidProposalStatus.selector, ProposalStatus.VotingPeriod));
+        space.execute(proposalId, emergencyStrategy.params);
+
+        _vote(address(43), proposalId, Choice.For, userVotingStrategies, voteMetadataURI); // 3
+        _vote(address(44), proposalId, Choice.For, userVotingStrategies, voteMetadataURI); // 4
+
+        // EmergencyQuorum has been reached; the proposal should get executed!
+        vm.expectEmit(true, true, true, true);
+        emit ProposalExecuted(proposalId);
+        space.execute(proposalId, emergencyStrategy.params);
+
+        assertEq(uint8(space.getProposalStatus(proposalId)), uint8(ProposalStatus.Executed));
+    }
+
+    function testEmergencyQuorumSetEmergencyQuorumUnauthorized() public {
+        uint256 newEmergencyQuorum = 4; // emergencyQuorum * 2
+        vm.prank(address(0xdeadbeef));
+        vm.expectRevert("Ownable: caller is not the owner");
+        emergency.setEmergencyQuorum(newEmergencyQuorum);
+    }
+
+    function testEmergencyQuorumSetQuorum() public {
+        uint256 newQuorum = quorum * 2; // 2
+
+        vm.expectEmit(true, true, true, true);
+        emit QuorumUpdated(newQuorum);
+        emergency.setQuorum(newQuorum);
+
+        uint256 proposalId = _createProposal(
+            author,
+            proposalMetadataURI,
+            emergencyStrategy,
+            abi.encode(userVotingStrategies)
+        );
+        _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataURI); // 1
+
+        // Warp to the minimum voting duration
+        vm.warp(block.timestamp + minVotingDuration);
+
+        // The proposal should not be executed because the new emergency quorum hasn't been reached yet.
+        vm.expectRevert(abi.encodeWithSelector(InvalidProposalStatus.selector, ProposalStatus.VotingPeriod));
+        space.execute(proposalId, emergencyStrategy.params);
+
+        _vote(address(42), proposalId, Choice.For, userVotingStrategies, voteMetadataURI); // 2
+
+        // Quorum has been reached; the proposal should get executed!
+        vm.expectEmit(true, true, true, true);
+        emit ProposalExecuted(proposalId);
+        space.execute(proposalId, emergencyStrategy.params);
+
+        assertEq(uint8(space.getProposalStatus(proposalId)), uint8(ProposalStatus.Executed));
+    }
+
+    function testEmergencyQuorumSetQuorumUnauthorized() public {
+        uint256 newQuorum = quorum * 2; // 2
+        vm.prank(address(0xdeadbeef));
+        vm.expectRevert("Ownable: caller is not the owner");
+        emergency.setQuorum(newQuorum);
     }
 }
