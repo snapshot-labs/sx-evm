@@ -15,7 +15,8 @@ import {
     Proposal,
     ProposalStatus,
     Strategy,
-    UpdateSettingsInput
+    UpdateSettingsInput,
+    InitializeInput
 } from "src/types.sol";
 import { IVotingStrategy } from "src/interfaces/IVotingStrategy.sol";
 import { IExecutionStrategy } from "src/interfaces/IExecutionStrategy.sol";
@@ -70,49 +71,24 @@ contract Space is ISpace, Initializable, IERC4824, UUPSUpgradeable, OwnableUpgra
     mapping(uint256 proposalId => mapping(address voter => bool hasVoted)) public override voteRegistry;
 
     /// @inheritdoc ISpaceActions
-    function initialize(
-        address _owner,
-        uint32 _votingDelay,
-        uint32 _minVotingDuration,
-        uint32 _maxVotingDuration,
-        Strategy calldata _proposalValidationStrategy,
-        string calldata _proposalValidationStrategyMetadataURI,
-        string calldata _daoURI,
-        string calldata _metadataURI,
-        Strategy[] calldata _votingStrategies,
-        string[] calldata _votingStrategyMetadataURIs,
-        address[] calldata _authenticators
-    ) public override initializer {
-        if (_votingStrategies.length == 0) revert EmptyArray();
-        if (_authenticators.length == 0) revert EmptyArray();
-        if (_votingStrategies.length != _votingStrategyMetadataURIs.length) revert ArrayLengthMismatch();
+    function initialize(InitializeInput calldata input) public override initializer {
+        if (input.votingStrategies.length == 0) revert EmptyArray();
+        if (input.authenticators.length == 0) revert EmptyArray();
+        if (input.votingStrategies.length != input.votingStrategyMetadataURIs.length) revert ArrayLengthMismatch();
 
         __Ownable_init();
-        transferOwnership(_owner);
-        _setDaoURI(_daoURI);
-        _setMaxVotingDuration(_maxVotingDuration);
-        _setMinVotingDuration(_minVotingDuration);
-        _setProposalValidationStrategy(_proposalValidationStrategy);
-        _setVotingDelay(_votingDelay);
-        _addVotingStrategies(_votingStrategies);
-        _addAuthenticators(_authenticators);
+        transferOwnership(input.owner);
+        _setDaoURI(input.daoURI);
+        _setMaxVotingDuration(input.maxVotingDuration);
+        _setMinVotingDuration(input.minVotingDuration);
+        _setProposalValidationStrategy(input.proposalValidationStrategy);
+        _setVotingDelay(input.votingDelay);
+        _addVotingStrategies(input.votingStrategies);
+        _addAuthenticators(input.authenticators);
 
         nextProposalId = 1;
 
-        emit SpaceCreated(
-            address(this),
-            _owner,
-            _votingDelay,
-            _minVotingDuration,
-            _maxVotingDuration,
-            _proposalValidationStrategy,
-            _proposalValidationStrategyMetadataURI,
-            _daoURI,
-            _metadataURI,
-            _votingStrategies,
-            _votingStrategyMetadataURIs,
-            _authenticators
-        );
+        emit SpaceCreated(address(this), input);
     }
 
     // ------------------------------------
