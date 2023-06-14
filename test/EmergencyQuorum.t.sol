@@ -9,8 +9,14 @@ import { EmergencyQuorumStrategy } from "../src/execution-strategies/EmergencyQu
 contract EmergencyQuorumExec is EmergencyQuorumStrategy {
     uint256 internal numExecuted;
 
-    // solhint-disable-next-line no-empty-blocks
-    constructor(uint256 _quorum, uint256 _emergencyQuorum) EmergencyQuorumStrategy(_quorum, _emergencyQuorum) {}
+    constructor(uint256 _quorum, uint256 _emergencyQuorum) {
+        setUp(abi.encode(_quorum, _emergencyQuorum));
+    }
+
+    function setUp(bytes memory initParams) public initializer {
+        (uint256 _quorum, uint256 _emergencyQuorum) = abi.decode(initParams, (uint256, uint256));
+        __EmergencyQuorumExecutionStrategy_init(_quorum, _emergencyQuorum);
+    }
 
     function execute(
         Proposal memory proposal,

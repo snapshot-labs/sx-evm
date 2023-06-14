@@ -4,12 +4,18 @@ pragma solidity ^0.8.18;
 
 import { IExecutionStrategy } from "../interfaces/IExecutionStrategy.sol";
 import { FinalizationStatus, Proposal, ProposalStatus } from "../types.sol";
+import { SpaceManager } from "../utils/SpaceManager.sol";
 
-abstract contract EmergencyQuorumStrategy is IExecutionStrategy {
+abstract contract EmergencyQuorumStrategy is IExecutionStrategy, SpaceManager {
     uint256 public quorum;
     uint256 public emergencyQuorum;
 
-    constructor(uint256 _quorum, uint256 _emergencyQuorum) {
+    /// @dev Initializer
+    // solhint-disable-next-line func-name-mixedcase
+    function __EmergencyQuorumExecutionStrategy_init(
+        uint256 _quorum,
+        uint256 _emergencyQuorum
+    ) internal onlyInitializing {
         quorum = _quorum;
         emergencyQuorum = _emergencyQuorum;
     }
