@@ -38,8 +38,7 @@ abstract contract SimpleQuorumExecutionStrategy is IExecutionStrategy, SpaceMana
         uint256 votesAgainst,
         uint256 votesAbstain
     ) public view override returns (ProposalStatus) {
-        bool accepted = _quorumReached(quorum, votesFor, votesAgainst, votesAbstain) &&
-            _supported(votesFor, votesAgainst);
+        bool accepted = _quorumReached(quorum, votesFor, votesAbstain) && _supported(votesFor, votesAgainst);
         if (proposal.finalizationStatus == FinalizationStatus.Cancelled) {
             return ProposalStatus.Cancelled;
         } else if (proposal.finalizationStatus == FinalizationStatus.Executed) {
@@ -61,13 +60,8 @@ abstract contract SimpleQuorumExecutionStrategy is IExecutionStrategy, SpaceMana
         }
     }
 
-    function _quorumReached(
-        uint256 _quorum,
-        uint256 _votesFor,
-        uint256 _votesAgainst,
-        uint256 _votesAbstain
-    ) internal pure returns (bool) {
-        uint256 totalVotes = _votesFor + _votesAgainst + _votesAbstain;
+    function _quorumReached(uint256 _quorum, uint256 _votesFor, uint256 _votesAbstain) internal pure returns (bool) {
+        uint256 totalVotes = _votesFor + _votesAbstain;
         return totalVotes >= _quorum;
     }
 
