@@ -71,7 +71,7 @@ contract Space is ISpace, Initializable, IERC4824, UUPSUpgradeable, OwnableUpgra
     mapping(uint256 proposalId => mapping(address voter => bool hasVoted)) public override voteRegistry;
 
     /// @inheritdoc ISpaceActions
-    function initialize(InitializeCalldata calldata input) public override initializer {
+    function initialize(InitializeCalldata calldata input) external override initializer {
         if (input.votingStrategies.length == 0) revert EmptyArray();
         if (input.authenticators.length == 0) revert EmptyArray();
         if (input.votingStrategies.length != input.votingStrategyMetadataURIs.length) revert ArrayLengthMismatch();
@@ -393,11 +393,6 @@ contract Space is ISpace, Initializable, IERC4824, UUPSUpgradeable, OwnableUpgra
             authenticators[_authenticators[i]] = false;
         }
         // TODO: should we check that there are still authenticators left? same for other setters..
-    }
-
-    /// @dev Reverts if `msg.sender` is not in the list of whitelisted authenticators.
-    function _assertValidAuthenticator() internal view {
-        if (authenticators[msg.sender] != true) revert AuthenticatorNotWhitelisted();
     }
 
     /// @dev Reverts if a specified proposal does not exist.
