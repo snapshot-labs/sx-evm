@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.18;
 
-import { Choice, IndexedStrategy, Strategy, InitializeInput } from "src/types.sol";
+import { Choice, IndexedStrategy, Strategy, InitializeCalldata } from "src/types.sol";
 
 /// @title Space Actions
 /// @notice User focused actions that can be performed on a space.
@@ -23,7 +23,7 @@ interface ISpaceActions {
     ///          votingStrategyMetadataURIs  The metadata URIs for `votingStrategies`.
     ///          authenticators The whitelisted authenticator addresses.
     /// @dev A struct is used here because of solidity's stack constraints.
-    function initialize(InitializeInput calldata input) external;
+    function initialize(InitializeCalldata calldata input) external;
 
     /// @notice  Creates a proposal.
     /// @param   author  The address of the proposal creator.

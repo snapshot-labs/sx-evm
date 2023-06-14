@@ -14,7 +14,7 @@ import { Space } from "../src/Space.sol";
 import { ISpaceEvents } from "../src/interfaces/space/ISpaceEvents.sol";
 import { IProxyFactoryEvents } from "../src/interfaces/factory/IProxyFactoryEvents.sol";
 import { IProxyFactoryErrors } from "../src/interfaces/factory/IProxyFactoryErrors.sol";
-import { Strategy, InitializeInput } from "../src/types.sol";
+import { Strategy, InitializeCalldata } from "../src/types.sol";
 
 // solhint-disable-next-line max-states-count
 contract SpaceFactoryTest is Test, IProxyFactoryEvents, IProxyFactoryErrors, ISpaceEvents {
@@ -75,7 +75,7 @@ contract SpaceFactoryTest is Test, IProxyFactoryEvents, IProxyFactoryErrors, ISp
             address(masterSpace),
             abi.encodeWithSelector(
                 Space.initialize.selector,
-                InitializeInput(
+                InitializeCalldata(
                     owner,
                     votingDelay,
                     minVotingDuration,
@@ -101,7 +101,7 @@ contract SpaceFactoryTest is Test, IProxyFactoryEvents, IProxyFactoryErrors, ISp
             address(0),
             abi.encodeWithSelector(
                 Space.initialize.selector,
-                InitializeInput(
+                InitializeCalldata(
                     owner,
                     votingDelay,
                     minVotingDuration,
@@ -123,7 +123,7 @@ contract SpaceFactoryTest is Test, IProxyFactoryEvents, IProxyFactoryErrors, ISp
             address(0x123),
             abi.encodeWithSelector(
                 Space.initialize.selector,
-                InitializeInput(
+                InitializeCalldata(
                     owner,
                     votingDelay,
                     minVotingDuration,
@@ -149,7 +149,7 @@ contract SpaceFactoryTest is Test, IProxyFactoryEvents, IProxyFactoryErrors, ISp
             address(masterSpace),
             abi.encodeWithSelector(
                 Space.initialize.selector,
-                InitializeInput(
+                InitializeCalldata(
                     owner,
                     votingDelay,
                     minVotingDuration,
@@ -173,7 +173,7 @@ contract SpaceFactoryTest is Test, IProxyFactoryEvents, IProxyFactoryErrors, ISp
             address(masterSpace),
             abi.encodeWithSelector(
                 Space.initialize.selector,
-                InitializeInput(
+                InitializeCalldata(
                     owner,
                     votingDelay,
                     minVotingDuration,
@@ -196,7 +196,7 @@ contract SpaceFactoryTest is Test, IProxyFactoryEvents, IProxyFactoryErrors, ISp
             address(masterSpace),
             abi.encodeWithSelector(
                 Space.initialize.selector,
-                InitializeInput(
+                InitializeCalldata(
                     owner,
                     votingDelay,
                     minVotingDuration,
@@ -220,7 +220,7 @@ contract SpaceFactoryTest is Test, IProxyFactoryEvents, IProxyFactoryErrors, ISp
             address(masterSpace),
             abi.encodeWithSelector(
                 Space.initialize.selector,
-                InitializeInput(
+                InitializeCalldata(
                     owner,
                     votingDelay,
                     minVotingDuration,
@@ -241,7 +241,7 @@ contract SpaceFactoryTest is Test, IProxyFactoryEvents, IProxyFactoryErrors, ISp
         // Initializing the space should revert as the space is already initialized
         vm.expectRevert("Initializable: contract is already initialized");
         Space(spaceProxy).initialize(
-            InitializeInput(
+            InitializeCalldata(
                 owner,
                 votingDelay,
                 minVotingDuration,

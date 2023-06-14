@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.18;
 
-import { IndexedStrategy, Proposal, Strategy, Choice, InitializeInput } from "src/types.sol";
+import { IndexedStrategy, Proposal, Strategy, Choice, InitializeCalldata } from "src/types.sol";
 
 /// @title Space Events
 interface ISpaceEvents {
@@ -18,7 +18,7 @@ interface ISpaceEvents {
     // /        each consisting of a strategy address and an array of configuration parameters.
     // / @param votingStrategyMetadataURIs The metadata URIs for `votingStrategies`.
     // / @param authenticators The whitelisted authenticator addresses.
-    event SpaceCreated(address space, InitializeInput input);
+    event SpaceCreated(address space, InitializeCalldata input);
 
     /// @notice Emitted when a proposal is created.
     /// @param proposalId The proposal id.

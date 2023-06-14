@@ -80,7 +80,7 @@ struct MetaTransaction {
 
 /// @dev    Structure used for the function `initialize` of the Space contract because of solidity's stack constraints.
 ///         For more information, see `ISpaceActions.sol`.
-struct InitializeInput {
+struct InitializeCalldata {
     address owner;
     uint32 votingDelay;
     uint32 minVotingDuration;
@@ -96,7 +96,7 @@ struct InitializeInput {
 
 /// @dev    Structure used for the function `updateSettings` of the Space contract because of solidity's stack constraints.
 ///         For more information, see `ISpaceOwnerActions.sol`.
-struct UpdateSettingsInput {
+struct UpdateSettingsCalldata {
     uint32 minVotingDuration;
     uint32 maxVotingDuration;
     uint32 votingDelay;
@@ -109,28 +109,4 @@ struct UpdateSettingsInput {
     Strategy[] votingStrategiesToAdd;
     string[] votingStrategyMetadataURIsToAdd;
     uint8[] votingStrategiesToRemove;
-}
-
-/// @dev Struct used to handle stack constraints.
-struct ProposeCalldata {
-    address author;
-    string metadataURI;
-    Strategy executionStrategy;
-    bytes userProposalValidationParams;
-}
-
-struct VoteCalldata {
-    address voter;
-    uint256 proposalId;
-    Choice choice;
-    IndexedStrategy[] userVotingStrategies;
-    string metadataURI;
-}
-
-/// @dev Struct used to handle stack constraints.
-struct UpdateProposalCalldata {
-    address author;
-    uint256 proposalId;
-    Strategy executionStrategy;
-    string metadataURI;
 }

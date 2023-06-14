@@ -15,8 +15,8 @@ import {
     Proposal,
     ProposalStatus,
     Strategy,
-    UpdateSettingsInput,
-    InitializeInput
+    UpdateSettingsCalldata,
+    InitializeCalldata
 } from "src/types.sol";
 import { IVotingStrategy } from "src/interfaces/IVotingStrategy.sol";
 import { IExecutionStrategy } from "src/interfaces/IExecutionStrategy.sol";
@@ -71,7 +71,7 @@ contract Space is ISpace, Initializable, IERC4824, UUPSUpgradeable, OwnableUpgra
     mapping(uint256 proposalId => mapping(address voter => bool hasVoted)) public override voteRegistry;
 
     /// @inheritdoc ISpaceActions
-    function initialize(InitializeInput calldata input) public override initializer {
+    function initialize(InitializeCalldata calldata input) public override initializer {
         if (input.votingStrategies.length == 0) revert EmptyArray();
         if (input.authenticators.length == 0) revert EmptyArray();
         if (input.votingStrategies.length != input.votingStrategyMetadataURIs.length) revert ArrayLengthMismatch();
@@ -99,7 +99,7 @@ contract Space is ISpace, Initializable, IERC4824, UUPSUpgradeable, OwnableUpgra
 
     /// @inheritdoc ISpaceOwnerActions
     // solhint-disable-next-line code-complexity
-    function updateSettings(UpdateSettingsInput calldata input) external override onlyOwner {
+    function updateSettings(UpdateSettingsCalldata calldata input) external override onlyOwner {
         if ((input.minVotingDuration != NO_UPDATE_UINT32) && (input.maxVotingDuration != NO_UPDATE_UINT32)) {
             // Check that min and max VotingDuration are valid
             // We don't use the internal `_setMinVotingDuration` and `_setMaxVotingDuration` functions because
