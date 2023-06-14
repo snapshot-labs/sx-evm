@@ -6,8 +6,8 @@ import { IExecutionStrategy } from "../interfaces/IExecutionStrategy.sol";
 import { FinalizationStatus, Proposal, ProposalStatus } from "../types.sol";
 
 abstract contract EmergencyQuorumStrategy is IExecutionStrategy {
-    uint256 public immutable quorum;
-    uint256 public immutable emergencyQuorum;
+    uint256 public quorum;
+    uint256 public emergencyQuorum;
 
     constructor(uint256 _quorum, uint256 _emergencyQuorum) {
         quorum = _quorum;
