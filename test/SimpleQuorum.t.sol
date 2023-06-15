@@ -3,7 +3,7 @@
 pragma solidity ^0.8.18;
 
 import { SpaceTest } from "./utils/Space.t.sol";
-import { Choice, IndexedStrategy, ProposalStatus, Strategy, UpdateSettingsInput } from "../src/types.sol";
+import { Choice, IndexedStrategy, ProposalStatus, Strategy } from "../src/types.sol";
 import { VanillaExecutionStrategy } from "../src/execution-strategies/VanillaExecutionStrategy.sol";
 
 contract SimpleQuorumTest is SpaceTest {

@@ -2,7 +2,7 @@
 pragma solidity ^0.8.18;
 
 import { SpaceTest } from "./utils/Space.t.sol";
-import { FinalizationStatus, IndexedStrategy, Proposal, Strategy, UpdateSettingsInput } from "../src/types.sol";
+import { FinalizationStatus, IndexedStrategy, Proposal, Strategy, UpdateSettingsCalldata } from "../src/types.sol";
 import { VanillaVotingStrategy } from "../src/voting-strategies/VanillaVotingStrategy.sol";
 import { IExecutionStrategy } from "src/interfaces/IExecutionStrategy.sol";
 import { StupidProposalValidationStrategy } from "./mocks/StupidProposalValidation.sol";
@@ -18,14 +18,14 @@ contract ProposeTest is SpaceTest {
 
         // Expected content of the proposal struct
         Proposal memory proposal = Proposal(
+            author,
             uint32(block.timestamp),
             uint32(block.timestamp + votingDelay),
+            IExecutionStrategy(executionStrategy.addr),
             uint32(block.timestamp + votingDelay + minVotingDuration),
             uint32(block.timestamp + votingDelay + maxVotingDuration),
-            keccak256(abi.encodePacked(executionStrategy.params)),
-            IExecutionStrategy(executionStrategy.addr),
-            author,
             FinalizationStatus.Pending,
+            keccak256(abi.encodePacked(executionStrategy.params)),
             activeVotingStrategies
         );
 
@@ -36,26 +36,26 @@ contract ProposeTest is SpaceTest {
 
         // Actual content of the proposal struct
         (
+            address _author,
             uint32 _snapshotTimestamp,
             uint32 _startTimestamp,
+            IExecutionStrategy _executionStrategy,
             uint32 _minEndTimestamp,
             uint32 _maxEndTimestamp,
-            bytes32 _executionPayloadHash,
-            IExecutionStrategy _executionStrategy,
-            address _author,
             FinalizationStatus _finalizationStatus,
+            bytes32 _executionPayloadHash,
             uint256 _activeVotingStrategies
         ) = space.proposals(proposalId);
 
         Proposal memory _proposal = Proposal(
+            _author,
             _snapshotTimestamp,
             _startTimestamp,
+            IExecutionStrategy(_executionStrategy),
             _minEndTimestamp,
             _maxEndTimestamp,
-            _executionPayloadHash,
-            IExecutionStrategy(_executionStrategy),
-            _author,
             _finalizationStatus,
+            _executionPayloadHash,
             _activeVotingStrategies
         );
 
@@ -75,7 +75,7 @@ contract ProposeTest is SpaceTest {
         StupidProposalValidationStrategy stupidProposalValidationStrategy = new StupidProposalValidationStrategy();
         Strategy memory validationStrategy = Strategy(address(stupidProposalValidationStrategy), new bytes(0));
         space.updateSettings(
-            UpdateSettingsInput(
+            UpdateSettingsCalldata(
                 NO_UPDATE_UINT32,
                 NO_UPDATE_UINT32,
                 NO_UPDATE_UINT32,
