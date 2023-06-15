@@ -6,7 +6,7 @@ import { IExecutionStrategy } from "../interfaces/IExecutionStrategy.sol";
 import { FinalizationStatus, Proposal, ProposalStatus } from "../types.sol";
 import { SpaceManager } from "../utils/SpaceManager.sol";
 
-abstract contract EmergencyQuorumStrategy is IExecutionStrategy, SpaceManager {
+abstract contract EmergencyQuorumExecutionStrategy is IExecutionStrategy, SpaceManager {
     uint256 public quorum;
     uint256 public emergencyQuorum;
 
