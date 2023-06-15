@@ -87,7 +87,7 @@ abstract contract SpaceTest is Test, GasSnapshot, ISpaceEvents, ISpaceErrors, IE
 
         vanillaVotingStrategy = new VanillaVotingStrategy();
         vanillaAuthenticator = new VanillaAuthenticator();
-        vanillaExecutionStrategy = new VanillaExecutionStrategy(quorum);
+        vanillaExecutionStrategy = new VanillaExecutionStrategy(owner, quorum);
         vanillaProposalValidationStrategy = new VanillaProposalValidationStrategy();
 
         votingDelay = 0;
