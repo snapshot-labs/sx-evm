@@ -4,9 +4,9 @@ pragma solidity ^0.8.18;
 
 import { SpaceTest } from "./utils/Space.t.sol";
 import { Choice, IndexedStrategy, Proposal, ProposalStatus, Strategy, UpdateSettingsCalldata } from "../src/types.sol";
-import { EmergencyQuorumStrategy } from "../src/execution-strategies/EmergencyQuorumStrategy.sol";
+import { EmergencyQuorumExecutionStrategy } from "../src/execution-strategies/EmergencyQuorumExecutionStrategy.sol";
 
-contract EmergencyQuorumExec is EmergencyQuorumStrategy {
+contract EmergencyQuorumExec is EmergencyQuorumExecutionStrategy {
     uint256 internal numExecuted;
 
     constructor(address _owner, uint256 _quorum, uint256 _emergencyQuorum) {
