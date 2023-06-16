@@ -13,6 +13,9 @@ import { TestERC1155 } from "./mocks/TestERC1155.sol";
 import { TestERC721 } from "./mocks/TestERC721.sol";
 import { CompTimelock } from "./mocks/CompTimelock.sol";
 
+uint256 constant TRUE = 1;
+uint256 constant FALSE = 0;
+
 abstract contract CompTimelockExecutionStrategyTest is SpaceTest {
     error InvalidSpace();
     error TimelockDelayNotMet();
@@ -480,7 +483,7 @@ abstract contract CompTimelockExecutionStrategyTest is SpaceTest {
         assertEq(timelockExecutionStrategy.vetoGuardian(), vetoGuardian);
         assertEq(timelockExecutionStrategy.quorum(), quorum);
         assertEq(address(timelockExecutionStrategy.timelock()), address(timelock));
-        assertEq(timelockExecutionStrategy.isSpaceEnabled(address(space)), true);
+        assertEq(timelockExecutionStrategy.isSpaceEnabled(address(space)), TRUE);
     }
 }
 

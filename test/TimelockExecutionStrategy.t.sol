@@ -12,6 +12,9 @@ import { TestERC721 } from "./mocks/TestERC721.sol";
 import { IERC1155Receiver } from "@openzeppelin/contracts/interfaces/IERC1155Receiver.sol";
 import { IERC721Receiver } from "@openzeppelin/contracts/interfaces/IERC721Receiver.sol";
 
+uint256 constant TRUE = 1;
+uint256 constant FALSE = 0;
+
 abstract contract TimelockExecutionStrategyTest is SpaceTest {
     error InvalidSpace();
     error TimelockDelayNotMet();
@@ -488,7 +491,7 @@ abstract contract TimelockExecutionStrategyTest is SpaceTest {
         assertEq(timelockExecutionStrategy.vetoGuardian(), vetoGuardian);
         assertEq(timelockExecutionStrategy.quorum(), quorum);
         assertEq(timelockExecutionStrategy.timelockDelay(), 1000);
-        assertEq(timelockExecutionStrategy.isSpaceEnabled(address(space)), true);
+        assertEq(timelockExecutionStrategy.isSpaceEnabled(address(space)), TRUE);
     }
 }
 
