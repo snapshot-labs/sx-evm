@@ -26,7 +26,7 @@ abstract contract ActiveProposalsLimiter {
         if (packedData.lastUpdate == 0) {
             // First time the user proposes, activeProposals is 1 no matter what.
             packedData.activeProposals = 1;
-        } else if (block.number >= packedData.lastUpdate + cooldown) {
+        } else if (block.timestamp >= packedData.lastUpdate + cooldown) {
             // Cooldown passed, reset counter.
             packedData.activeProposals = 1;
         } else if (packedData.activeProposals >= maxActiveProposals) {
@@ -37,7 +37,7 @@ abstract contract ActiveProposalsLimiter {
             packedData.activeProposals += 1;
         }
 
-        packedData.lastUpdate = uint32(block.number);
+        packedData.lastUpdate = uint32(block.timestamp);
         return true;
     }
 }
