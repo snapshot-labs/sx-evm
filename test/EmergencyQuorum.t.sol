@@ -102,7 +102,7 @@ contract EmergencyQuorumTest is SpaceTest {
         );
         _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataURI); // 1
 
-        vm.warp(block.timestamp + minVotingDuration);
+        vm.roll(block.number + minVotingDuration);
 
         vm.expectEmit(true, true, true, true);
         emit ProposalExecuted(proposalId);
@@ -118,7 +118,7 @@ contract EmergencyQuorumTest is SpaceTest {
         );
         _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataURI); // 1
 
-        vm.warp(block.timestamp + maxVotingDuration);
+        vm.roll(block.number + maxVotingDuration);
 
         vm.expectEmit(true, true, true, true);
         emit ProposalExecuted(proposalId);
@@ -143,7 +143,7 @@ contract EmergencyQuorumTest is SpaceTest {
         space.execute(proposalId, emergencyStrategy.params);
 
         // Now forward to `maxEndTimestamp`, the proposal should be finalized and `Rejected`.
-        vm.warp(block.timestamp + maxVotingDuration);
+        vm.roll(block.number + maxVotingDuration);
 
         vm.expectRevert(abi.encodeWithSelector(InvalidProposalStatus.selector, uint8(ProposalStatus.Rejected)));
         space.execute(proposalId, emergencyStrategy.params);
@@ -162,7 +162,7 @@ contract EmergencyQuorumTest is SpaceTest {
             abi.encode(userVotingStrategies)
         );
         _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataURI); // emergencyQuorum reached
-        vm.warp(block.timestamp + maxVotingDuration);
+        vm.roll(block.number + maxVotingDuration);
 
         vm.expectEmit(true, true, true, true);
         emit ProposalExecuted(proposalId);
@@ -211,7 +211,7 @@ contract EmergencyQuorumTest is SpaceTest {
         );
         _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataURI); // 1
 
-        vm.warp(block.timestamp + minVotingDuration);
+        vm.roll(block.number + minVotingDuration);
 
         space.execute(proposalId, emergencyStrategy.params);
 
