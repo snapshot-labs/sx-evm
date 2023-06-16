@@ -8,6 +8,7 @@ import { MetaTransaction, Proposal, ProposalStatus } from "../types.sol";
 import { Enum } from "@gnosis.pm/safe-contracts/contracts/common/Enum.sol";
 import { IERC1155Receiver } from "@openzeppelin/contracts/interfaces/IERC1155Receiver.sol";
 import { IERC721Receiver } from "@openzeppelin/contracts/interfaces/IERC721Receiver.sol";
+import { IERC165 } from "@openzeppelin/contracts/interfaces/IERC165.sol";
 
 /// @title Timelock Execution Strategy
 /// @notice Used to execute proposal transactions according to a timelock delay.
@@ -127,7 +128,7 @@ contract TimelockExecutionStrategy is SimpleQuorumExecutionStrategy, IERC1155Rec
 
         if (proposalExecutionTime[proposal.executionPayloadHash] != 0) revert DuplicateExecutionPayloadHash();
 
-        uint256 executionTime = block.number + timelockDelay;
+        uint256 executionTime = block.timestamp + timelockDelay;
         proposalExecutionTime[proposal.executionPayloadHash] = executionTime;
 
         MetaTransaction[] memory transactions = abi.decode(payload, (MetaTransaction[]));
@@ -145,7 +146,7 @@ contract TimelockExecutionStrategy is SimpleQuorumExecutionStrategy, IERC1155Rec
         uint256 executionTime = proposalExecutionTime[executionPayloadHash];
 
         if (executionTime == 0) revert ProposalNotQueued();
-        if (proposalExecutionTime[executionPayloadHash] > block.number) revert TimelockDelayNotMet();
+        if (proposalExecutionTime[executionPayloadHash] > block.timestamp) revert TimelockDelayNotMet();
 
         // Reset the execution time to 0 to prevent reentrancy
         proposalExecutionTime[executionPayloadHash] = 0;
@@ -216,6 +217,9 @@ contract TimelockExecutionStrategy is SimpleQuorumExecutionStrategy, IERC1155Rec
 
     /// @notice IERC165 interface support
     function supportsInterface(bytes4 interfaceId) external pure returns (bool) {
-        return interfaceId == type(IERC721Receiver).interfaceId || interfaceId == type(IERC1155Receiver).interfaceId;
+        return
+            interfaceId == type(IERC721Receiver).interfaceId ||
+            interfaceId == type(IERC1155Receiver).interfaceId ||
+            interfaceId == type(IERC165).interfaceId;
     }
 }

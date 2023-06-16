@@ -402,7 +402,7 @@ contract Space is ISpace, Initializable, IERC4824, UUPSUpgradeable, OwnableUpgra
     /// @dev Returns the cumulative voting power of a user over a set of voting strategies.
     function _getCumulativePower(
         address userAddress,
-        uint32 timestamp,
+        uint32 blockNumber,
         IndexedStrategy[] calldata userStrategies,
         uint256 allowedStrategies
     ) internal returns (uint256) {
@@ -421,7 +421,7 @@ contract Space is ISpace, Initializable, IERC4824, UUPSUpgradeable, OwnableUpgra
             Strategy memory strategy = votingStrategies[strategyIndex];
 
             totalVotingPower += IVotingStrategy(strategy.addr).getVotingPower(
-                timestamp,
+                blockNumber,
                 userAddress,
                 strategy.params,
                 userStrategies[i].params
