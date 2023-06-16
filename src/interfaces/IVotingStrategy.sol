@@ -18,5 +18,5 @@ interface IVotingStrategy {
         address voter,
         bytes calldata params,
         bytes calldata userParams
-    ) external returns (uint256 votingPower);
+    ) external view returns (uint256 votingPower);
 }
