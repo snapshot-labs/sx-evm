@@ -259,6 +259,8 @@ contract Space is ISpace, Initializable, IERC4824, UUPSUpgradeable, OwnableUpgra
         if (proposal.finalizationStatus != FinalizationStatus.Pending) revert ProposalFinalized();
         if (voteRegistry[proposalId][voter] == TRUE) revert UserAlreadyVoted();
 
+        voteRegistry[proposalId][voter] = TRUE;
+
         uint256 votingPower = _getCumulativePower(
             voter,
             proposal.snapshotTimestamp,
@@ -267,7 +269,6 @@ contract Space is ISpace, Initializable, IERC4824, UUPSUpgradeable, OwnableUpgra
         );
         if (votingPower == 0) revert UserHasNoVotingPower();
         votePower[proposalId][choice] += votingPower;
-        voteRegistry[proposalId][voter] = TRUE;
 
         if (bytes(metadataURI).length == 0) {
             emit VoteCast(proposalId, voter, choice, votingPower);
