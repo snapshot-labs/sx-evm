@@ -144,6 +144,6 @@ contract CompTimelock {
 
     function getBlockTimestamp() internal view returns (uint) {
         // solium-disable-next-line security/no-block-members
-        return block.number;
+        return block.timestamp;
     }
 }
