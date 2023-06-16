@@ -204,9 +204,6 @@ contract Space is ISpace, Initializable, IERC4824, UUPSUpgradeable, OwnableUpgra
         Strategy calldata executionStrategy,
         bytes calldata userProposalValidationParams
     ) external override onlyAuthenticator {
-        // Overflows at block number of 2^32 - 1 = 4,294,967,295
-        uint32 snapshotBlockNumber = uint32(block.number) - 1;
-
         if (
             !IProposalValidationStrategy(proposalValidationStrategy.addr).validate(
                 author,
@@ -215,7 +212,8 @@ contract Space is ISpace, Initializable, IERC4824, UUPSUpgradeable, OwnableUpgra
             )
         ) revert FailedToPassProposalValidation();
 
-        uint32 startBlockNumber = snapshotBlockNumber + votingDelay;
+        // Max block number of 2^32 - 1 = 4,294,967,295
+        uint32 startBlockNumber = uint32(block.number) + votingDelay;
         uint32 minEndBlockNumber = startBlockNumber + minVotingDuration;
         uint32 maxEndBlockNumber = startBlockNumber + maxVotingDuration;
 
@@ -224,7 +222,6 @@ contract Space is ISpace, Initializable, IERC4824, UUPSUpgradeable, OwnableUpgra
 
         Proposal memory proposal = Proposal(
             author,
-            snapshotBlockNumber,
             startBlockNumber,
             IExecutionStrategy(executionStrategy.addr),
             minEndBlockNumber,
@@ -257,7 +254,7 @@ contract Space is ISpace, Initializable, IERC4824, UUPSUpgradeable, OwnableUpgra
 
         uint256 votingPower = _getCumulativePower(
             voter,
-            proposal.snapshotBlockNumber,
+            proposal.startBlockNumber,
             userVotingStrategies,
             proposal.activeVotingStrategies
         );

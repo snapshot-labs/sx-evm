@@ -11,9 +11,8 @@ struct Proposal {
     // SLOT 1:
     // The address of the proposal creator.
     address author;
-    // The block number at which voting power for the proposal is calculated.
-    uint32 snapshotBlockNumber;
     // The block number at which the voting period starts.
+    // This is also the snapshot block number where voting power is calculated at.
     uint32 startBlockNumber;
     //
     // SLOT 2:
