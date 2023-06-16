@@ -8,6 +8,8 @@ import { SpaceManager } from "../utils/SpaceManager.sol";
 
 /// @title Simple Quorum Base Execution Strategy
 abstract contract SimpleQuorumExecutionStrategy is IExecutionStrategy, SpaceManager {
+    event QuorumUpdated(uint256 newQuorum);
+
     /// @notice The quorum required to execute a proposal using this strategy.
     uint256 public quorum;
 
@@ -15,6 +17,11 @@ abstract contract SimpleQuorumExecutionStrategy is IExecutionStrategy, SpaceMana
     // solhint-disable-next-line func-name-mixedcase
     function __SimpleQuorumExecutionStrategy_init(uint256 _quorum) internal onlyInitializing {
         quorum = _quorum;
+    }
+
+    function setQuorum(uint256 _quorum) external onlyOwner {
+        quorum = _quorum;
+        emit QuorumUpdated(_quorum);
     }
 
     function execute(
@@ -38,8 +45,7 @@ abstract contract SimpleQuorumExecutionStrategy is IExecutionStrategy, SpaceMana
         uint256 votesAgainst,
         uint256 votesAbstain
     ) public view override returns (ProposalStatus) {
-        bool accepted = _quorumReached(quorum, votesFor, votesAgainst, votesAbstain) &&
-            _supported(votesFor, votesAgainst);
+        bool accepted = _quorumReached(quorum, votesFor, votesAbstain) && _supported(votesFor, votesAgainst);
         if (proposal.finalizationStatus == FinalizationStatus.Cancelled) {
             return ProposalStatus.Cancelled;
         } else if (proposal.finalizationStatus == FinalizationStatus.Executed) {
@@ -61,13 +67,8 @@ abstract contract SimpleQuorumExecutionStrategy is IExecutionStrategy, SpaceMana
         }
     }
 
-    function _quorumReached(
-        uint256 _quorum,
-        uint256 _votesFor,
-        uint256 _votesAgainst,
-        uint256 _votesAbstain
-    ) internal pure returns (bool) {
-        uint256 totalVotes = _votesFor + _votesAgainst + _votesAbstain;
+    function _quorumReached(uint256 _quorum, uint256 _votesFor, uint256 _votesAbstain) internal pure returns (bool) {
+        uint256 totalVotes = _votesFor + _votesAbstain;
         return totalVotes >= _quorum;
     }
 

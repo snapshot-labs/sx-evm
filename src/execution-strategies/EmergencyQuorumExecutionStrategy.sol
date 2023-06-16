@@ -4,14 +4,33 @@ pragma solidity ^0.8.18;
 
 import { IExecutionStrategy } from "../interfaces/IExecutionStrategy.sol";
 import { FinalizationStatus, Proposal, ProposalStatus } from "../types.sol";
+import { SpaceManager } from "../utils/SpaceManager.sol";
 
-abstract contract EmergencyQuorumStrategy is IExecutionStrategy {
-    uint256 public immutable quorum;
-    uint256 public immutable emergencyQuorum;
+abstract contract EmergencyQuorumExecutionStrategy is IExecutionStrategy, SpaceManager {
+    uint256 public quorum;
+    uint256 public emergencyQuorum;
 
-    constructor(uint256 _quorum, uint256 _emergencyQuorum) {
+    event QuorumUpdated(uint256 _quorum);
+    event EmergencyQuorumUpdated(uint256 _emergencyQuorum);
+
+    /// @dev Initializer
+    // solhint-disable-next-line func-name-mixedcase
+    function __EmergencyQuorumExecutionStrategy_init(
+        uint256 _quorum,
+        uint256 _emergencyQuorum
+    ) internal onlyInitializing {
         quorum = _quorum;
         emergencyQuorum = _emergencyQuorum;
+    }
+
+    function setQuorum(uint256 _quorum) external onlyOwner {
+        quorum = _quorum;
+        emit QuorumUpdated(_quorum);
+    }
+
+    function setEmergencyQuorum(uint256 _emergencyQuorum) external onlyOwner {
+        emergencyQuorum = _emergencyQuorum;
+        emit EmergencyQuorumUpdated(_emergencyQuorum);
     }
 
     function execute(
@@ -29,10 +48,9 @@ abstract contract EmergencyQuorumStrategy is IExecutionStrategy {
         uint256 votesAgainst,
         uint256 votesAbstain
     ) public view override returns (ProposalStatus) {
-        bool emergencyQuorumReached = _quorumReached(emergencyQuorum, votesFor, votesAgainst, votesAbstain);
+        bool emergencyQuorumReached = _quorumReached(emergencyQuorum, votesFor, votesAbstain);
 
-        bool accepted = _quorumReached(quorum, votesFor, votesAgainst, votesAbstain) &&
-            _supported(votesFor, votesAgainst);
+        bool accepted = _quorumReached(quorum, votesFor, votesAbstain) && _supported(votesFor, votesAgainst);
 
         if (proposal.finalizationStatus == FinalizationStatus.Cancelled) {
             return ProposalStatus.Cancelled;
@@ -81,13 +99,8 @@ abstract contract EmergencyQuorumStrategy is IExecutionStrategy {
         }
     }
 
-    function _quorumReached(
-        uint256 _quorum,
-        uint256 _votesFor,
-        uint256 _votesAgainst,
-        uint256 _votesAbstain
-    ) internal pure returns (bool) {
-        uint256 totalVotes = _votesFor + _votesAgainst + _votesAbstain;
+    function _quorumReached(uint256 _quorum, uint256 _votesFor, uint256 _votesAbstain) internal pure returns (bool) {
+        uint256 totalVotes = _votesFor + _votesAbstain;
         return totalVotes >= _quorum;
     }
 
