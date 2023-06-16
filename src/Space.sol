@@ -24,6 +24,10 @@ import { IProposalValidationStrategy } from "src/interfaces/IProposalValidationS
 import { SXUtils } from "./utils/SXUtils.sol";
 import { BitPacker } from "./utils/BitPacker.sol";
 
+/// @dev Constants used to replace the `bool` type in mappings.
+uint256 constant TRUE = 1;
+uint256 constant FALSE = 0;
+
 /// @title Space Contract
 /// @notice The core contract for Snapshot X.
 ///         A proxy of this contract should be deployed with the Proxy Factory.
@@ -62,13 +66,13 @@ contract Space is ISpace, Initializable, IERC4824, UUPSUpgradeable, OwnableUpgra
     /// @inheritdoc ISpaceState
     Strategy public override proposalValidationStrategy;
     /// @inheritdoc ISpaceState
-    mapping(address auth => bool allowed) public override authenticators;
+    mapping(address auth => uint256 allowed) public override authenticators;
     /// @inheritdoc ISpaceState
     mapping(uint256 proposalId => Proposal proposal) public override proposals;
     // @inheritdoc ISpaceState
     mapping(uint256 proposalId => mapping(Choice choice => uint256 votePower)) public override votePower;
     /// @inheritdoc ISpaceState
-    mapping(uint256 proposalId => mapping(address voter => bool hasVoted)) public override voteRegistry;
+    mapping(uint256 proposalId => mapping(address voter => uint256 hasVoted)) public override voteRegistry;
 
     /// @inheritdoc ISpaceActions
     function initialize(InitializeCalldata calldata input) external override initializer {
@@ -168,7 +172,7 @@ contract Space is ISpace, Initializable, IERC4824, UUPSUpgradeable, OwnableUpgra
 
     /// @dev Gates access to whitelisted authenticators only.
     modifier onlyAuthenticator() {
-        if (authenticators[msg.sender] != true) revert AuthenticatorNotWhitelisted();
+        if (authenticators[msg.sender] != TRUE) revert AuthenticatorNotWhitelisted();
         _;
     }
 
@@ -253,7 +257,7 @@ contract Space is ISpace, Initializable, IERC4824, UUPSUpgradeable, OwnableUpgra
         if (block.timestamp >= proposal.maxEndTimestamp) revert VotingPeriodHasEnded();
         if (block.timestamp < proposal.startTimestamp) revert VotingPeriodHasNotStarted();
         if (proposal.finalizationStatus != FinalizationStatus.Pending) revert ProposalFinalized();
-        if (voteRegistry[proposalId][voter]) revert UserAlreadyVoted();
+        if (voteRegistry[proposalId][voter] == TRUE) revert UserAlreadyVoted();
 
         uint256 votingPower = _getCumulativePower(
             voter,
@@ -263,7 +267,7 @@ contract Space is ISpace, Initializable, IERC4824, UUPSUpgradeable, OwnableUpgra
         );
         if (votingPower == 0) revert UserHasNoVotingPower();
         votePower[proposalId][choice] += votingPower;
-        voteRegistry[proposalId][voter] = true;
+        voteRegistry[proposalId][voter] = TRUE;
 
         if (bytes(metadataURI).length == 0) {
             emit VoteCast(proposalId, voter, choice, votingPower);
@@ -384,14 +388,14 @@ contract Space is ISpace, Initializable, IERC4824, UUPSUpgradeable, OwnableUpgra
     /// @dev Adds an array of authenticators.
     function _addAuthenticators(address[] calldata _authenticators) internal {
         for (uint256 i = 0; i < _authenticators.length; i++) {
-            authenticators[_authenticators[i]] = true;
+            authenticators[_authenticators[i]] = TRUE;
         }
     }
 
     /// @dev Removes an array of authenticators.
     function _removeAuthenticators(address[] calldata _authenticators) internal {
         for (uint256 i = 0; i < _authenticators.length; i++) {
-            authenticators[_authenticators[i]] = false;
+            authenticators[_authenticators[i]] = FALSE;
         }
         // TODO: should we check that there are still authenticators left? same for other setters..
     }

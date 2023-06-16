@@ -18,6 +18,9 @@ import { ISpaceErrors } from "../../src/interfaces/space/ISpaceErrors.sol";
 import { IExecutionStrategyErrors } from "../../src/interfaces/execution-strategies/IExecutionStrategyErrors.sol";
 import { Choice, Strategy, IndexedStrategy, InitializeCalldata } from "../../src/types.sol";
 
+uint256 constant TRUE = 1;
+uint256 constant FALSE = 0;
+
 // solhint-disable-next-line max-states-count
 abstract contract SpaceTest is Test, GasSnapshot, ISpaceEvents, ISpaceErrors, IExecutionStrategyErrors {
     bytes4 internal constant PROPOSE_SELECTOR = bytes4(keccak256("propose(address,string,(address,bytes),bytes)"));
