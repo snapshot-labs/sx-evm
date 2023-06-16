@@ -275,20 +275,22 @@ contract Space is ISpace, Initializable, IERC4824, UUPSUpgradeable, OwnableUpgra
     /// @inheritdoc ISpaceActions
     function execute(uint256 proposalId, bytes calldata executionPayload) external override nonReentrant {
         Proposal storage proposal = proposals[proposalId];
+        Proposal memory cachedProposal = proposal;
         _assertProposalExists(proposal);
+
+        // Set status before `execute` call to prevent reentrancy issues.
+        proposal.finalizationStatus = FinalizationStatus.Executed;
 
         // We add reentrancy protection here to prevent this function being re-entered by the execution strategy.
         // We cannot use the Checks-Effects-Interactions pattern because the proposal status is checked inside
         // the execution strategy (so essentially forced to do Checks-Interactions-Effects).
         proposal.executionStrategy.execute(
-            proposal,
+            cachedProposal,
             votePower[proposalId][Choice.For],
             votePower[proposalId][Choice.Against],
             votePower[proposalId][Choice.Abstain],
             executionPayload
         );
-
-        proposal.finalizationStatus = FinalizationStatus.Executed;
 
         emit ProposalExecuted(proposalId);
     }
