@@ -99,7 +99,7 @@ contract CompTimelockCompatibleExecutionStrategy is SimpleQuorumExecutionStrateg
 
         if (proposalExecutionTime[proposal.executionPayloadHash] != 0) revert DuplicateExecutionPayloadHash();
 
-        uint256 executionTime = block.timestamp + timelockDelay();
+        uint256 executionTime = block.number + timelockDelay();
         proposalExecutionTime[proposal.executionPayloadHash] = executionTime;
 
         MetaTransaction[] memory transactions = abi.decode(payload, (MetaTransaction[]));
@@ -128,7 +128,7 @@ contract CompTimelockCompatibleExecutionStrategy is SimpleQuorumExecutionStrateg
         uint256 executionTime = proposalExecutionTime[executionPayloadHash];
 
         if (executionTime == 0) revert ProposalNotQueued();
-        if (proposalExecutionTime[executionPayloadHash] > block.timestamp) revert TimelockDelayNotMet();
+        if (proposalExecutionTime[executionPayloadHash] > block.number) revert TimelockDelayNotMet();
 
         // Reset the execution time to 0 to prevent reentrancy.
         proposalExecutionTime[executionPayloadHash] = 0;

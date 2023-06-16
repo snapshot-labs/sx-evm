@@ -38,12 +38,12 @@ abstract contract EmergencyQuorumStrategy is IExecutionStrategy {
             return ProposalStatus.Cancelled;
         } else if (proposal.finalizationStatus == FinalizationStatus.Executed) {
             return ProposalStatus.Executed;
-        } else if (block.timestamp < proposal.startTimestamp) {
+        } else if (block.number < proposal.startBlockNumber) {
             return ProposalStatus.VotingDelay;
         } else if (emergencyQuorumReached) {
             if (_supported(votesFor, votesAgainst)) {
                 // Proposal is supported
-                if (block.timestamp < proposal.maxEndTimestamp) {
+                if (block.number < proposal.maxEndBlockNumber) {
                     // New votes can still come in so return `VotingPeriodAccepted`.
                     return ProposalStatus.VotingPeriodAccepted;
                 } else {
@@ -52,7 +52,7 @@ abstract contract EmergencyQuorumStrategy is IExecutionStrategy {
                 }
             } else {
                 // Proposal is not supported
-                if (block.timestamp < proposal.maxEndTimestamp) {
+                if (block.number < proposal.maxEndBlockNumber) {
                     // New votes might still come in so return `VotingPeriod`.
                     return ProposalStatus.VotingPeriod;
                 } else {
@@ -60,11 +60,11 @@ abstract contract EmergencyQuorumStrategy is IExecutionStrategy {
                     return ProposalStatus.Rejected;
                 }
             }
-        } else if (block.timestamp < proposal.minEndTimestamp) {
-            // Proposal has not reached minEndTimestamp yet.
+        } else if (block.number < proposal.minEndBlockNumber) {
+            // Proposal has not reached minEndBlockNumber yet.
             return ProposalStatus.VotingPeriod;
-        } else if (block.timestamp < proposal.maxEndTimestamp) {
-            // Timestamp is between minEndTimestamp and maxEndTimestamp
+        } else if (block.number < proposal.maxEndBlockNumber) {
+            // block number is between minEndBlockNumber and maxEndBlockNumber
             if (accepted) {
                 return ProposalStatus.VotingPeriodAccepted;
             } else {
