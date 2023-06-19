@@ -16,17 +16,15 @@ import {
     ProposalStatus,
     Strategy,
     UpdateSettingsCalldata,
-    InitializeCalldata
+    InitializeCalldata,
+    TRUE,
+    FALSE
 } from "src/types.sol";
 import { IVotingStrategy } from "src/interfaces/IVotingStrategy.sol";
 import { IExecutionStrategy } from "src/interfaces/IExecutionStrategy.sol";
 import { IProposalValidationStrategy } from "src/interfaces/IProposalValidationStrategy.sol";
 import { SXUtils } from "./utils/SXUtils.sol";
 import { BitPacker } from "./utils/BitPacker.sol";
-
-/// @dev Constants used to replace the `bool` type in mappings.
-uint256 constant TRUE = 1;
-uint256 constant FALSE = 0;
 
 /// @title Space Contract
 /// @notice The core contract for Snapshot X.
