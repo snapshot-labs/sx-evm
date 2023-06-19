@@ -3,10 +3,7 @@
 pragma solidity ^0.8.18;
 
 import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-
-/// @dev uint256 booleans for gas optimizations.
-uint256 constant TRUE = 1;
-uint256 constant FALSE = 0;
+import { TRUE, FALSE } from "../types.sol";
 
 /// @title Space Manager
 /// @notice Manages a whitelist of Spaces that are authorized to execute transactions via this contract.

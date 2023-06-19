@@ -6,9 +6,7 @@ import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import { EIP712 } from "@openzeppelin/contracts/utils/cryptography/EIP712.sol";
 import { Choice, IndexedStrategy, Strategy } from "src/types.sol";
 import { SXHash } from "src/utils/SXHash.sol";
-
-uint256 constant TRUE = 1;
-uint256 constant FALSE = 0;
+import { TRUE, FALSE } from "../types.sol";
 
 /// @title EIP712 Signature Verifier
 /// @notice Verifies Signatures for Snapshot X actions.

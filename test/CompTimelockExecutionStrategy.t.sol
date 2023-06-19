@@ -3,7 +3,17 @@
 pragma solidity ^0.8.18;
 
 import { SpaceTest } from "./utils/Space.t.sol";
-import { Choice, Enum, IndexedStrategy, MetaTransaction, ProposalStatus, Strategy, Proposal } from "../src/types.sol";
+import {
+    Choice,
+    Enum,
+    IndexedStrategy,
+    MetaTransaction,
+    ProposalStatus,
+    Strategy,
+    Proposal,
+    TRUE,
+    FALSE
+} from "../src/types.sol";
 import {
     CompTimelockCompatibleExecutionStrategy
 } from "../src/execution-strategies/CompTimelockCompatibleExecutionStrategy.sol";
@@ -12,9 +22,6 @@ import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy
 import { TestERC1155 } from "./mocks/TestERC1155.sol";
 import { TestERC721 } from "./mocks/TestERC721.sol";
 import { CompTimelock } from "./mocks/CompTimelock.sol";
-
-uint256 constant TRUE = 1;
-uint256 constant FALSE = 0;
 
 abstract contract CompTimelockExecutionStrategyTest is SpaceTest {
     error InvalidSpace();
