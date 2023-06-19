@@ -120,7 +120,7 @@ contract CompTimelockCompatibleExecutionStrategy is SimpleQuorumExecutionStrateg
             // Check there are not duplicates.
             // Do not include `executionTime` because it's a constant.
             bytes32 txHash = keccak256(abi.encode(transactions[i].to, transactions[i].value, "", transactions[i].data));
-            for (uint j = 0; j < i; j++) {
+            for (uint256 j = 0; j < i; j++) {
                 if (txHashes[j] == txHash) revert DuplicateMetaTransaction();
             }
             txHashes[i] = txHash;
