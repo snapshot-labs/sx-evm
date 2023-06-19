@@ -275,9 +275,11 @@ contract Space is ISpace, Initializable, IERC4824, UUPSUpgradeable, OwnableUpgra
     /// @inheritdoc ISpaceActions
     function execute(uint256 proposalId, bytes calldata executionPayload) external override nonReentrant {
         Proposal storage proposal = proposals[proposalId];
-        Proposal memory cachedProposal = proposal;
         _assertProposalExists(proposal);
 
+        // We cache the proposal because we will modify the *real* proposal's finalizationStatus before
+        // calling the `execute` function. We will use the `cachedProposal` as an argument to the `execute` function.
+        Proposal memory cachedProposal = proposal;
         // Set status before `execute` call to prevent reentrancy issues.
         proposal.finalizationStatus = FinalizationStatus.Executed;
 
