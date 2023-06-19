@@ -5,9 +5,7 @@ pragma solidity ^0.8.18;
 /// @title Voting Strategy Interface
 interface IVotingStrategy {
     /// @notice Gets the voting power of an address at a given block number.
-    /// @param blockNumber The snapshot block number to get the voting power at. If a particular voting strategy
-    ///                  requires a block number instead of a block number, the strategy should resolve the
-    ///                  block number to a block number.
+    /// @param blockNumber The snapshot block number to get the voting power at.
     /// @param voter The address to get the voting power of.
     /// @param params The global parameters that can configure the voting strategy for a particular Space.
     /// @param userParams The user parameters that can be used in the voting strategy computation.
