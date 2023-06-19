@@ -279,7 +279,7 @@ contract Space is ISpace, Initializable, IERC4824, UUPSUpgradeable, OwnableUpgra
 
         // We cache the proposal because we will modify the *real* proposal's finalizationStatus before
         // calling the `execute` function. We will use the `cachedProposal` as an argument to the `execute` function.
-        // This allows us to for the CEI pattern to avoid reentrancy issues.
+        // This allows us to follow the CEI pattern to avoid reentrancy issues.
         Proposal memory cachedProposal = proposal;
 
         proposal.finalizationStatus = FinalizationStatus.Executed;
