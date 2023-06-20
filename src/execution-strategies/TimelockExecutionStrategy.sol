@@ -145,8 +145,10 @@ contract TimelockExecutionStrategy is SimpleQuorumExecutionStrategy, IERC1155Rec
 
     /// @notice Executes a queued proposal.
     /// @param payload The proposal execution payload.
-    /// @dev Cannot rely on the invariant that proposal payloads are executed atomically.
-    ///      Reenetrant calls could lead to the transactions in proposals being executed in an interleaved order.
+    /// @dev Due to possible reentrancy, one cannot rely on the invariant that proposal payloads are executed atomically.
+    ///      As follows: If Proposal A is composed of MetaTransaction a1 and a2, and proposal B of MetaTransaction b1.
+    ///      If A.a1 executes code that triggers a proposal execution, then the execution order overall can potentially
+    ///      become [A.a1, B.b1, A.a2].
     function executeQueuedProposal(bytes memory payload) external {
         bytes32 executionPayloadHash = keccak256(payload);
 
