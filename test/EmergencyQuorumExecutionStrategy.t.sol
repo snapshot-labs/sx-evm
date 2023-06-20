@@ -210,7 +210,7 @@ contract EmergencyQuorumTest is SpaceTest {
 
         space.cancel(proposalId);
 
-        vm.expectRevert(abi.encodeWithSelector(InvalidProposalStatus.selector, uint8(ProposalStatus.Cancelled)));
+        vm.expectRevert(abi.encodeWithSelector(ProposalFinalized.selector));
         space.execute(proposalId, emergencyStrategy.params);
     }
 
@@ -227,7 +227,7 @@ contract EmergencyQuorumTest is SpaceTest {
 
         space.execute(proposalId, emergencyStrategy.params);
 
-        vm.expectRevert(abi.encodeWithSelector(InvalidProposalStatus.selector, uint8(ProposalStatus.Executed)));
+        vm.expectRevert(abi.encodeWithSelector(ProposalFinalized.selector));
         space.execute(proposalId, emergencyStrategy.params);
     }
 
