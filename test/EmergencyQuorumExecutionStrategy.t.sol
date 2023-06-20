@@ -34,8 +34,6 @@ contract EmergencyQuorumExec is EmergencyQuorumExecutionStrategy {
         if ((proposalStatus != ProposalStatus.Accepted) && (proposalStatus != ProposalStatus.VotingPeriodAccepted)) {
             revert InvalidProposalStatus(proposalStatus);
         }
-        // Check that the execution payload matches the payload supplied when the proposal was created
-        if (proposal.executionPayloadHash != keccak256(payload)) revert InvalidPayload();
         numExecuted++;
     }
 

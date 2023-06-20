@@ -276,6 +276,8 @@ contract Space is ISpace, Initializable, IERC4824, UUPSUpgradeable, OwnableUpgra
     function execute(uint256 proposalId, bytes calldata executionPayload) external override nonReentrant {
         Proposal storage proposal = proposals[proposalId];
         _assertProposalExists(proposal);
+        // Check that the execution payload matches the payload supplied when the proposal was created
+        if (proposal.executionPayloadHash != keccak256(executionPayload)) revert InvalidPayload();
 
         // We cache the proposal because we will modify the *real* proposal's finalizationStatus before
         // calling the `execute` function. We will use the `cachedProposal` as an argument to the `execute` function.
