@@ -145,6 +145,8 @@ contract TimelockExecutionStrategy is SimpleQuorumExecutionStrategy, IERC1155Rec
 
     /// @notice Executes a queued proposal.
     /// @param payload The proposal execution payload.
+    /// @dev Cannot rely on the invariant that proposal payloads are executed atomically.
+    ///      Reenetrant calls could lead to the transactions in proposals being executed in an interleaved order.
     function executeQueuedProposal(bytes memory payload) external {
         bytes32 executionPayloadHash = keccak256(payload);
 
