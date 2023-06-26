@@ -31,8 +31,22 @@ contract WhitelistVotingStrategyTest is Test {
 
         bytes memory params = abi.encode(members);
 
-        vm.expectRevert(VoterAndIndexMismatch.selector);
         // `voter` is members[0] but the `voterIndex` is 1 (which corresponds to members[1]).
-        whitelistVotingStrategy.getVotingPower(0, members[0].addr, params, abi.encode(1));
+        assertEq(whitelistVotingStrategy.getVotingPower(0, members[0].addr, params, abi.encode(1)), 0);
+    }
+
+    function testWhitelistNotMember() public {
+        WhitelistVotingStrategy.Member[] memory members = new WhitelistVotingStrategy.Member[](3);
+        members[0] = WhitelistVotingStrategy.Member(address(1), 11);
+        members[1] = WhitelistVotingStrategy.Member(address(3), 33);
+        members[2] = WhitelistVotingStrategy.Member(address(5), 55);
+        whitelistVotingStrategy = new WhitelistVotingStrategy();
+
+        bytes memory params = abi.encode(members);
+
+        // address(2) is not a member of the whitelist. Should return 0 for all `voterIndex` values.
+        assertEq(whitelistVotingStrategy.getVotingPower(0, address(2), params, abi.encode(0)), 0);
+        assertEq(whitelistVotingStrategy.getVotingPower(0, address(2), params, abi.encode(1)), 0);
+        assertEq(whitelistVotingStrategy.getVotingPower(0, address(2), params, abi.encode(2)), 0);
     }
 }
