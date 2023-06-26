@@ -523,13 +523,7 @@ contract TimelockExecutionStrategyTestProxy is TimelockExecutionStrategyTest {
         address[] memory spaces = new address[](1);
         spaces[0] = address(space);
         address[] memory emptyArray = new address[](1);
-        TimelockExecutionStrategy masterExecutionStrategy = new TimelockExecutionStrategy(
-            address(1),
-            address(0),
-            emptyArray,
-            0,
-            0
-        );
+        TimelockExecutionStrategy masterExecutionStrategy = new TimelockExecutionStrategy();
 
         timelockExecutionStrategy = TimelockExecutionStrategy(
             payable(
