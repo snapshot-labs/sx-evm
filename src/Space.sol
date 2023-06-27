@@ -170,7 +170,7 @@ contract Space is ISpace, Initializable, IERC4824, UUPSUpgradeable, OwnableUpgra
 
     /// @dev Gates access to whitelisted authenticators only.
     modifier onlyAuthenticator() {
-        if (authenticators[msg.sender] != TRUE) revert AuthenticatorNotWhitelisted();
+        if (authenticators[msg.sender] == FALSE) revert AuthenticatorNotWhitelisted();
         _;
     }
 
