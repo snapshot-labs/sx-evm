@@ -21,7 +21,7 @@ abstract contract ActiveProposalsLimiter {
         if (maxActiveProposals == 0) revert MaxActiveProposalsCannotBeZero();
 
         // The space calls the proposal validation strategy, therefore msg.sender corresponds to the space address.
-        PackedData storage packedData = usersPackedData[msg.sender][author];
+        PackedData memory packedData = usersPackedData[msg.sender][author];
 
         if (packedData.lastUpdate == 0) {
             // First time the user proposes, activeProposals is 1 no matter what.
@@ -36,8 +36,8 @@ abstract contract ActiveProposalsLimiter {
             // Cooldown has not passed, user has not reached maximum active proposals: increase counter.
             packedData.activeProposals += 1;
         }
-
         packedData.lastUpdate = uint32(block.timestamp);
+        usersPackedData[msg.sender][author] = packedData;
         return true;
     }
 }
