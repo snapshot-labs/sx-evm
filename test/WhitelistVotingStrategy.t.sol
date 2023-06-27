@@ -36,7 +36,7 @@ contract WhitelistVotingStrategyTest is Test {
         whitelistVotingStrategy.getVotingPower(0, members[0].addr, params, abi.encode(1));
     }
 
-    function testWhitelistIndexOutofBounds() public {
+    function testWhitelistIndexOutOfBounds() public {
         WhitelistVotingStrategy.Member[] memory members = new WhitelistVotingStrategy.Member[](3);
         members[0] = WhitelistVotingStrategy.Member(address(1), 11);
         members[1] = WhitelistVotingStrategy.Member(address(3), 33);
