@@ -252,7 +252,7 @@ contract Space is ISpace, Initializable, IERC4824, UUPSUpgradeable, OwnableUpgra
         if (block.number >= proposal.maxEndBlockNumber) revert VotingPeriodHasEnded();
         if (block.number < proposal.startBlockNumber) revert VotingPeriodHasNotStarted();
         if (proposal.finalizationStatus != FinalizationStatus.Pending) revert ProposalFinalized();
-        if (voteRegistry[proposalId][voter] == TRUE) revert UserAlreadyVoted();
+        if (voteRegistry[proposalId][voter] != FALSE) revert UserAlreadyVoted();
 
         voteRegistry[proposalId][voter] = TRUE;
 
