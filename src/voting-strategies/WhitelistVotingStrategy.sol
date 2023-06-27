@@ -24,7 +24,7 @@ contract WhitelistVotingStrategy is IVotingStrategy {
     /// @param params Parameter array containing the encoded whitelist of addresses and their voting power.
     ///               The array should be an ABI encoded array of Member structs.
     /// @param userParams Expected to contain a `uint256` corresponding to the voterIndex in the array provided by `params`.
-    /// @return votingPower The voting power of the address if it exists in the whitelist, otherwise 0.
+    /// @return votingPower The voting power of the address if it exists in the whitelist, otherwise reverts.
     function getVotingPower(
         uint32 /* blockNumber */,
         address voter,
@@ -34,10 +34,8 @@ contract WhitelistVotingStrategy is IVotingStrategy {
         Member[] memory members = abi.decode(params, (Member[]));
         uint256 voterIndex = abi.decode(userParams, (uint256));
 
-        if (voter != members[voterIndex].addr) {
-            return 0;
-        } else {
-            return members[voterIndex].vp;
-        }
+        if (voter != members[voterIndex].addr) revert VoterAndIndexMismatch();
+
+        return members[voterIndex].vp;
     }
 }
