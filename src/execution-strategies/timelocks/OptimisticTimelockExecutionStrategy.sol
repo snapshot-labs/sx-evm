@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.18;
 
-import { SimpleQuorumExecutionStrategy } from "../SimpleQuorumExecutionStrategy.sol";
+import { OptimisticQuorumExecutionStrategy } from "../OptimisticQuorumExecutionStrategy.sol";
 import { SpaceManager } from "../../utils/SpaceManager.sol";
 import { MetaTransaction, Proposal, ProposalStatus } from "../../types.sol";
 import { Enum } from "@gnosis.pm/safe-contracts/contracts/common/Enum.sol";
@@ -10,9 +10,9 @@ import { IERC1155Receiver } from "@openzeppelin/contracts/interfaces/IERC1155Rec
 import { IERC721Receiver } from "@openzeppelin/contracts/interfaces/IERC721Receiver.sol";
 import { IERC165 } from "@openzeppelin/contracts/interfaces/IERC165.sol";
 
-/// @title Timelock Execution Strategy
+/// @title Optimistic Timelock Execution Strategy
 /// @notice Used to execute proposal transactions according to a timelock delay.
-contract TimelockExecutionStrategy is SimpleQuorumExecutionStrategy, IERC1155Receiver, IERC721Receiver {
+contract OptimisticTimelockExecutionStrategy is OptimisticQuorumExecutionStrategy, IERC1155Receiver, IERC721Receiver {
     /// @notice Thrown if timelock delay is in the future.
     error TimelockDelayNotMet();
 
@@ -38,9 +38,9 @@ contract TimelockExecutionStrategy is SimpleQuorumExecutionStrategy, IERC1155Rec
     /// @param owner The owner of the Timelock.
     /// @param vetoGuardian The veto guardian of the Timelock.
     /// @param spaces The spaces that are whitelisted for this Timelock.
-    /// @param quorum The quorum required to execute a proposal.
+    /// @param quorum The quorum required to reject a proposal.
     /// @param timelockDelay The delay in seconds between a proposal being queued and the execution of the proposal.
-    event TimelockExecutionStrategySetUp(
+    event OptimisticTimelockExecutionStrategySetUp(
         address owner,
         address vetoGuardian,
         address[] spaces,
@@ -97,9 +97,9 @@ contract TimelockExecutionStrategy is SimpleQuorumExecutionStrategy, IERC1155Rec
         transferOwnership(_owner);
         vetoGuardian = _vetoGuardian;
         __SpaceManager_init(_spaces);
-        __SimpleQuorumExecutionStrategy_init(_quorum);
+        __OptimisticQuorumExecutionStrategy_init(_quorum);
         timelockDelay = _timelockDelay;
-        emit TimelockExecutionStrategySetUp(_owner, _vetoGuardian, _spaces, _quorum, _timelockDelay);
+        emit OptimisticTimelockExecutionStrategySetUp(_owner, _vetoGuardian, _spaces, _quorum, _timelockDelay);
     }
 
     /// @notice Executes a proposal by queueing its transactions in the timelock. Can only be called by approved spaces.
@@ -194,7 +194,7 @@ contract TimelockExecutionStrategy is SimpleQuorumExecutionStrategy, IERC1155Rec
 
     /// @notice Returns the strategy type string.
     function getStrategyType() external pure override returns (string memory) {
-        return "SimpleQuorumTimelock";
+        return "OptimisticQuorumTimelock";
     }
 
     // solhint-disable-next-line no-empty-blocks
