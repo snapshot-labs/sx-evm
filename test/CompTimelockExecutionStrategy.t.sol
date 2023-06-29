@@ -16,7 +16,7 @@ import {
 } from "../src/types.sol";
 import {
     CompTimelockCompatibleExecutionStrategy
-} from "../src/execution-strategies/CompTimelockCompatibleExecutionStrategy.sol";
+} from "../src/execution-strategies/timelocks/CompTimelockCompatibleExecutionStrategy.sol";
 import { MockImplementation } from "./mocks/MockImplementation.sol";
 import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import { TestERC1155 } from "./mocks/TestERC1155.sol";

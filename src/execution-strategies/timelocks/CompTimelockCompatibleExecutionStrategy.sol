@@ -2,10 +2,10 @@
 
 pragma solidity ^0.8.18;
 
-import { ICompTimelock } from "../interfaces/ICompTimelock.sol";
-import { SimpleQuorumExecutionStrategy } from "./SimpleQuorumExecutionStrategy.sol";
-import { SpaceManager } from "../utils/SpaceManager.sol";
-import { MetaTransaction, Proposal, ProposalStatus, TRUE, FALSE } from "../types.sol";
+import { ICompTimelock } from "../../interfaces/ICompTimelock.sol";
+import { SimpleQuorumExecutionStrategy } from "../SimpleQuorumExecutionStrategy.sol";
+import { SpaceManager } from "../../utils/SpaceManager.sol";
+import { MetaTransaction, Proposal, ProposalStatus, TRUE, FALSE } from "../../types.sol";
 import { Enum } from "@gnosis.pm/safe-contracts/contracts/common/Enum.sol";
 
 /// @title Comp Timelock Execution Strategy
