@@ -24,7 +24,7 @@ src
 │  ├─ timelocks
 │  |  ├─ CompTimelockCompatibleExecutionStrategy.sol - "Strategy that provides compatibility with existing Comp Timelock contracts"
 │  |  ├─ OptimisticCompTimelockCompatibleExecutionStrategy.sol - "Optimistic strategy that provides compatibility with existing Comp Timelock contracts"
-│  |  ├─ OptimisticTimelockExecutionStrategy.sol - "Optimstic strategy that can be used to execute proposal transactions according to a timelock delay"
+│  |  ├─ OptimisticTimelockExecutionStrategy.sol - "Optimistic strategy that can be used to execute proposal transactions according to a timelock delay"
 │  |  └─ TimelockExecutionStrategy.sol - "Strategy that can be used to execute proposal transactions according to a timelock delay"
 │  ├─ AvatarExecutionStrategy.sol - "Strategy that allows proposal transactions to be executed from an Avatar contract"
 │  ├─ TimelockExecutionStrategy.sol - "Strategy that can be used to execute proposal transactions according to a timelock delay"
