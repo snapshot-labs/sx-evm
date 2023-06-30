@@ -10,7 +10,7 @@ import { Enum } from "@gnosis.pm/safe-contracts/contracts/common/Enum.sol";
 
 /// @title Optimistic Comp Timelock Execution Strategy
 /// @notice An optimstic execution strategy that provides compatibility with existing Comp Timelock contracts.
-contract OptimsticCompTimelockCompatibleExecutionStrategy is OptimisticQuorumExecutionStrategy {
+contract OptimisticCompTimelockCompatibleExecutionStrategy is OptimisticQuorumExecutionStrategy {
     /// @notice Thrown if timelock delay is in the future.
     error TimelockDelayNotMet();
     /// @notice Thrown if the proposal execution payload hash is not queued.
