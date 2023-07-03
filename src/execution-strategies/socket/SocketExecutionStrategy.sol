@@ -2,17 +2,16 @@
 pragma solidity ^0.8.18;
 
 import { SimpleQuorumExecutionStrategy } from "./../SimpleQuorumExecutionStrategy.sol";
-import { Proposal, ProposalStatus } from "../../types.sol";
+import { Proposal, ProposalStatus, xMetaTransaction } from "../../types.sol";
 import { ISocket } from "../../interfaces/socket/ISocket.sol";
 import { PlugBase } from "./PlugBase.sol";
 
 /// @title Socket Execution Strategy
 contract SocketExecutionStrategy is SimpleQuorumExecutionStrategy, PlugBase {
-    uint256 internal executionGasLimit=1000000;
-    uint256 destChainSlug=0;
+    uint256 internal maxExecutionGasLimit=10000000;
 
-    constructor(uint256 _quorum) {
-        __SimpleQuorumExecutionStrategy_init(_quorum);
+    constructor(uint256 _quorum, address _socket) PlugBase(_socket) {
+        quorum = _quorum;
     }
 
     function execute(
@@ -22,38 +21,25 @@ contract SocketExecutionStrategy is SimpleQuorumExecutionStrategy, PlugBase {
         uint256 votesAbstain,
         bytes memory payload
     ) external override {
-        ProposalStatus proposalStatus = getProposalStatus(proposal, votesFor, votesAgainst, votesAbstain);
-        if ((proposalStatus != ProposalStatus.Accepted) && (proposalStatus != ProposalStatus.VotingPeriodAccepted)) {
-            revert InvalidProposalStatus(proposalStatus);
-        }
-        // Check that the execution payload matches the payload supplied when the proposal was created
-        if (proposal.executionPayloadHash != keccak256(payload)) revert InvalidPayload();
-
+        // TODO: add relavent checks on the proposal
+       
         // send proposal-status and payload to destination Plugs via Socket
-        _outbound(
-            destChainSlug,
-            executionGasLimit,
-            10000000,
-            abi.encode(proposalStatus,payload)
-        );
+        // TODO: fix fees
+        xMetaTransaction[] memory transactions = abi.decode(payload, (xMetaTransaction[]));
+        for (uint256 i = 0; i < transactions.length; i++) {
+            _outbound(
+                transactions[i].toChainId,
+                maxExecutionGasLimit,
+                0,
+                abi.encode(ProposalStatus.Executed,bytes(""))
+            );
+        }
     }
 
     function _receiveInbound(
         uint256 siblingChainSlug_,
         bytes memory payload_
-    ) internal override {
-         (uint8 proposalStatus, bytes memory executionPayload) = abi.decode(
-            payload_,
-            (uint8, bytes)
-        );
-
-        // TODO: if proposal is not finalised, revert
-
-        MetaTransaction memory transaction = abi.decode(executionPayload, (MetaTransaction));
-        (success, ) = transaction.to.call{ value: transaction.value }(transaction.data);
-
-        emit ProposalExecuted(keccak256(executionPayload));
-    }
+    ) internal override {}
 
     function getStrategyType() external pure override returns (string memory) {
         return "SocketExecutionStrategy";

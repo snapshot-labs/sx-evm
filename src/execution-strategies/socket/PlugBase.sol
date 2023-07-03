@@ -1,22 +1,23 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity 0.8.13;
+pragma solidity 0.8.18;
 
-import {ISocket} from "../interfaces/ISocket.sol";
+import { ISocket } from "../../interfaces/socket/ISocket.sol";
+import "forge-std/Test.sol";
 
 abstract contract PlugBase {
-    address public owner;
+    address public plugOwner;
     ISocket socket;
 
     constructor(address socket_) {
-        owner = msg.sender;
+        plugOwner = msg.sender;
         socket = ISocket(socket_);
     }
 
     //
     // Modifiers
     //
-    modifier onlyOwner() {
-        require(msg.sender == owner, "no auth");
+    modifier onlyPlugOwner() {
+        require(msg.sender == plugOwner, "no auth");
         _;
     }
 
@@ -25,7 +26,7 @@ abstract contract PlugBase {
         address siblingPlug_,
         address inboundSwitchboard_,
         address outboundSwitchboard_
-    ) external onlyOwner {
+    ) external onlyPlugOwner {
         socket.connect(
             siblingChainSlug_,
             siblingPlug_,
@@ -58,12 +59,12 @@ abstract contract PlugBase {
         bytes memory payload_
     ) internal virtual;
 
-    function _getChainSlug() internal view returns (uint256) {
-        return socket.chainSlug();
-    }
+    // function _getChainSlug() internal view returns (uint256) {
+    //     return socket.chainSlug();
+    // }
 
     // owner related functions
-    function removeOwner() external onlyOwner {
-        owner = address(0);
+    function removeOwner() external onlyPlugOwner {
+        plugOwner = address(0);
     }
 }
