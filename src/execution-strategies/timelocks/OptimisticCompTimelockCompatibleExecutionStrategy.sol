@@ -2,15 +2,15 @@
 
 pragma solidity ^0.8.18;
 
-import { ICompTimelock } from "../interfaces/ICompTimelock.sol";
-import { SimpleQuorumExecutionStrategy } from "./SimpleQuorumExecutionStrategy.sol";
-import { SpaceManager } from "../utils/SpaceManager.sol";
-import { MetaTransaction, Proposal, ProposalStatus } from "../types.sol";
+import { ICompTimelock } from "../../interfaces/ICompTimelock.sol";
+import { OptimisticQuorumExecutionStrategy } from "../OptimisticQuorumExecutionStrategy.sol";
+import { SpaceManager } from "../../utils/SpaceManager.sol";
+import { MetaTransaction, Proposal, ProposalStatus, TRUE, FALSE } from "../../types.sol";
 import { Enum } from "@gnosis.pm/safe-contracts/contracts/common/Enum.sol";
 
-/// @title Comp Timelock Execution Strategy
-/// @notice An Execution strategy that provides compatibility with existing Comp Timelock contracts.
-contract CompTimelockCompatibleExecutionStrategy is SimpleQuorumExecutionStrategy {
+/// @title Optimistic Comp Timelock Execution Strategy
+/// @notice An optimstic execution strategy that provides compatibility with existing Comp Timelock contracts.
+contract OptimisticCompTimelockCompatibleExecutionStrategy is OptimisticQuorumExecutionStrategy {
     /// @notice Thrown if timelock delay is in the future.
     error TimelockDelayNotMet();
     /// @notice Thrown if the proposal execution payload hash is not queued.
@@ -24,7 +24,7 @@ contract CompTimelockCompatibleExecutionStrategy is SimpleQuorumExecutionStrateg
     /// @notice Thrown if the transaction is invalid.
     error InvalidTransaction();
 
-    event CompTimelockCompatibleExecutionStrategySetUp(
+    event OptimisticCompTimelockCompatibleExecutionStrategySetUp(
         address owner,
         address vetoGuardian,
         address[] spaces,
@@ -42,6 +42,9 @@ contract CompTimelockCompatibleExecutionStrategy is SimpleQuorumExecutionStrateg
     /// @notice The time at which a proposal can be executed. Indexed by the hash of the proposal execution payload.
     mapping(bytes32 => uint256) public proposalExecutionTime;
 
+    /// @notice Mapping of queued transaction hashes.
+    mapping(bytes32 => uint256) public txHashes;
+
     /// @notice Veto guardian is given permission to veto any queued proposal.
     address public vetoGuardian;
 
@@ -52,7 +55,7 @@ contract CompTimelockCompatibleExecutionStrategy is SimpleQuorumExecutionStrateg
     /// @param _owner Address of the owner of this contract.
     /// @param _vetoGuardian Address of the veto guardian.
     /// @param _spaces Array of whitelisted space contracts.
-    /// @param _quorum The quorum required to execute a proposal.
+    /// @param _quorum The quorum required to reject a proposal.
     constructor(address _owner, address _vetoGuardian, address[] memory _spaces, uint256 _quorum, address _timelock) {
         setUp(abi.encode(_owner, _vetoGuardian, _spaces, _quorum, _timelock));
     }
@@ -64,9 +67,9 @@ contract CompTimelockCompatibleExecutionStrategy is SimpleQuorumExecutionStrateg
         transferOwnership(_owner);
         vetoGuardian = _vetoGuardian;
         __SpaceManager_init(_spaces);
-        __SimpleQuorumExecutionStrategy_init(_quorum);
+        __OptimisticQuorumExecutionStrategy_init(_quorum);
         timelock = ICompTimelock(_timelock);
-        emit CompTimelockCompatibleExecutionStrategySetUp(_owner, _vetoGuardian, _spaces, _quorum, _timelock);
+        emit OptimisticCompTimelockCompatibleExecutionStrategySetUp(_owner, _vetoGuardian, _spaces, _quorum, _timelock);
     }
 
     /// @notice Accepts admin role of the timelock contract. Must be called before using the timelock.
@@ -104,11 +107,6 @@ contract CompTimelockCompatibleExecutionStrategy is SimpleQuorumExecutionStrateg
 
         MetaTransaction[] memory transactions = abi.decode(payload, (MetaTransaction[]));
 
-        // An array to check that there are no duplicates in the list of transactions.
-        // We must do this because the Compound Timelock will silently "merge" two duplicate transactions.
-        // This could be problematic for off-chain indexers and UI tools.
-        bytes32[] memory txHashes = new bytes32[](transactions.length);
-
         for (uint256 i = 0; i < transactions.length; i++) {
             // Comp Timelock does not support delegate calls.
             if (transactions[i].operation == Enum.Operation.DelegateCall) {
@@ -116,12 +114,16 @@ contract CompTimelockCompatibleExecutionStrategy is SimpleQuorumExecutionStrateg
             }
 
             // Check there are not duplicates.
-            // Do not include `executionTime` because it's a constant.
-            bytes32 txHash = keccak256(abi.encode(transactions[i].to, transactions[i].value, "", transactions[i].data));
-            for (uint256 j = 0; j < i; j++) {
-                if (txHashes[j] == txHash) revert DuplicateMetaTransaction();
-            }
-            txHashes[i] = txHash;
+            // We must do this because the Compound Timelock will silently "merge" two duplicate transactions.
+            // This could be problematic for off-chain indexers and UI tools.
+            bytes32 txHash = keccak256(
+                abi.encode(transactions[i].to, transactions[i].value, "", transactions[i].data, executionTime)
+            );
+            // We use `!= FALSE` rather than `== TRUE` for gas optimisations.
+            if (txHashes[txHash] != FALSE) revert DuplicateMetaTransaction();
+
+            // Store the transaction hash.
+            txHashes[txHash] = TRUE;
 
             timelock.queueTransaction(
                 transactions[i].to,
@@ -154,6 +156,12 @@ contract CompTimelockCompatibleExecutionStrategy is SimpleQuorumExecutionStrateg
 
         MetaTransaction[] memory transactions = abi.decode(payload, (MetaTransaction[]));
         for (uint256 i = 0; i < transactions.length; i++) {
+            // Clear out the transactions from the mapping.
+            bytes32 txHash = keccak256(
+                abi.encode(transactions[i].to, transactions[i].value, "", transactions[i].data, executionTime)
+            );
+            txHashes[txHash] = FALSE;
+
             timelock.executeTransaction(
                 transactions[i].to,
                 transactions[i].value,
@@ -199,6 +207,6 @@ contract CompTimelockCompatibleExecutionStrategy is SimpleQuorumExecutionStrateg
 
     /// @notice Returns the strategy type string.
     function getStrategyType() external pure override returns (string memory) {
-        return "CompTimelockCompatibleSimpleQuorum";
+        return "CompTimelockCompatibleOptimisticQuorum";
     }
 }
