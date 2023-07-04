@@ -47,9 +47,7 @@ contract Socket is ISocket {
             !configExists[outboundSwitchboard_][siblingChainSlug_]
         ) revert InvalidConnection();
 
-        PlugConfig storage plugConfig = plugConfigs[msg.sender][
-            siblingChainSlug_
-        ];
+        PlugConfig storage plugConfig = plugConfigs[msg.sender][siblingChainSlug_];
 
         plugConfig.siblingPlug = siblingPlug_;
         plugConfig.inboundSwitchboard = inboundSwitchboard_;
@@ -71,19 +69,12 @@ contract Socket is ISocket {
         uint256 msgGasLimit_,
         bytes calldata payload_
     ) external payable override returns (bytes32) {
-        PlugConfig memory srcPlugConfig = plugConfigs[msg.sender][
-            siblingChainSlug_
-        ];
+        PlugConfig memory srcPlugConfig = plugConfigs[msg.sender][siblingChainSlug_];
 
-        PlugConfig memory dstPlugConfig = plugConfigs[
-            srcPlugConfig.siblingPlug
-        ][chainSlug];
+        PlugConfig memory dstPlugConfig = plugConfigs[srcPlugConfig.siblingPlug][chainSlug];
 
         if (dstPlugConfig.siblingPlug != msg.sender) revert WrongSiblingPlug();
-        IPlug(srcPlugConfig.siblingPlug).inbound{gas: msgGasLimit_}(
-            siblingChainSlug_,
-            payload_
-        );
+        IPlug(srcPlugConfig.siblingPlug).inbound{ gas: msgGasLimit_ }(siblingChainSlug_, payload_);
 
         return bytes32(0);
     }
@@ -102,9 +93,7 @@ contract Socket is ISocket {
             address decapacitor__
         )
     {
-        PlugConfig memory plugConfig = plugConfigs[plugAddress_][
-            siblingChainSlug_
-        ];
+        PlugConfig memory plugConfig = plugConfigs[plugAddress_][siblingChainSlug_];
         return (
             plugConfig.siblingPlug,
             plugConfig.inboundSwitchboard,

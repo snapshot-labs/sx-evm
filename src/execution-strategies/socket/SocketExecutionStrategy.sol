@@ -8,7 +8,7 @@ import { PlugBase } from "./PlugBase.sol";
 
 /// @title Socket Execution Strategy
 contract SocketExecutionStrategy is SimpleQuorumExecutionStrategy, PlugBase {
-    uint256 internal maxExecutionGasLimit=10000000;
+    uint256 internal maxExecutionGasLimit = 10000000;
 
     constructor(uint256 _quorum, address _socket) PlugBase(_socket) {
         quorum = _quorum;
@@ -22,7 +22,7 @@ contract SocketExecutionStrategy is SimpleQuorumExecutionStrategy, PlugBase {
         bytes memory payload
     ) external override {
         // TODO: add relavent checks on the proposal
-       
+
         // send proposal-status and payload to destination Plugs via Socket
         // TODO: fix fees
         xMetaTransaction[] memory transactions = abi.decode(payload, (xMetaTransaction[]));
@@ -31,15 +31,12 @@ contract SocketExecutionStrategy is SimpleQuorumExecutionStrategy, PlugBase {
                 transactions[i].toChainId,
                 maxExecutionGasLimit,
                 0,
-                abi.encode(ProposalStatus.Executed,bytes(""))
+                abi.encode(ProposalStatus.Executed, bytes(""))
             );
         }
     }
 
-    function _receiveInbound(
-        uint256 siblingChainSlug_,
-        bytes memory payload_
-    ) internal override {}
+    function _receiveInbound(uint256 siblingChainSlug_, bytes memory payload_) internal override {}
 
     function getStrategyType() external pure override returns (string memory) {
         return "SocketExecutionStrategy";
