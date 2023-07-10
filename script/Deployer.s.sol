@@ -3,17 +3,24 @@ pragma solidity ^0.8.18;
 
 import { Script } from "forge-std/Script.sol";
 import { stdJson } from "forge-std/StdJson.sol";
+
+import { ProxyFactory } from "../src/ProxyFactory.sol";
 import { Space } from "../src/Space.sol";
-import { VanillaAuthenticator } from "../src/authenticators/VanillaAuthenticator.sol";
-import { VanillaVotingStrategy } from "../src/voting-strategies/VanillaVotingStrategy.sol";
+import { Strategy } from "../src/types.sol";
+
 import { VanillaExecutionStrategy } from "../src/execution-strategies/VanillaExecutionStrategy.sol";
 import { AvatarExecutionStrategy } from "../src/execution-strategies/AvatarExecutionStrategy.sol";
 import { TimelockExecutionStrategy } from "../src/execution-strategies/TimelockExecutionStrategy.sol";
+
+import { VanillaAuthenticator } from "../src/authenticators/VanillaAuthenticator.sol";
 import { EthSigAuthenticator } from "../src/authenticators/EthSigAuthenticator.sol";
 import { EthTxAuthenticator } from "../src/authenticators/EthTxAuthenticator.sol";
+
+import { VanillaVotingStrategy } from "../src/voting-strategies/VanillaVotingStrategy.sol";
 import { CompVotingStrategy } from "../src/voting-strategies/CompVotingStrategy.sol";
 import { OZVotesVotingStrategy } from "../src/voting-strategies/OZVotesVotingStrategy.sol";
 import { WhitelistVotingStrategy } from "../src/voting-strategies/WhitelistVotingStrategy.sol";
+
 import {
     VanillaProposalValidationStrategy
 } from "../src/proposal-validation-strategies/VanillaProposalValidationStrategy.sol";
@@ -26,8 +33,6 @@ import {
 import {
     PropositionPowerAndActiveProposalsLimiterValidationStrategy
 } from "../src/proposal-validation-strategies/PropositionPowerAndActiveProposalsLimiterValidationStrategy.sol";
-import { ProxyFactory } from "../src/ProxyFactory.sol";
-import { Strategy } from "../src/types.sol";
 
 interface SingletonFactory {
     function deploy(bytes memory _initCode, bytes32 salt) external returns (address payable);
@@ -40,7 +45,7 @@ contract Deployer is Script {
     string internal deploymentsPath;
 
     string internal name = "snapshot-x";
-    string internal version = "0.1.0";
+    string internal version = "1.0.0";
 
     using stdJson for string;
 
@@ -57,7 +62,7 @@ contract Deployer is Script {
 
         vm.startBroadcast(deployer);
 
-        // ------- Execution Strategies -------
+        // ------- EXECUTION STRATEGIES -------
 
         (address avatarExecutionStrategy, ) = noRedeploy(
             abi.encodePacked(
