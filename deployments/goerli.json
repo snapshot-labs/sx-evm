@@ -1,0 +1,20 @@
+{
+  "TimelockExecutionStrategyImplementation": "0xdD5243b799759e2C64bD6CaFD7e57FcbB676f87D",
+  "PropositionPowerAndActiveProposalsLimiterValidationStrategy": "0x358e4Ba219CC1e1c7084A14c3a504772acfc40b1",
+  "WhitelistVotingStrategy": "0x3CEE21A33751A2722413fF62dEC3dEc48e7748A4",
+  "AvatarExecutionStrategyImplementation": "0x3813f3d97Aa2F80e3aF625605A31206e067FB2e5",
+  "OptimisticCompTimelockCompatibleExecutionStrategyImplementation": "0xe7cf0424b9Fa0B7738ED80803ba6a61a2504dF0F",
+  "OZVotesVotingStrategy": "0x2c8631584474E750CEdF2Fb6A904f2e84777Aefe",
+  "CompTimelockCompatibleExecutionStrategyImplementation": "0xA1c236dc145aF36ABc0A5c06601eD18Fb6d80b49",
+  "VanillaAuthenticator": "0xb9BE0a0093933968E3B4c4fC5d939B6c1Fe45142",
+  "VanillaVotingStrategy": "0xC1245C5DCa7885C73E32294140F1e5d30688c202",
+  "ProxyFactory": "0x421Ae9237Ad736c639C051aAf90a471f4B09a836",
+  "PropositionPowerProposalValidationStrategy": "0x6D9d6D08EF6b26348Bd18F1FC8D953696b7cf311",
+  "EthSigAuthenticator": "0x5f9B7D78c9a37a439D78f801E0E339C6E711e260",
+  "SpaceImplementation": "0xd9c46d5420434355d0E5Ca3e3cCb20cE7A533964",
+  "VanillaProposalValidationStrategy": "0x9A39194F870c410633C170889E9025fba2113c79",
+  "OptimisticTimelockExecutionStrategyImplementation": "0xC0696550F6309c312b8843407128F5B64F2A9aD6",
+  "EthTxAuthenticator": "0xBA06E6cCb877C332181A6867c05c8b746A21Aed1",
+  "CompVotingStrategy": "0x0c2De612982Efd102803161fc7C74CcA15Db932c",
+  "ActiveProposalsLimiterProposalValidationStrategy": "0x399821c9Ea977387a0DEcCF1C9692B4dF925FF38"
+}
