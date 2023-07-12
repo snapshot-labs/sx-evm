@@ -65,8 +65,6 @@ contract Deployer is Script {
     uint256 internal saltNonce = 0;
 
     function run() public {
-        // uint256 pvk = vm.envUint("PRIVATE_KEY");
-        // deployer = vm.rememberKey(pvk);
         deployer = vm.envAddress("DEPLOYER_ADDRESS");
 
         string memory network = vm.envString("NETWORK");
@@ -90,10 +88,7 @@ contract Deployer is Script {
 
         (address timelockExecutionStrategy, ) = noRedeploy(
             deployer,
-            abi.encodePacked(
-                type(TimelockExecutionStrategy).creationCode,
-                abi.encode(address(0x1), address(0x1), new address[](0), 0, 0)
-            ),
+            abi.encodePacked(type(TimelockExecutionStrategy).creationCode),
             saltNonce
         );
 
@@ -101,10 +96,7 @@ contract Deployer is Script {
 
         (address optimisticTimelockExecutionStrategy, ) = noRedeploy(
             deployer,
-            abi.encodePacked(
-                type(OptimisticTimelockExecutionStrategy).creationCode,
-                abi.encode(address(0x1), address(0x1), new address[](0), 0, 0)
-            ),
+            abi.encodePacked(type(OptimisticTimelockExecutionStrategy).creationCode),
             saltNonce
         );
 
