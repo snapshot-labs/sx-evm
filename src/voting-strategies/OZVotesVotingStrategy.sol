@@ -3,7 +3,7 @@
 pragma solidity ^0.8.18;
 
 import { IVotingStrategy } from "../interfaces/IVotingStrategy.sol";
-import { IVotes } from "@openzeppelin/contracts/governance/utils/IVotes.sol";
+import { IVotes } from "lib/openzeppelin-contracts/contracts/governance/utils/IVotes.sol";
 
 /// @title OZ Votes Voting Strategy
 /// @notice Uses delegated balances of OZ Votes style tokens to determine voting power.

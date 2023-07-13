@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.18;
 
-import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import { OwnableUpgradeable } from "lib/openzeppelin-contracts-upgradeable/contracts/access/OwnableUpgradeable.sol";
 import { TRUE, FALSE } from "../types.sol";
 
 /// @title Space Manager
