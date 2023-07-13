@@ -1,5 +1,6 @@
 {
   "name": "sx-evm",
+  "version": "1.0.0",
   "description": "On-chain voting framework",
   "repository": "snapshot-labs/sx-evm",
   "author": "SnapshotLabs",
