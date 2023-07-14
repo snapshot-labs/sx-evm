@@ -8,5 +8,6 @@ node_modules
 /broadcast/
 lcov.info
 
-# zkysnc 
-zkout/
+# zksync artifacts
+artifacts-zk
+cache-zk
