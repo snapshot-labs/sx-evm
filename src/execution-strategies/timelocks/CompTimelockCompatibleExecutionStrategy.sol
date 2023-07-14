@@ -6,7 +6,7 @@ import { ICompTimelock } from "../../interfaces/ICompTimelock.sol";
 import { SimpleQuorumExecutionStrategy } from "../SimpleQuorumExecutionStrategy.sol";
 import { SpaceManager } from "../../utils/SpaceManager.sol";
 import { MetaTransaction, Proposal, ProposalStatus } from "../../types.sol";
-import { Enum } from "lib/safe-contracts/contracts/common/Enum.sol";
+import { Enum } from "src/utils/Enum.sol";
 
 /// @title Comp Timelock Execution Strategy
 /// @notice An Execution strategy that provides compatibility with existing Comp Timelock contracts.

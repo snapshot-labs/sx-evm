@@ -5,7 +5,7 @@ pragma solidity ^0.8.18;
 import { SimpleQuorumExecutionStrategy } from "../SimpleQuorumExecutionStrategy.sol";
 import { SpaceManager } from "../../utils/SpaceManager.sol";
 import { MetaTransaction, Proposal, ProposalStatus } from "../../types.sol";
-import { Enum } from "lib/safe-contracts/contracts/common/Enum.sol";
+import { Enum } from "src/utils/Enum.sol";
 import { IERC1155Receiver } from "lib/openzeppelin-contracts/contracts/interfaces/IERC1155Receiver.sol";
 import { IERC721Receiver } from "lib/openzeppelin-contracts/contracts/interfaces/IERC721Receiver.sol";
 import { IERC165 } from "lib/openzeppelin-contracts/contracts/interfaces/IERC165.sol";
