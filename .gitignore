@@ -3,6 +3,7 @@ cache
 node_modules
 .yarn
 .env
+.DS_Store
 
 # broadcasts
 /broadcast/
