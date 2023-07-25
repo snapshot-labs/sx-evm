@@ -10,7 +10,7 @@
   "OptimisticTimelockExecutionStrategyImplementation": "0x93C5cF832AD6Be0a7BF5d70B05FBc50864982B46",
   "PropositionPowerAndActiveProposalsLimiterValidationStrategy": "0x358e4Ba219CC1e1c7084A14c3a504772acfc40b1",
   "PropositionPowerProposalValidationStrategy": "0x6D9d6D08EF6b26348Bd18F1FC8D953696b7cf311",
-  "ProxyFactory": "0x421Ae9237Ad736c639C051aAf90a471f4B09a836",
+  "ProxyFactory": "0x4B4F7f64Be813Ccc66AEFC3bFCe2baA01188631c",
   "SpaceImplementation": "0xd9c46d5420434355d0E5Ca3e3cCb20cE7A533964",
   "TimelockExecutionStrategyImplementation": "0x00C5E67e6F7FDf80d7bCA249E38C355FbE62Ba34",
   "VanillaAuthenticator": "0xb9BE0a0093933968E3B4c4fC5d939B6c1Fe45142",
