@@ -37,6 +37,10 @@ struct Proposal {
     // Bit array where the index of each each bit corresponds to whether the voting strategy.
     // at that index is active at the time of proposal creation.
     uint256 activeVotingStrategies;
+    // SLOT 5:
+    // Bit array where the index of each bit corresponds to whether the voting strategy 
+    // at that index was selected for the given proposal. empty array/0 indicates all active strategies are valid.
+    uint256 selectedVotingStrategies;
 }
 
 /// @notice The data stored for each strategy.
