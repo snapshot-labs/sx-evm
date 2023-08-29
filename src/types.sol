@@ -41,6 +41,8 @@ struct Proposal {
     // Bit array where the index of each bit corresponds to whether the voting strategy 
     // at that index was selected for the given proposal. empty array/0 indicates all active strategies are valid.
     uint256 selectedVotingStrategies;
+
+    uint8[] enumeratedVotingStrategies;
 }
 
 /// @notice The data stored for each strategy.

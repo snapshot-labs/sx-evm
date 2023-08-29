@@ -234,7 +234,8 @@ contract Space is ISpace, Initializable, IERC4824, UUPSUpgradeable, OwnableUpgra
             FinalizationStatus.Pending,
             executionPayloadHash,
             activeVotingStrategies,
-            selectedVotingStrategies
+            selectedVotingStrategies,
+            selectedVotingStrategiesIndices
         );
 
         proposals[nextProposalId] = proposal;
