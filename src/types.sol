@@ -3,7 +3,7 @@
 pragma solidity ^0.8.18;
 
 import { Enum } from "@gnosis.pm/safe-contracts/contracts/common/Enum.sol";
-import { IExecutionStrategy } from "src/interfaces/IExecutionStrategy.sol";
+import { IExecutionStrategy } from "./interfaces/IExecutionStrategy.sol";
 
 /// @dev Constants used to replace the `bool` type in mappings for gas efficiency.
 uint256 constant TRUE = 1;
@@ -41,8 +41,6 @@ struct Proposal {
     // Bit array where the index of each bit corresponds to whether the voting strategy 
     // at that index was selected for the given proposal. empty array/0 indicates all active strategies are valid.
     uint256 selectedVotingStrategies;
-
-    uint8[] enumeratedVotingStrategies;
 }
 
 /// @notice The data stored for each strategy.
