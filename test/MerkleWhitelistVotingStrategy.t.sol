@@ -110,13 +110,42 @@ contract MerkleWhitelistVotingStrategyTest is Test {
 
         bytes32 root = merkleLib.getRoot(leaves);
 
+        bytes32[] memory proof = merkleLib.getProof(leaves, 2);
+
         // Proof is for a different member than the voter address
         vm.expectRevert(InvalidMember.selector);
         merkleWhitelistVotingStrategy.getVotingPower(
             0,
             members[1].addr,
             abi.encode(root),
-            abi.encode(merkleLib.getProof(leaves, 2), members[2])
+            abi.encode(proof, members[2])
         );
+    }
+
+    function testLargeMerkleWhitelist() public {
+        uint256 numMembers = 100;
+        MerkleWhitelistVotingStrategy.Member[] memory members = new MerkleWhitelistVotingStrategy.Member[](numMembers);
+        for (uint256 i = 0; i < numMembers; i++) {
+            members[i] = MerkleWhitelistVotingStrategy.Member(address(uint160(i)), uint96(i));
+        }
+
+        bytes32[] memory leaves = new bytes32[](numMembers);
+        for (uint256 i = 0; i < numMembers; i++) {
+            leaves[i] = keccak256(abi.encode(members[i]));
+        }
+
+        bytes32 root = merkleLib.getRoot(leaves);
+
+        for (uint256 i = 0; i < numMembers; i++) {
+            assertEq(
+                merkleWhitelistVotingStrategy.getVotingPower(
+                    0,
+                    members[i].addr,
+                    abi.encode(root),
+                    abi.encode(merkleLib.getProof(leaves, i), members[i])
+                ),
+                members[i].vp
+            );
+        }
     }
 }
