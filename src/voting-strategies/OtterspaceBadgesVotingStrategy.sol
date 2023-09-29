@@ -31,9 +31,8 @@ contract OtterspaceBadgesVotingStrategy is IVotingStrategy {
 
     /// @notice Returns the voting power of an address.
     /// @param voter The address to get the voting power of.
-    /// @param params Parameter array containing the encoded whitelist of addresses and their voting power.
-    ///               The array should be an ABI encoded array of Member structs.
-    /// @param userParams Parameter array containing an array of indices of
+    /// @param params Parameter array containing an array of Badge structs.
+    /// @param userParams Parameter array containing an array of indices of the badges the voter owns.
     /// @return votingPower The voting power of the address if it exists in the whitelist, otherwise reverts.
     function getVotingPower(
         uint32 /* blockNumber */,
