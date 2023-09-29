@@ -5,3 +5,5 @@ forge-gas-snapshot/=lib/forge-gas-snapshot/src
 @prb/test/=lib/prb-test/src/
 @zodiac/=lib/zodiac/contracts/
 @gnosis.pm/safe-contracts=lib/safe-contracts
+@otterspace/contracts/=lib/otterspace-contracts/src
+ERC4973/=lib/ERC4973/src/
