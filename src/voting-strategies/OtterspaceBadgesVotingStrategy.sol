@@ -6,7 +6,7 @@ pragma solidity ^0.8.18;
 import { IVotingStrategy } from "../interfaces/IVotingStrategy.sol";
 
 interface IBadges {
-    function ownerOf(uint256 tokenId) external view returns (address);
+    function isBadgeValid(uint256 _badgeId) external view returns (bool);
 }
 
 /// @title Otterspace Badge Voting Strategy
@@ -46,7 +46,7 @@ contract OtterspaceBadgesVotingStrategy is IVotingStrategy {
         uint256 vp;
         for (uint8 i = 0; i < userBadgeIndices.length; i++) {
             uint256 tokenId = uint256(getBadgeIdHash(voter, badges[userBadgeIndices[i]].specUri));
-            if (IBadges(badgesRegistry).ownerOf(tokenId) != voter) revert InvalidBadge();
+            if (!IBadges(badgesRegistry).isBadgeValid(tokenId)) revert InvalidBadge();
             vp += badges[userBadgeIndices[i]].vp;
         }
 
