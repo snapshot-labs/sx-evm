@@ -1,5 +1,6 @@
 {
   "name": "sx-evm",
+  "version": "1.0.2",
   "description": "On-chain voting framework",
   "repository": "snapshot-labs/sx-evm",
   "author": "SnapshotLabs",
@@ -22,8 +23,6 @@
     "prettier": "prettier --write \"**/*.{json,md,sol,yml}\"",
     "format": "yarn prettier",
     "test": "forge test --optimize -vv",
-    "deploy-modules": "forge script script/ModulesSetup.s.sol:ModulesSetup --rpc-url $GOERLI_RPC_URL --optimize --broadcast --verify -vvvv",
-    "deploy-space": "forge script script/SpaceSetup.s.sol:SpaceSetup --rpc-url $GOERLI_RPC_URL --optimize --broadcast --verify -vvvv",
     "prepare": "husky install"
   },
   "lint-staged": {
