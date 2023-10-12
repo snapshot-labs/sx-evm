@@ -29,6 +29,7 @@ import { VanillaVotingStrategy } from "../src/voting-strategies/VanillaVotingStr
 import { CompVotingStrategy } from "../src/voting-strategies/CompVotingStrategy.sol";
 import { OZVotesVotingStrategy } from "../src/voting-strategies/OZVotesVotingStrategy.sol";
 import { WhitelistVotingStrategy } from "../src/voting-strategies/WhitelistVotingStrategy.sol";
+import { MerkleWhitelistVotingStrategy } from "../src/voting-strategies/MerkleWhitelistVotingStrategy.sol";
 
 import {
     VanillaProposalValidationStrategy
@@ -162,6 +163,13 @@ contract Deployer is Script {
 
         (address ozVotesVotingStrategy, ) = noRedeploy(deployer, type(OZVotesVotingStrategy).creationCode, saltNonce);
         deployments.serialize("OZVotesVotingStrategy", ozVotesVotingStrategy);
+
+        (address merkleWhitelistVotingStrategy, ) = noRedeploy(
+            deployer,
+            type(MerkleWhitelistVotingStrategy).creationCode,
+            saltNonce
+        );
+        deployments.serialize("MerkleWhitelistVotingStrategy", merkleWhitelistVotingStrategy);
 
         // ------- PROPOSAL VALIDATION STRATEGIES -------
 
