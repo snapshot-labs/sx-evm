@@ -18,7 +18,8 @@ src
 ├─ voting-strategies
 │  ├─ CompVotingStrategy.sol - "Strategy that uses delegated balances of Comp tokens as voting power"
 │  ├─ OZVotesVotingStrategy.sol - "Strategy that uses delegated balances of OZ Votes tokens as voting power"
-│  ├─ WhitelistVotingStrategy.sol — "Strategy that gives predetermined voting power for members in a whitelist, otherwise zero"
+│  ├─ WhitelistVotingStrategy.sol — "Strategy that gives predetermined voting power for members in a whitelist, otherwise zero. Whitelist is stored in a bytes array On-Chain."
+│  ├─ MerkleWhitelistVotingStrategy.sol — "Strategy that gives predetermined voting power for members in a whitelist, otherwise zero. Whitelist is stored in a Merkle tree Off-Chain, with only the root being stored On-Chain."
 │  └─ VanillaVotingStrategy.sol — "Vanilla Strategy"
 ├─ execution-strategies
 │  ├─ timelocks
