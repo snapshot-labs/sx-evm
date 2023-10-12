@@ -24,6 +24,7 @@ contract DeployerTest is Test {
 
     function setUp() public {
         vm.setEnv("NETWORK", "test");
+        vm.setEnv("DEPLOYER_ADDRESS", vm.toString(address(this)));
 
         // Setting the bytecode at the singleton address of the singleton factory.
         vm.etch(address(0xce0042B868300000d44A59004Da54A005ffdcf9f), singletonFactoryBytecode);
