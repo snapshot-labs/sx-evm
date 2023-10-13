@@ -81,7 +81,7 @@ $ forge coverage
 
 ### Deployment
 
-To deploy the protocol to an EVM chain, first set the following environment variables: 
+To deploy the protocol to an EVM chain, first set the following environment variables:
 
 ```sh
 # The address of the account that the protocol will be deployed from.
@@ -94,10 +94,12 @@ RPC_URL=
 ETHERSCAN_API_KEY=
 ```
 
-Following this, a [Foundry Script](https://book.getfoundry.sh/tutorials/solidity-scripting) can be run to deploy the entire protocol. Example usage to deploy from a Ledger Hardware Wallet and verify on a block explorer: 
+Following this, a [Foundry Script](https://book.getfoundry.sh/tutorials/solidity-scripting) can be run to deploy the
+entire protocol. Example usage to deploy from a Ledger Hardware Wallet and verify on a block explorer:
 
 ```sh
 forge script script/Deployer.s.sol:Deployer --rpc-url $RPC_URL --optimize --broadcast --verify -vvvv --ledger --sender $DEPLOYER_ADDRESS --hd-paths "m/44'/60'/4'/0/0"
 ```
-The script uses the [Singleton Factory](https://eips.ethereum.org/EIPS/eip-2470) for the deployments which ensures that the addresses of the contracts are the same on all chains (so long as the chain is fully EVM equivalent).  
 
+The script uses the [Singleton Factory](https://eips.ethereum.org/EIPS/eip-2470) for the deployments which ensures that
+the addresses of the contracts are the same on all chains (so long as the chain is fully EVM equivalent).
