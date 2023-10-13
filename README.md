@@ -84,9 +84,9 @@ $ forge coverage
 To deploy the protocol to an EVM chain, first set the following environment variables: 
 
 ```sh
-# The address of the account that the will be used to deploy from.
+# The address of the account that the protocol will be deployed from.
 DEPLOYER_ADDRESS=
-# The name of the chain you want to deploy on. The contract addresses of the deployed contracts will be stored at /deployments/network.json
+# The name of the chain you want to deploy on. The addresses of the deployed contracts will be stored at /deployments/network.json
 NETWORK=
 # An RPC URL for the chain.
 RPC_URL=
