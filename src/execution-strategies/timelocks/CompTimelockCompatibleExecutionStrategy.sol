@@ -80,7 +80,6 @@ contract CompTimelockCompatibleExecutionStrategy is SimpleQuorumExecutionStrateg
     }
 
     /// @notice Executes a proposal by queueing its transactions in the timelock. Can only be called by approved spaces.
-    /// @param proposalId The ID of the proposal.
     /// @param proposal The proposal.
     /// @param votesFor The number of votes for the proposal.
     /// @param votesAgainst The number of votes against the proposal.
