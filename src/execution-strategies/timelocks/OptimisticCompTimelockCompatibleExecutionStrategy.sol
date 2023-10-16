@@ -80,12 +80,14 @@ contract OptimisticCompTimelockCompatibleExecutionStrategy is OptimisticQuorumEx
     }
 
     /// @notice Executes a proposal by queueing its transactions in the timelock. Can only be called by approved spaces.
+    /// @param proposalId The ID of the proposal.
     /// @param proposal The proposal.
     /// @param votesFor The number of votes for the proposal.
     /// @param votesAgainst The number of votes against the proposal.
     /// @param votesAbstain The number of abstaining votes for the proposal.
     /// @param payload The encoded payload of the proposal to execute.
     function execute(
+        uint256 proposalId,
         Proposal memory proposal,
         uint256 votesFor,
         uint256 votesAgainst,
