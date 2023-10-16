@@ -5,7 +5,7 @@
   "CompVotingStrategy": "0x0c2De612982Efd102803161fc7C74CcA15Db932c",
   "EthSigAuthenticator": "0x5f9B7D78c9a37a439D78f801E0E339C6E711e260",
   "EthTxAuthenticator": "0xBA06E6cCb877C332181A6867c05c8b746A21Aed1",
-  "MerkleWhitelistVotingStrategy": "0xbce18d5aCA2bcd30D5963fA39e80B9FfF7841a1E",
+  "MerkleWhitelistVotingStrategy": "0x34f0AfFF5A739bBf3E285615F50e40ddAaf2A829",
   "OZVotesVotingStrategy": "0x2c8631584474E750CEdF2Fb6A904f2e84777Aefe",
   "OptimisticCompTimelockCompatibleExecutionStrategyImplementation": "0xe7cf0424b9Fa0B7738ED80803ba6a61a2504dF0F",
   "OptimisticTimelockExecutionStrategyImplementation": "0x93C5cF832AD6Be0a7BF5d70B05FBc50864982B46",
