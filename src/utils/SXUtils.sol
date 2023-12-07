@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.18;
 
-import { IndexedStrategy } from "src/types.sol";
+import { IndexedStrategy } from "../types.sol";
 
 /// @title Snapshot X Types Utilities Library
 library SXUtils {
