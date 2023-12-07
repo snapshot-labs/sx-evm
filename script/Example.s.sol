@@ -10,6 +10,7 @@ import { TimelockExecutionStrategy } from "../src/execution-strategies/timelocks
 import { Strategy, IndexedStrategy, InitializeCalldata, Choice, MetaTransaction } from "../src/types.sol";
 import { Enum } from "@gnosis.pm/safe-contracts/contracts/common/Enum.sol";
 
+// Example script to deploy a space, create a proposal, vote on it, and execute it.
 contract Example is Script {
     // Paste in the addresses from your json in the /deployments/ folder. The below are from v1.0.2 on goerli.
     address public proxyFactory = address(0x4B4F7f64Be813Ccc66AEFC3bFCe2baA01188631c);
@@ -18,6 +19,9 @@ contract Example is Script {
     address public vanillaProposalValidationStrategy = address(0x9A39194F870c410633C170889E9025fba2113c79);
     address public vanillaAuthenticator = address(0xb9BE0a0093933968E3B4c4fC5d939B6c1Fe45142);
     address public timelockExecutionStrategyImplementation = address(0xdD5243b799759e2C64bD6CaFD7e57FcbB676f87D);
+
+    // Change the salt to deploy multiple spaces or get a 'salt already used' error
+    uint256 public constant saltNonce = 1234;
 
     function run() public {
         uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
@@ -37,9 +41,6 @@ contract Example is Script {
         string memory proposalValidationStrategyMetadataURI = "";
         string memory daoURI = "";
         string memory metadataURI = "";
-
-        // Change the salt to deploy multiple spaces or get a 'salt already used' error
-        uint256 saltNonce = 1234;
 
         // Deploy space
         ProxyFactory(proxyFactory).deployProxy(
