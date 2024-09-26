@@ -2,8 +2,8 @@
 
 pragma solidity ^0.8.18;
 
-import { Choice, Proposal, ProposalStatus, FinalizationStatus, Strategy } from "src/types.sol";
-import { IExecutionStrategy } from "src/interfaces/IExecutionStrategy.sol";
+import { Choice, Proposal, ProposalStatus, FinalizationStatus, Strategy } from "../../types.sol";
+import { IExecutionStrategy } from "../../interfaces/IExecutionStrategy.sol";
 
 /// @title Space State
 interface ISpaceState {
@@ -63,6 +63,7 @@ interface ISpaceState {
     /// @return finalizationStatus The finalization status of the proposal. See `FinalizationStatus`.
     /// @return executionPayloadHash The keccak256 hash of the execution payload.
     /// @return activeVotingStrategies The bit array of the active voting strategies for the proposal.
+    /// @return selectedVotingStrategies
     function proposals(
         uint256 proposalId
     )
@@ -76,7 +77,8 @@ interface ISpaceState {
             uint32 maxEndBlockNumber,
             FinalizationStatus finalizationStatus,
             bytes32 executionPayloadHash,
-            uint256 activeVotingStrategies
+            uint256 activeVotingStrategies,
+            uint256 selectedVotingStrategies
         );
 
     /// @notice Returns the status of a proposal.
