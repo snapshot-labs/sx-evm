@@ -28,8 +28,8 @@ contract MerkleWhitelistVotingStrategy is IVotingStrategy {
     /// @param userParams Parameter array containing the desired member of the whitelist and its associated merkle proof.
     /// @return votingPower The voting power of the address if it exists in the whitelist, otherwise reverts.
     function getVotingPower(
-        uint32 /* blockNumber */,
-        address voter,
+        uint32,
+        /* blockNumber */ address voter,
         bytes calldata params,
         bytes calldata userParams
     ) external pure override returns (uint256 votingPower) {
