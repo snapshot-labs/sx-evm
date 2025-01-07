@@ -2,6 +2,7 @@ name: "CI"
 
 env:
   FOUNDRY_PROFILE: "ci"
+  PRIVATE_KEY: "0xafdfd9c3d2095ef696594f6cedcae59e72dcd697e2a7521b1578140422a4f890"
 
 on:
   pull_request:
