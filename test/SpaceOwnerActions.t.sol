@@ -21,9 +21,16 @@ contract SpaceOwnerActionsTest is SpaceTest {
         space.transferOwnership(newOwner);
     }
 
-    function testTransferOwnershipInvalid() public {
+    function testTransferOwnershipZeroAddress() public {
         address newOwner = address(0);
-        vm.expectRevert("Ownable: new owner is the zero address");
+        vm.expectRevert(abi.encodeWithSelector(ZeroAddress.selector));
+        space.transferOwnership(newOwner);
+    }
+
+    function testTransferOwnershipNotOwner() public {
+        address newOwner = address(1);
+        vm.prank(newOwner);
+        vm.expectRevert("Ownable: caller is not the owner");
         space.transferOwnership(newOwner);
     }
 
@@ -58,7 +65,7 @@ contract SpaceOwnerActionsTest is SpaceTest {
         uint256 proposalId = _createProposal(author, proposalMetadataURI, executionStrategy, new bytes(0));
         _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataURI);
 
-        vm.expectRevert("Ownable: caller is not the owner");
+        vm.expectRevert(abi.encodeWithSelector(InvalidPrivilegeLevel.selector));
         vm.prank(unauthorized);
         space.cancel(proposalId);
     }
@@ -83,7 +90,7 @@ contract SpaceOwnerActionsTest is SpaceTest {
 
     // ------- Update Unauthorized -------
     function testUpdateSettingsUnauthorized() public {
-        vm.expectRevert("Ownable: caller is not the owner");
+        vm.expectRevert(abi.encodeWithSelector(InvalidPrivilegeLevel.selector));
         vm.prank(unauthorized);
         space.updateSettings(
             UpdateSettingsCalldata(
@@ -104,7 +111,7 @@ contract SpaceOwnerActionsTest is SpaceTest {
     }
 
     function testUpdateStrategiesUnauthorized() public {
-        vm.expectRevert("Ownable: caller is not the owner");
+        vm.expectRevert(abi.encodeWithSelector(InvalidPrivilegeLevel.selector));
         vm.prank(unauthorized);
         space.updateSettings(
             UpdateSettingsCalldata(
