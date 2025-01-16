@@ -79,6 +79,20 @@ enum Choice {
     Abstain
 }
 
+/// @notice The set of possible roles for a user.
+///         None: No privilege.
+///         Author: Can submit a proposal without having to pass the proposal validation strategy.
+///         Moderator: Author privileges + can edit the metadata of the space.
+///         Admin: Moderator privileges + can edit the settings of the space.
+///         Controller: All restrictions are lifted. Equivalent to `owner` in the space contract.
+enum PrivilegeLevel {
+    None,
+    Author,
+    Moderator,
+    Admin,
+    Controller
+}
+
 /// @notice Transaction struct that can be used to represent transactions inside a proposal.
 struct MetaTransaction {
     address to;
@@ -106,7 +120,7 @@ struct InitializeCalldata {
 }
 
 /// @dev    Structure used for the function `updateSettings` of the Space contract because of solidity's stack constraints.
-///         For more information, see `ISpaceOwnerActions.sol`.
+///         For more information, see `ISpacePrivilegedActions.sol`.
 struct UpdateSettingsCalldata {
     uint32 minVotingDuration;
     uint32 maxVotingDuration;
