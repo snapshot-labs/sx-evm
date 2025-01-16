@@ -34,11 +34,11 @@ interface ISpacePrivilegedActions {
     function updateSettings(UpdateSettingsCalldata calldata input) external;
 
     /// @notice Transfers ownership of the Space to a new address.
-    /// @param  user The address of the user to grant the privilege to.
+    /// @param  target The address of the user to grant the privilege to.
     /// @param  level The privilege level to grant.
     /// @dev    Only Admins and Controller can grant privileges.
     /// @dev    Cannot grant `Controller` privilege. Use `transferOwnership` instead.
-    function grantPrivilege(address user, PrivilegeLevel level) external;
+    function grantPrivilege(address target, PrivilegeLevel level) external;
 
     /// @notice Transfers ownership of the Space to a new address.
     /// @param  newOwner The address to transfer ownership to.

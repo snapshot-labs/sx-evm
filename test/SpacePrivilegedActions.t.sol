@@ -50,6 +50,23 @@ contract SpaceOwnerActionsTest is SpaceTest {
         space.grantPrivilege(controller, PrivilegeLevel.Controller);
     }
 
+    function testAdminCannotModifyAdmin() public {
+        address admin = address(2);
+        space.grantPrivilege(admin, PrivilegeLevel.Admin);
+
+        address admin2 = address(3);
+        space.grantPrivilege(admin2, PrivilegeLevel.Admin);
+
+        vm.expectRevert(abi.encodeWithSelector(InvalidPrivilegeLevel.selector));
+        vm.prank(admin);
+        space.grantPrivilege(admin2, PrivilegeLevel.None);
+    }
+
+    function testControllerCannotModifyHisOwnPrivilege() public {
+        vm.expectRevert(abi.encodeWithSelector(InvalidPrivilegeLevel.selector));
+        space.grantPrivilege(owner, PrivilegeLevel.None);
+    }
+
     // ------- Transfer Ownership -------
 
     function testTransferOwnership() public {

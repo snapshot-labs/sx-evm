@@ -82,7 +82,6 @@ contract Space is ISpace, Initializable, IERC4824, UUPSUpgradeable, OwnableUpgra
         if (input.votingStrategies.length != input.votingStrategyMetadataURIs.length) revert ArrayLengthMismatch();
 
         __Ownable_init();
-        // grantPrivilege(input.owner, PrivilegeLevel.Controller);
         transferOwnership(input.owner);
         _setDaoURI(input.daoURI);
         _setMaxVotingDuration(input.maxVotingDuration);
@@ -124,19 +123,31 @@ contract Space is ISpace, Initializable, IERC4824, UUPSUpgradeable, OwnableUpgra
     }
 
     /// @inheritdoc ISpacePrivilegedActions
-    function grantPrivilege(address user, PrivilegeLevel level) external {
-        PrivilegeLevel userLevel = privileges[msg.sender];
+    function grantPrivilege(address target, PrivilegeLevel level) external {
+        PrivilegeLevel senderLevel = privileges[msg.sender];
+        PrivilegeLevel targetLevel = privileges[target];
 
-        if (userLevel < PrivilegeLevel.Admin) {
-            // Must be at least Admin to grant privileges.
+        if (senderLevel < PrivilegeLevel.Admin) {
+            // Sender must be at least Admin to grant privileges.
             revert InvalidPrivilegeLevel();
-        } else if (userLevel == PrivilegeLevel.Admin) {
-            // If user is Admin, he may only grant up to Moderator privileges.
+        } else if (senderLevel == PrivilegeLevel.Admin) {
+            // An admin cannot modify other admins or controllers.
+            if (targetLevel >= PrivilegeLevel.Admin) {
+                revert InvalidPrivilegeLevel();
+            }
+
+            // If the sender is Admin, he may only grant up to Moderator privileges.
             if (level >= PrivilegeLevel.Admin) {
                 revert InvalidPrivilegeLevel();
             }
-        } else if (userLevel == PrivilegeLevel.Controller) {
-            // The user should call `transferOwnership` to transfer the controller role.
+        } else if (senderLevel == PrivilegeLevel.Controller) {
+            // A controller cannot modify other controllers.
+            // (n.b: there should only be a single controller at any point in time)
+            if (targetLevel == PrivilegeLevel.Controller) {
+                revert InvalidPrivilegeLevel();
+            }
+
+            // The sender should call `transferOwnership` to transfer the controller role.
             if (level == PrivilegeLevel.Controller) {
                 revert InvalidPrivilegeLevel();
             }
@@ -145,8 +156,9 @@ contract Space is ISpace, Initializable, IERC4824, UUPSUpgradeable, OwnableUpgra
             revert InvalidPrivilegeLevel();
         }
 
-        privileges[user] = level;
-        emit PrivilegeChanged(user, level);
+        // Proceed to grant the privilege.
+        privileges[target] = level;
+        emit PrivilegeChanged(target, level);
     }
 
     /// @inheritdoc ISpacePrivilegedActions
