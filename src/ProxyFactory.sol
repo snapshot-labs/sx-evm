@@ -6,8 +6,6 @@ import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy
 import { IProxyFactory } from "./interfaces/IProxyFactory.sol";
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 
-address constant SPACE_IMPLEM = address(0xC3031A7d3326E47D49BfF9D374d74f364B29CE4D);
-
 /// @title Proxy Factory
 /// @notice A contract to deploy and track ERC1967 proxies of a given implementation contract.
 contract ProxyFactory is IProxyFactory, Ownable {
