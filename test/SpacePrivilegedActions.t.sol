@@ -6,31 +6,109 @@ import { TRUE, FALSE, SpaceTest } from "./utils/Space.t.sol";
 import { Choice, IndexedStrategy, Strategy, UpdateSettingsCalldata } from "../src/types.sol";
 import { VanillaExecutionStrategy } from "../src/execution-strategies/VanillaExecutionStrategy.sol";
 import { BitPacker } from "../src/utils/BitPacker.sol";
+import { PrivilegeLevel } from "../src/types.sol";
 
 contract SpaceOwnerActionsTest is SpaceTest {
     using BitPacker for uint256;
 
     event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
 
+    // ------- Grant Privilege -------
+
+    function testGrantPrivilege() public {
+        address admin = address(2);
+        vm.expectEmit(true, true, true, true);
+        emit PrivilegeChanged(admin, PrivilegeLevel.Admin);
+        space.grantPrivilege(admin, PrivilegeLevel.Admin);
+    }
+
+    function testAdminGrantModerator() public {
+        address admin = address(2);
+        space.grantPrivilege(admin, PrivilegeLevel.Admin);
+
+        address moderator = address(3);
+        vm.expectEmit(true, true, true, true);
+        emit PrivilegeChanged(moderator, PrivilegeLevel.Moderator);
+        space.grantPrivilege(moderator, PrivilegeLevel.Moderator);
+
+        assert(PrivilegeLevel.Moderator == space.getPrivilegeLevel(moderator));
+    }
+
+    function testAdminCannotGrantAdmin() public {
+        address admin = address(2);
+        space.grantPrivilege(admin, PrivilegeLevel.Admin);
+
+        address newAdmin = address(3);
+        vm.expectRevert(abi.encodeWithSelector(InvalidPrivilegeLevel.selector));
+        vm.prank(admin);
+        space.grantPrivilege(newAdmin, PrivilegeLevel.Admin);
+    }
+
+    function testControllerCannotGrantController() public {
+        address controller = address(2);
+        vm.expectRevert(abi.encodeWithSelector(InvalidPrivilegeLevel.selector));
+        space.grantPrivilege(controller, PrivilegeLevel.Controller);
+    }
+
+    function testAdminCannotModifyAdmin() public {
+        address admin = address(2);
+        space.grantPrivilege(admin, PrivilegeLevel.Admin);
+
+        address admin2 = address(3);
+        space.grantPrivilege(admin2, PrivilegeLevel.Admin);
+
+        vm.expectRevert(abi.encodeWithSelector(InvalidPrivilegeLevel.selector));
+        vm.prank(admin);
+        space.grantPrivilege(admin2, PrivilegeLevel.None);
+    }
+
+    function testControllerCannotModifyHisOwnPrivilege() public {
+        vm.expectRevert(abi.encodeWithSelector(InvalidPrivilegeLevel.selector));
+        space.grantPrivilege(owner, PrivilegeLevel.None);
+    }
+
     // ------- Transfer Ownership -------
 
     function testTransferOwnership() public {
         address newOwner = address(2);
         vm.expectEmit(true, true, true, true);
+        emit PrivilegeChanged(newOwner, PrivilegeLevel.Controller);
+        vm.expectEmit(true, true, true, true);
         emit OwnershipTransferred(owner, newOwner);
+        space.transferOwnership(newOwner);
+
+        assert(PrivilegeLevel.Controller == space.getPrivilegeLevel(newOwner));
+    }
+
+    function testTransferOwnershipZeroAddress() public {
+        address newOwner = address(0);
+        vm.expectRevert(abi.encodeWithSelector(ZeroAddress.selector));
         space.transferOwnership(newOwner);
     }
 
-    function testTransferOwnershipInvalid() public {
-        address newOwner = address(0);
-        vm.expectRevert("Ownable: new owner is the zero address");
+    function testTransferOwnershipNotOwner() public {
+        address newOwner = address(1);
+        vm.prank(newOwner);
+        vm.expectRevert("Ownable: caller is not the owner");
         space.transferOwnership(newOwner);
+    }
+
+    function testTransferOwnshipFromAdmin() public {
+        address admin = address(2);
+        space.grantPrivilege(admin, PrivilegeLevel.Admin);
+
+        vm.expectRevert("Ownable: caller is not the owner");
+        vm.prank(admin);
+        space.transferOwnership(admin);
     }
 
     function testRenounceOwnership() public {
         vm.expectEmit(true, true, true, true);
         emit OwnershipTransferred(owner, address(0));
         space.renounceOwnership();
+
+        // Ensure Controller has been removed
+        assert(PrivilegeLevel.None == space.getPrivilegeLevel(owner));
     }
 
     // ------- Cancel Proposal ----
@@ -44,7 +122,7 @@ contract SpaceOwnerActionsTest is SpaceTest {
         space.cancel(proposalId);
     }
 
-    function testCancelInvalidProposal() public {
+    function testCancelInexistingProposal() public {
         uint256 proposalId = _createProposal(author, proposalMetadataURI, executionStrategy, new bytes(0));
         _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataURI);
 
@@ -58,7 +136,7 @@ contract SpaceOwnerActionsTest is SpaceTest {
         uint256 proposalId = _createProposal(author, proposalMetadataURI, executionStrategy, new bytes(0));
         _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataURI);
 
-        vm.expectRevert("Ownable: caller is not the owner");
+        vm.expectRevert(abi.encodeWithSelector(InvalidPrivilegeLevel.selector));
         vm.prank(unauthorized);
         space.cancel(proposalId);
     }
@@ -81,9 +159,30 @@ contract SpaceOwnerActionsTest is SpaceTest {
         space.cancel(proposalId);
     }
 
+    function testCancelAdmin() public {
+        uint256 proposalId = _createProposal(author, proposalMetadataURI, executionStrategy, new bytes(0));
+        _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataURI);
+
+        address admin = address(2);
+        space.grantPrivilege(admin, PrivilegeLevel.Admin);
+        vm.prank(admin);
+        space.cancel(proposalId);
+    }
+
+    function testCancelModerator() public {
+        uint256 proposalId = _createProposal(author, proposalMetadataURI, executionStrategy, new bytes(0));
+        _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataURI);
+
+        address moderator = address(3);
+        space.grantPrivilege(moderator, PrivilegeLevel.Moderator);
+        vm.expectRevert(abi.encodeWithSelector(InvalidPrivilegeLevel.selector));
+        vm.prank(moderator);
+        space.cancel(proposalId);
+    }
+
     // ------- Update Unauthorized -------
     function testUpdateSettingsUnauthorized() public {
-        vm.expectRevert("Ownable: caller is not the owner");
+        vm.expectRevert(abi.encodeWithSelector(InvalidPrivilegeLevel.selector));
         vm.prank(unauthorized);
         space.updateSettings(
             UpdateSettingsCalldata(
@@ -103,8 +202,116 @@ contract SpaceOwnerActionsTest is SpaceTest {
         );
     }
 
+    function testUpdateSettingsAuthor() public {
+        address author = address(2);
+        space.grantPrivilege(author, PrivilegeLevel.Author);
+        vm.expectRevert(abi.encodeWithSelector(InvalidPrivilegeLevel.selector));
+
+        string memory newMetadataURI = "All your bases are belong to us";
+
+        vm.prank(author);
+        space.updateSettings(
+            UpdateSettingsCalldata(
+                NO_UPDATE_UINT32,
+                NO_UPDATE_UINT32,
+                NO_UPDATE_UINT32,
+                newMetadataURI,
+                NO_UPDATE_STRING,
+                NO_UPDATE_STRATEGY,
+                NO_UPDATE_STRING,
+                NO_UPDATE_ADDRESSES,
+                NO_UPDATE_ADDRESSES,
+                NO_UPDATE_STRATEGIES,
+                NO_UPDATE_STRINGS,
+                NO_UPDATE_UINT8S
+            )
+        );
+    }
+
+    function testUpdateSettingsModeratorMetadata() public {
+        address moderator = address(3);
+        space.grantPrivilege(moderator, PrivilegeLevel.Moderator);
+        string memory newMetadataURI = "All your bases are belong to us";
+
+        vm.expectEmit(true, true, true, true);
+        emit MetadataURIUpdated(newMetadataURI);
+        vm.prank(moderator);
+        space.updateSettings(
+            UpdateSettingsCalldata(
+                NO_UPDATE_UINT32,
+                NO_UPDATE_UINT32,
+                NO_UPDATE_UINT32,
+                newMetadataURI,
+                NO_UPDATE_STRING,
+                NO_UPDATE_STRATEGY,
+                NO_UPDATE_STRING,
+                NO_UPDATE_ADDRESSES,
+                NO_UPDATE_ADDRESSES,
+                NO_UPDATE_STRATEGIES,
+                NO_UPDATE_STRINGS,
+                NO_UPDATE_UINT8S
+            )
+        );
+    }
+
+    function testUpdateSettingsModeratorInvalid() public {
+        address moderator = address(3);
+        space.grantPrivilege(moderator, PrivilegeLevel.Moderator);
+        string memory newMetadataURI = "All your bases are belong to us";
+
+        vm.expectRevert(InvalidPrivilegeLevel.selector);
+        vm.prank(moderator);
+        space.updateSettings(
+            UpdateSettingsCalldata(
+                1337,
+                NO_UPDATE_UINT32,
+                NO_UPDATE_UINT32,
+                NO_UPDATE_STRING,
+                newMetadataURI,
+                NO_UPDATE_STRATEGY,
+                NO_UPDATE_STRING,
+                NO_UPDATE_ADDRESSES,
+                NO_UPDATE_ADDRESSES,
+                NO_UPDATE_STRATEGIES,
+                NO_UPDATE_STRINGS,
+                NO_UPDATE_UINT8S
+            )
+        );
+
+        // Check that the min voting duration was not updated
+        assert(space.minVotingDuration() != 1337);
+    }
+
+    function testUpdateSettingsAdmin() public {
+        address admin = address(3);
+        space.grantPrivilege(admin, PrivilegeLevel.Admin);
+        string memory newMetadataURI = "All your bases are belong to us";
+        uint32 newMinDuration = 1;
+
+        vm.prank(admin);
+        space.updateSettings(
+            UpdateSettingsCalldata(
+                newMinDuration,
+                NO_UPDATE_UINT32,
+                NO_UPDATE_UINT32,
+                newMetadataURI,
+                NO_UPDATE_STRING,
+                NO_UPDATE_STRATEGY,
+                NO_UPDATE_STRING,
+                NO_UPDATE_ADDRESSES,
+                NO_UPDATE_ADDRESSES,
+                NO_UPDATE_STRATEGIES,
+                NO_UPDATE_STRINGS,
+                NO_UPDATE_UINT8S
+            )
+        );
+
+        // Check that the min voting duration was correctly updated
+        assert(space.minVotingDuration() == newMinDuration);
+    }
+
     function testUpdateStrategiesUnauthorized() public {
-        vm.expectRevert("Ownable: caller is not the owner");
+        vm.expectRevert(abi.encodeWithSelector(InvalidPrivilegeLevel.selector));
         vm.prank(unauthorized);
         space.updateSettings(
             UpdateSettingsCalldata(

@@ -7,11 +7,12 @@ import { Initializable } from "@openzeppelin/contracts-upgradeable/proxy/utils/I
 import { UUPSUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import { ReentrancyGuard } from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import { IERC4824 } from "src/interfaces/IERC4824.sol";
-import { ISpace, ISpaceActions, ISpaceState, ISpaceOwnerActions } from "src/interfaces/ISpace.sol";
+import { ISpace, ISpaceActions, ISpaceState, ISpacePrivilegedActions } from "src/interfaces/ISpace.sol";
 import {
     Choice,
     FinalizationStatus,
     IndexedStrategy,
+    PrivilegeLevel,
     Proposal,
     ProposalStatus,
     Strategy,
@@ -71,6 +72,8 @@ contract Space is ISpace, Initializable, IERC4824, UUPSUpgradeable, OwnableUpgra
     mapping(uint256 proposalId => mapping(Choice choice => uint256 votePower)) public override votePower;
     /// @inheritdoc ISpaceState
     mapping(uint256 proposalId => mapping(address voter => uint256 hasVoted)) public override voteRegistry;
+    // @inheritdoc ISpaceState
+    mapping(address members => PrivilegeLevel privilegeLevel) public privileges;
 
     /// @inheritdoc ISpaceActions
     function initialize(InitializeCalldata calldata input) external override initializer {
@@ -99,80 +102,176 @@ contract Space is ISpace, Initializable, IERC4824, UUPSUpgradeable, OwnableUpgra
     // |                                  |
     // ------------------------------------
 
-    /// @inheritdoc ISpaceOwnerActions
+    /// @inheritdoc ISpacePrivilegedActions
+    function transferOwnership(
+        address newOwner
+    ) public override(ISpacePrivilegedActions, OwnableUpgradeable) onlyOwner {
+        if (newOwner == address(0)) revert ZeroAddress();
+
+        privileges[owner()] = PrivilegeLevel.None;
+        emit PrivilegeChanged(owner(), PrivilegeLevel.None);
+        privileges[newOwner] = PrivilegeLevel.Controller;
+        emit PrivilegeChanged(newOwner, PrivilegeLevel.Controller);
+        _transferOwnership(newOwner);
+    }
+
+    /// @inheritdoc ISpacePrivilegedActions
+    function renounceOwnership() public override(ISpacePrivilegedActions, OwnableUpgradeable) onlyOwner {
+        privileges[owner()] = PrivilegeLevel.None;
+        emit PrivilegeChanged(owner(), PrivilegeLevel.None);
+        _transferOwnership(address(0));
+    }
+
+    /// @inheritdoc ISpacePrivilegedActions
+    function grantPrivilege(address target, PrivilegeLevel level) external {
+        PrivilegeLevel senderLevel = privileges[msg.sender];
+        PrivilegeLevel targetLevel = privileges[target];
+
+        if (senderLevel < PrivilegeLevel.Admin) {
+            // Sender must be at least Admin to grant privileges.
+            revert InvalidPrivilegeLevel();
+        } else if (senderLevel == PrivilegeLevel.Admin) {
+            // An admin cannot modify other admins or controllers.
+            if (targetLevel >= PrivilegeLevel.Admin) {
+                revert InvalidPrivilegeLevel();
+            }
+
+            // If the sender is Admin, he may only grant up to Moderator privileges.
+            if (level >= PrivilegeLevel.Admin) {
+                revert InvalidPrivilegeLevel();
+            }
+        } else if (senderLevel == PrivilegeLevel.Controller) {
+            // A controller cannot modify other controllers.
+            // (n.b: there should only be a single controller at any point in time)
+            if (targetLevel == PrivilegeLevel.Controller) {
+                revert InvalidPrivilegeLevel();
+            }
+
+            // The sender should call `transferOwnership` to transfer the controller role.
+            if (level == PrivilegeLevel.Controller) {
+                revert InvalidPrivilegeLevel();
+            }
+        } else {
+            // Unreachable code, but might become reachable if the enum is updated.
+            revert InvalidPrivilegeLevel();
+        }
+
+        // Proceed to grant the privilege.
+        privileges[target] = level;
+        emit PrivilegeChanged(target, level);
+    }
+
+    /// @inheritdoc ISpacePrivilegedActions
     // solhint-disable-next-line code-complexity
-    function updateSettings(UpdateSettingsCalldata calldata input) external override onlyOwner {
-        if ((input.minVotingDuration != NO_UPDATE_UINT32) && (input.maxVotingDuration != NO_UPDATE_UINT32)) {
-            // Check that min and max VotingDuration are valid
-            // We don't use the internal `_setMinVotingDuration` and `_setMaxVotingDuration` functions because
-            // it would revert when `_minVotingDuration > maxVotingDuration` (when the new `_min` is
-            // bigger than the current `max`).
-            if (input.minVotingDuration > input.maxVotingDuration) {
-                revert InvalidDuration(input.minVotingDuration, input.maxVotingDuration);
+    function updateSettings(UpdateSettingsCalldata calldata input) external override {
+        PrivilegeLevel level = privileges[msg.sender];
+        if (level < PrivilegeLevel.Moderator) {
+            // If not at least a moderator, revert.
+            revert InvalidPrivilegeLevel();
+        } else if (level == PrivilegeLevel.Moderator) {
+            // If moderator, the user may only edit the metadataURI.
+            // Ensure that every field except metadataURI is set to the NO_UPDATE value. If not, error with InvalidPrivilegeLevel.
+            if (
+                input.minVotingDuration != NO_UPDATE_UINT32 ||
+                input.maxVotingDuration != NO_UPDATE_UINT32 ||
+                input.votingDelay != NO_UPDATE_UINT32 ||
+                keccak256(abi.encodePacked(input.daoURI)) != NO_UPDATE_HASH ||
+                input.proposalValidationStrategy.addr != NO_UPDATE_ADDRESS ||
+                keccak256(abi.encodePacked(input.proposalValidationStrategyMetadataURI)) != NO_UPDATE_HASH ||
+                input.authenticatorsToAdd.length > 0 ||
+                input.authenticatorsToRemove.length > 0 ||
+                input.votingStrategiesToAdd.length > 0 ||
+                input.votingStrategyMetadataURIsToAdd.length > 0 ||
+                input.votingStrategiesToRemove.length > 0
+            ) {
+                revert InvalidPrivilegeLevel();
             }
 
-            minVotingDuration = input.minVotingDuration;
-            emit MinVotingDurationUpdated(input.minVotingDuration);
-
-            maxVotingDuration = input.maxVotingDuration;
-            emit MaxVotingDurationUpdated(input.maxVotingDuration);
-        } else if (input.minVotingDuration != NO_UPDATE_UINT32) {
-            _setMinVotingDuration(input.minVotingDuration);
-            emit MinVotingDurationUpdated(input.minVotingDuration);
-        } else if (input.maxVotingDuration != NO_UPDATE_UINT32) {
-            _setMaxVotingDuration(input.maxVotingDuration);
-            emit MaxVotingDurationUpdated(input.maxVotingDuration);
-        }
-
-        if (input.votingDelay != NO_UPDATE_UINT32) {
-            _setVotingDelay(input.votingDelay);
-            emit VotingDelayUpdated(input.votingDelay);
-        }
-
-        if (keccak256(abi.encodePacked(input.metadataURI)) != NO_UPDATE_HASH) {
-            emit MetadataURIUpdated(input.metadataURI);
-        }
-
-        if (keccak256(abi.encodePacked(input.daoURI)) != NO_UPDATE_HASH) {
-            _setDaoURI(input.daoURI);
-            emit DaoURIUpdated(input.daoURI);
-        }
-
-        if (input.proposalValidationStrategy.addr != NO_UPDATE_ADDRESS) {
-            _setProposalValidationStrategy(input.proposalValidationStrategy);
-            emit ProposalValidationStrategyUpdated(
-                input.proposalValidationStrategy,
-                input.proposalValidationStrategyMetadataURI
-            );
-        }
-
-        if (input.authenticatorsToAdd.length > 0) {
-            _addAuthenticators(input.authenticatorsToAdd);
-            emit AuthenticatorsAdded(input.authenticatorsToAdd);
-        }
-
-        if (input.authenticatorsToRemove.length > 0) {
-            _removeAuthenticators(input.authenticatorsToRemove);
-            emit AuthenticatorsRemoved(input.authenticatorsToRemove);
-        }
-
-        if (input.votingStrategiesToAdd.length > 0) {
-            if (input.votingStrategiesToAdd.length != input.votingStrategyMetadataURIsToAdd.length) {
-                revert ArrayLengthMismatch();
+            // Update metadataURI.
+            if (keccak256(abi.encodePacked(input.metadataURI)) != NO_UPDATE_HASH) {
+                emit MetadataURIUpdated(input.metadataURI);
             }
-            _addVotingStrategies(input.votingStrategiesToAdd);
-            emit VotingStrategiesAdded(input.votingStrategiesToAdd, input.votingStrategyMetadataURIsToAdd);
-        }
+        } else {
+            // Else, the user is an admin or controller and can edit all settings.
 
-        if (input.votingStrategiesToRemove.length > 0) {
-            _removeVotingStrategies(input.votingStrategiesToRemove);
-            emit VotingStrategiesRemoved(input.votingStrategiesToRemove);
+            if ((input.minVotingDuration != NO_UPDATE_UINT32) && (input.maxVotingDuration != NO_UPDATE_UINT32)) {
+                // Check that min and max VotingDuration are valid
+                // We don't use the internal `_setMinVotingDuration` and `_setMaxVotingDuration` functions because
+                // it would revert when `_minVotingDuration > maxVotingDuration` (when the new `_min` is
+                // bigger than the current `max`).
+                if (input.minVotingDuration > input.maxVotingDuration) {
+                    revert InvalidDuration(input.minVotingDuration, input.maxVotingDuration);
+                }
+
+                minVotingDuration = input.minVotingDuration;
+                emit MinVotingDurationUpdated(input.minVotingDuration);
+
+                maxVotingDuration = input.maxVotingDuration;
+                emit MaxVotingDurationUpdated(input.maxVotingDuration);
+            } else if (input.minVotingDuration != NO_UPDATE_UINT32) {
+                _setMinVotingDuration(input.minVotingDuration);
+                emit MinVotingDurationUpdated(input.minVotingDuration);
+            } else if (input.maxVotingDuration != NO_UPDATE_UINT32) {
+                _setMaxVotingDuration(input.maxVotingDuration);
+                emit MaxVotingDurationUpdated(input.maxVotingDuration);
+            }
+
+            if (input.votingDelay != NO_UPDATE_UINT32) {
+                _setVotingDelay(input.votingDelay);
+                emit VotingDelayUpdated(input.votingDelay);
+            }
+
+            if (keccak256(abi.encodePacked(input.metadataURI)) != NO_UPDATE_HASH) {
+                emit MetadataURIUpdated(input.metadataURI);
+            }
+
+            if (keccak256(abi.encodePacked(input.daoURI)) != NO_UPDATE_HASH) {
+                _setDaoURI(input.daoURI);
+                emit DaoURIUpdated(input.daoURI);
+            }
+
+            if (input.proposalValidationStrategy.addr != NO_UPDATE_ADDRESS) {
+                _setProposalValidationStrategy(input.proposalValidationStrategy);
+                emit ProposalValidationStrategyUpdated(
+                    input.proposalValidationStrategy,
+                    input.proposalValidationStrategyMetadataURI
+                );
+            }
+
+            if (input.authenticatorsToAdd.length > 0) {
+                _addAuthenticators(input.authenticatorsToAdd);
+                emit AuthenticatorsAdded(input.authenticatorsToAdd);
+            }
+
+            if (input.authenticatorsToRemove.length > 0) {
+                _removeAuthenticators(input.authenticatorsToRemove);
+                emit AuthenticatorsRemoved(input.authenticatorsToRemove);
+            }
+
+            if (input.votingStrategiesToAdd.length > 0) {
+                if (input.votingStrategiesToAdd.length != input.votingStrategyMetadataURIsToAdd.length) {
+                    revert ArrayLengthMismatch();
+                }
+                _addVotingStrategies(input.votingStrategiesToAdd);
+                emit VotingStrategiesAdded(input.votingStrategiesToAdd, input.votingStrategyMetadataURIsToAdd);
+            }
+
+            if (input.votingStrategiesToRemove.length > 0) {
+                _removeVotingStrategies(input.votingStrategiesToRemove);
+                emit VotingStrategiesRemoved(input.votingStrategiesToRemove);
+            }
         }
     }
 
     /// @dev Gates access to whitelisted authenticators only.
     modifier onlyAuthenticator() {
         if (authenticators[msg.sender] == FALSE) revert AuthenticatorNotWhitelisted();
+        _;
+    }
+
+    /// @dev Gates acces to users with a certain level of privilege.
+    modifier onlyLevel(PrivilegeLevel level) {
+        if (privileges[msg.sender] < level) revert InvalidPrivilegeLevel();
         _;
     }
 
@@ -208,7 +307,11 @@ contract Space is ISpace, Initializable, IERC4824, UUPSUpgradeable, OwnableUpgra
         Strategy calldata executionStrategy,
         bytes calldata userProposalValidationParams
     ) external override onlyAuthenticator {
+        // To submit a proposal, a user must either:
+        // - Have author privilege level.
+        // - Pass the proposal validation strategy.
         if (
+            (privileges[author] < PrivilegeLevel.Author) &&
             !IProposalValidationStrategy(proposalValidationStrategy.addr).validate(
                 author,
                 proposalValidationStrategy.params,
@@ -298,8 +401,8 @@ contract Space is ISpace, Initializable, IERC4824, UUPSUpgradeable, OwnableUpgra
         emit ProposalExecuted(proposalId);
     }
 
-    /// @inheritdoc ISpaceOwnerActions
-    function cancel(uint256 proposalId) external override onlyOwner {
+    /// @inheritdoc ISpacePrivilegedActions
+    function cancel(uint256 proposalId) external override onlyLevel(PrivilegeLevel.Admin) {
         Proposal storage proposal = proposals[proposalId];
         _assertProposalExists(proposal);
         if (proposal.finalizationStatus != FinalizationStatus.Pending) revert ProposalFinalized();
@@ -437,5 +540,10 @@ contract Space is ISpace, Initializable, IERC4824, UUPSUpgradeable, OwnableUpgra
             );
         }
         return totalVotingPower;
+    }
+
+    /// @inheritdoc ISpaceState
+    function getPrivilegeLevel(address user) external view override returns (PrivilegeLevel) {
+        return privileges[user];
     }
 }
