@@ -6,7 +6,7 @@ import { IVotingStrategy } from "../interfaces/IVotingStrategy.sol";
 import { SignatureChecker } from "@openzeppelin/contracts/utils/cryptography/SignatureChecker.sol";
 import { EIP712 } from "@openzeppelin/contracts/utils/cryptography/EIP712.sol";
 
-/// @title Vanilla Voting Strategy
+/// @title Oracle Voting Strategy
 contract OracleVotingStrategy is IVotingStrategy, EIP712 {
     error InvalidSignature();
     error InvalidTimestamp();
