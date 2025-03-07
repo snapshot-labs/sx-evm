@@ -11,11 +11,9 @@ contract OracleVotingStrategyTest is Test {
         keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)");
 
     bytes32 private constant SCORE_TYPEHASH =
-        keccak256("Score(bytes params,uint256 votingPower,uint32 timestamp,address voter)");
+        keccak256("Score(bytes params,uint256 votingPower,uint32 blockNumber,address voter)");
 
     error InvalidSignature();
-    error InvalidTimestamp();
-    error InvalidVoter();
 
     // Fictional Oracle Private Key
     uint256 public constant ORACLE_KEY = 1234;
@@ -37,7 +35,7 @@ contract OracleVotingStrategyTest is Test {
         address oracleVotingStrategy_,
         bytes memory params_,
         uint256 votingPower,
-        uint32 timestamp,
+        uint32 blockNumber,
         address voter_
     ) internal view returns (bytes32) {
         bytes32 digest = keccak256(
@@ -52,7 +50,7 @@ contract OracleVotingStrategyTest is Test {
                         oracleVotingStrategy_
                     )
                 ),
-                keccak256(abi.encode(SCORE_TYPEHASH, keccak256(params_), votingPower, timestamp, voter_))
+                keccak256(abi.encode(SCORE_TYPEHASH, keccak256(params_), votingPower, blockNumber, voter_))
             )
         );
 
@@ -65,17 +63,17 @@ contract OracleVotingStrategyTest is Test {
         bytes memory params = abi.encode(ORACLE_ADDRESS, params_);
 
         uint256 votingPower = 4242;
-        uint32 timestamp = 1111;
+        uint32 blockNumber = 1111;
 
         // Get the digest
-        bytes32 digest = _getDigest(address(oracleVotingStrategy), params_, votingPower, timestamp, VOTER);
+        bytes32 digest = _getDigest(address(oracleVotingStrategy), params_, votingPower, blockNumber, VOTER);
         // Sign the digest
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(ORACLE_KEY, digest);
 
-        bytes memory userParams = abi.encode(timestamp, VOTER, votingPower, r, s, v);
+        bytes memory userParams = abi.encode(votingPower, r, s, v);
 
         // The voting power should be correctly returned
-        assertEq(oracleVotingStrategy.getVotingPower(timestamp, VOTER, params, userParams), votingPower);
+        assertEq(oracleVotingStrategy.getVotingPower(blockNumber, VOTER, params, userParams), votingPower);
     }
 
     function testGetVotingPowerInvalidOracle() public {
@@ -84,19 +82,19 @@ contract OracleVotingStrategyTest is Test {
         bytes memory params = abi.encode(ORACLE_ADDRESS, params_);
 
         uint256 votingPower = 4242;
-        uint32 timestamp = 1111;
+        uint32 blockNumber = 1111;
 
         address randomAddress = address(2222);
         // Get the digest
-        bytes32 digest = _getDigest(randomAddress, params_, votingPower, timestamp, VOTER);
+        bytes32 digest = _getDigest(randomAddress, params_, votingPower, blockNumber, VOTER);
         // Sign the digest
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(ORACLE_KEY, digest);
 
-        bytes memory userParams = abi.encode(timestamp, VOTER, votingPower, r, s, v);
+        bytes memory userParams = abi.encode(votingPower, r, s, v);
 
         // Since the oracle address is incorrect, the voting strategy should revert
         vm.expectRevert(InvalidSignature.selector);
-        oracleVotingStrategy.getVotingPower(timestamp, VOTER, params, userParams);
+        oracleVotingStrategy.getVotingPower(blockNumber, VOTER, params, userParams);
     }
 
     function testGetVotingPowerInvalidParams() public {
@@ -104,20 +102,20 @@ contract OracleVotingStrategyTest is Test {
         bytes memory params_ = "";
 
         uint256 votingPower = 4242;
-        uint32 timestamp = 1111;
+        uint32 blockNumber = 1111;
 
         // Get the digest
-        bytes32 digest = _getDigest(address(oracleVotingStrategy), params_, votingPower, timestamp, VOTER);
+        bytes32 digest = _getDigest(address(oracleVotingStrategy), params_, votingPower, blockNumber, VOTER);
         // Sign the digest
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(ORACLE_KEY, digest);
 
-        bytes memory userParams = abi.encode(timestamp, VOTER, votingPower, r, s, v);
+        bytes memory userParams = abi.encode(votingPower, r, s, v);
 
         // Since the params is incorrect, the voting strategy should revert
         vm.expectRevert(InvalidSignature.selector);
         bytes memory modifiedParams_ = "0x1";
         bytes memory modifiedParams = abi.encode(ORACLE_ADDRESS, modifiedParams_);
-        oracleVotingStrategy.getVotingPower(timestamp, VOTER, modifiedParams, userParams);
+        oracleVotingStrategy.getVotingPower(blockNumber, VOTER, modifiedParams, userParams);
     }
 
     function testGetVotingPowerInvalidVP() public {
@@ -126,37 +124,37 @@ contract OracleVotingStrategyTest is Test {
         bytes memory params = abi.encode(ORACLE_ADDRESS, params_);
 
         uint256 votingPower = 4242;
-        uint32 timestamp = 1111;
+        uint32 blockNumber = 1111;
 
         // Get the digest
-        bytes32 digest = _getDigest(address(oracleVotingStrategy), params_, votingPower, timestamp, VOTER);
+        bytes32 digest = _getDigest(address(oracleVotingStrategy), params_, votingPower, blockNumber, VOTER);
         // Sign the digest
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(ORACLE_KEY, digest);
 
         // Since the params is incorrect, the voting strategy should revert
         vm.expectRevert(InvalidSignature.selector);
         uint256 modifiedVP = 1;
-        bytes memory userParams = abi.encode(timestamp, VOTER, modifiedVP, r, s, v);
-        oracleVotingStrategy.getVotingPower(timestamp, VOTER, params, userParams);
+        bytes memory userParams = abi.encode(modifiedVP, r, s, v);
+        oracleVotingStrategy.getVotingPower(blockNumber, VOTER, params, userParams);
     }
 
-    function testGetVotingPowerInvalidTimestamp() public {
+    function testGetVotingPowerInvalidBlockNumber() public {
         // Empty strategy parameters
         bytes memory params_ = "";
         bytes memory params = abi.encode(ORACLE_ADDRESS, params_);
 
         uint256 votingPower = 4242;
-        uint32 timestamp = 1111;
+        uint32 blockNumber = 1111;
 
         // Get the digest
-        bytes32 digest = _getDigest(address(oracleVotingStrategy), params_, votingPower, timestamp, VOTER);
+        bytes32 digest = _getDigest(address(oracleVotingStrategy), params_, votingPower, blockNumber, VOTER);
         // Sign the digest
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(ORACLE_KEY, digest);
 
-        bytes memory userParams = abi.encode(timestamp, VOTER, votingPower, r, s, v);
+        bytes memory userParams = abi.encode(votingPower, r, s, v);
 
-        // The voting power should be correctly returned
-        vm.expectRevert(InvalidTimestamp.selector);
+        // Incorrect Voting Power should revert
+        vm.expectRevert(InvalidSignature.selector);
         uint32 modifiedTimestamp = 2222;
         oracleVotingStrategy.getVotingPower(modifiedTimestamp, VOTER, params, userParams);
     }
@@ -167,18 +165,18 @@ contract OracleVotingStrategyTest is Test {
         bytes memory params = abi.encode(ORACLE_ADDRESS, params_);
 
         uint256 votingPower = 4242;
-        uint32 timestamp = 1111;
+        uint32 blockNumber = 1111;
 
         // Get the digest
-        bytes32 digest = _getDigest(address(oracleVotingStrategy), params_, votingPower, timestamp, VOTER);
+        bytes32 digest = _getDigest(address(oracleVotingStrategy), params_, votingPower, blockNumber, VOTER);
         // Sign the digest
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(ORACLE_KEY, digest);
 
-        bytes memory userParams = abi.encode(timestamp, VOTER, votingPower, r, s, v);
+        bytes memory userParams = abi.encode(votingPower, r, s, v);
 
-        // The voting power should be correctly returned
-        vm.expectRevert(InvalidVoter.selector);
+        // Invalid voter should revert
+        vm.expectRevert(InvalidSignature.selector);
         address modifiedVoter = address(8888);
-        oracleVotingStrategy.getVotingPower(timestamp, modifiedVoter, params, userParams);
+        oracleVotingStrategy.getVotingPower(blockNumber, modifiedVoter, params, userParams);
     }
 }
