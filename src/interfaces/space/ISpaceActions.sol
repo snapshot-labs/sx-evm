@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.18;
 
-import { Choice, IndexedStrategy, Strategy, InitializeCalldata } from "src/types.sol";
+import { Choice, IndexedStrategy, Strategy, InitializeCalldata } from "../../types.sol";
 
 /// @title Space Actions
 /// @notice User focused actions that can be performed on a space.
@@ -31,11 +31,13 @@ interface ISpaceActions {
     /// @param   executionStrategy  The execution strategy for the proposal,
     ///          consisting of a strategy address and an execution payload.
     /// @param   userProposalValidationParams  The user provided parameters for proposal validation.
+    /// @param   selectedVotingStrategyIndices The indices of voting strategies to use for this specific proposal. Empty array yields all active.
     function propose(
         address author,
         string calldata metadataURI,
         Strategy calldata executionStrategy,
-        bytes calldata userProposalValidationParams
+        bytes calldata userProposalValidationParams,
+        uint8[] calldata selectedVotingStrategyIndices 
     ) external;
 
     /// @notice  Casts a vote.

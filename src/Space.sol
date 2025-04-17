@@ -6,8 +6,8 @@ import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/O
 import { Initializable } from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import { UUPSUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import { ReentrancyGuard } from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
-import { IERC4824 } from "src/interfaces/IERC4824.sol";
-import { ISpace, ISpaceActions, ISpaceState, ISpaceOwnerActions } from "src/interfaces/ISpace.sol";
+import { IERC4824 } from "./interfaces/IERC4824.sol";
+import { ISpace, ISpaceActions, ISpaceState, ISpaceOwnerActions } from "./interfaces/ISpace.sol";
 import {
     Choice,
     FinalizationStatus,
@@ -19,10 +19,10 @@ import {
     InitializeCalldata,
     TRUE,
     FALSE
-} from "src/types.sol";
-import { IVotingStrategy } from "src/interfaces/IVotingStrategy.sol";
-import { IExecutionStrategy } from "src/interfaces/IExecutionStrategy.sol";
-import { IProposalValidationStrategy } from "src/interfaces/IProposalValidationStrategy.sol";
+} from "./types.sol";
+import { IVotingStrategy } from "./interfaces/IVotingStrategy.sol";
+import { IExecutionStrategy } from "./interfaces/IExecutionStrategy.sol";
+import { IProposalValidationStrategy } from "./interfaces/IProposalValidationStrategy.sol";
 import { SXUtils } from "./utils/SXUtils.sol";
 import { BitPacker } from "./utils/BitPacker.sol";
 
@@ -65,8 +65,9 @@ contract Space is ISpace, Initializable, IERC4824, UUPSUpgradeable, OwnableUpgra
     Strategy public override proposalValidationStrategy;
     /// @inheritdoc ISpaceState
     mapping(address auth => uint256 allowed) public override authenticators;
-    /// @inheritdoc ISpaceState
-    mapping(uint256 proposalId => Proposal proposal) public override proposals;
+
+    mapping(uint256 proposalId => Proposal proposal) public proposals;
+
     // @inheritdoc ISpaceState
     mapping(uint256 proposalId => mapping(Choice choice => uint256 votePower)) public override votePower;
     /// @inheritdoc ISpaceState
@@ -170,6 +171,15 @@ contract Space is ISpace, Initializable, IERC4824, UUPSUpgradeable, OwnableUpgra
         }
     }
 
+    function setAuthenticator(address auth) external onlyOwner{
+        authenticators[auth] = TRUE;
+    }
+
+    function addVotingStrategy(Strategy[] calldata newStrategy) external onlyAuthenticator returns(uint8){
+        _addVotingStrategies(newStrategy);
+        return nextVotingStrategyIndex - 1;
+    }
+
     /// @dev Gates access to whitelisted authenticators only.
     modifier onlyAuthenticator() {
         if (authenticators[msg.sender] == FALSE) revert AuthenticatorNotWhitelisted();
@@ -206,7 +216,8 @@ contract Space is ISpace, Initializable, IERC4824, UUPSUpgradeable, OwnableUpgra
         address author,
         string calldata metadataURI,
         Strategy calldata executionStrategy,
-        bytes calldata userProposalValidationParams
+        bytes calldata userProposalValidationParams,
+        uint8[] calldata selectedVotingStrategiesIndices
     ) external override onlyAuthenticator {
         if (
             !IProposalValidationStrategy(proposalValidationStrategy.addr).validate(
@@ -232,9 +243,10 @@ contract Space is ISpace, Initializable, IERC4824, UUPSUpgradeable, OwnableUpgra
             maxEndBlockNumber,
             FinalizationStatus.Pending,
             executionPayloadHash,
-            activeVotingStrategies
+            activeVotingStrategies,
+            _getSelectedBitArray(selectedVotingStrategiesIndices)
         );
-
+        
         proposals[nextProposalId] = proposal;
         emit ProposalCreated(nextProposalId, author, proposal, metadataURI, executionStrategy.params);
 
@@ -258,11 +270,16 @@ contract Space is ISpace, Initializable, IERC4824, UUPSUpgradeable, OwnableUpgra
 
         voteRegistry[proposalId][voter] = TRUE;
 
+        uint256 activeSelectedVotingStrategies = 
+            proposal.selectedVotingStrategies > 0 ? 
+            proposal.selectedVotingStrategies :
+            proposal.activeVotingStrategies;
+
         uint256 votingPower = _getCumulativePower(
             voter,
             proposal.startBlockNumber,
             userVotingStrategies,
-            proposal.activeVotingStrategies
+            activeSelectedVotingStrategies
         );
         if (votingPower == 0) revert UserHasNoVotingPower();
         votePower[proposalId][choice] += votingPower;
@@ -437,5 +454,18 @@ contract Space is ISpace, Initializable, IERC4824, UUPSUpgradeable, OwnableUpgra
             );
         }
         return totalVotingPower;
+    }
+
+    function _getSelectedBitArray(uint8[] calldata selectedIndices) internal returns(uint256) {
+        uint256 cachedActiveStrategies = activeVotingStrategies;
+        uint256 selectedVotingStrategies;
+        for(uint256 i = 0; i < selectedIndices.length; i++) {
+            uint8 strategyIndex = selectedIndices[i];
+            // Selected strategy must also be active
+            if(cachedActiveStrategies.isBitSet(strategyIndex)){
+                selectedVotingStrategies = selectedVotingStrategies.setBit(strategyIndex, true);
+            }
+        }
+        return selectedVotingStrategies;
     }
 }
