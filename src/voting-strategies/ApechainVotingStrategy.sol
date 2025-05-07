@@ -32,7 +32,7 @@ contract ApechainVotingStrategy is IVotingStrategy {
         uint32 blockNumber,
         address voter,
         bytes calldata params, // (address herodotusContract)
-        bytes calldata userParams // (VotingTrieParameters votingTrieParameters, uint256 proposalId) TODO check proposalId
+        bytes calldata userParams // (VotingTrieParameters votingTrieParameters, uint256 proposalId)
     ) external view override returns (uint256) {
         // Decode the parameters
         address contractAddress = abi.decode(params, (address));
