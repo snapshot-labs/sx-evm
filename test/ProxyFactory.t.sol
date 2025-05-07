@@ -234,6 +234,74 @@ contract SpaceFactoryTest is Test, IProxyFactoryEvents, IProxyFactoryErrors, ISp
         );
     }
 
+    function testSetDeploymentFee() public {
+        uint256 fee = 100;
+        factory.setDeploymentFee(address(masterSpace), fee);
+        assertEq(factory.deploymentFees(address(masterSpace)), fee);
+    }
+
+    function testSetUnsetDeploymentFee() public {
+        uint256 fee = 100;
+        factory.setDeploymentFee(address(masterSpace), fee);
+        assertEq(factory.deploymentFees(address(masterSpace)), fee);
+        factory.setDeploymentFee(address(masterSpace), 0);
+        assertEq(factory.deploymentFees(address(masterSpace)), 0);
+    }
+
+    function testSetFeesUnauthorized() public {
+        uint256 fee = 100;
+        vm.expectRevert("Ownable: caller is not the owner");
+        vm.prank(address(123));
+        factory.setDeploymentFee(address(masterSpace), fee);
+    }
+
+    function testClaimFees() public {
+        address newOwner = address(1337);
+        uint256 fee = 100;
+        vm.prank(factory.owner());
+        factory.setDeploymentFee(address(masterSpace), fee);
+
+        vm.prank(factory.owner());
+        factory.transferOwnership(newOwner);
+
+        uint256 saltNonce = 0;
+        bytes memory initializer = abi.encodeWithSelector(
+            Space.initialize.selector,
+            InitializeCalldata(
+                owner,
+                votingDelay,
+                minVotingDuration,
+                maxVotingDuration,
+                proposalValidationStrategy,
+                proposalValidationStrategyMetadataURI,
+                daoURI,
+                metadataURI,
+                votingStrategies,
+                votingStrategyMetadataURIs,
+                authenticators
+            )
+        );
+
+        address user = address(123);
+
+        // Provision user with enough ETH to pay the fees
+        vm.deal(user, fee * 2);
+        vm.prank(user);
+        factory.deployProxy{ value: fee }(address(masterSpace), initializer, saltNonce);
+        address spaceProxy = _predictProxyAddress(address(factory), user, address(masterSpace), saltNonce);
+
+        uint256 balanceBefore = factory.owner().balance;
+        vm.prank(newOwner);
+        factory.claimFees();
+        assertEq(address(factory.owner()).balance, balanceBefore + fee);
+    }
+
+    function testClaimFeesUnauthorized() public {
+        vm.prank(address(123));
+        vm.expectRevert("Ownable: caller is not the owner");
+        factory.claimFees();
+    }
+
     function _predictProxyAddress(
         address _factory,
         address _sender,
