@@ -25,8 +25,10 @@ interface IApeChainVotingPower {
     ) external view returns (uint256);
 }
 
-/// @title Vanilla Voting Strategy
-contract ApechainVotingStrategy is IVotingStrategy {
+/// @title Ape Gas Voting Strategy
+/// @notice Uses the Ape gas balance of a user to determine their voting power.
+/// @notice Powered by Herodotus.
+contract ApeGasVotingStrategy is IVotingStrategy {
     error InvalidVoter();
 
     function getVotingPower(
