@@ -34,11 +34,14 @@ contract ApeGasVotingStrategy is IVotingStrategy {
     function getVotingPower(
         uint32 blockNumber,
         address voter,
-        bytes calldata params, // (address herodotusContract)
+        bytes calldata params, // (address herodotusContract, bytes32 delegateId, address delegateRegistry)
         bytes calldata userParams // (VotingTrieParameters votingTrieParameters)
     ) external view override returns (uint256) {
         // Decode the parameters
-        address contractAddress = abi.decode(params, (address));
+        (address herodousContractAddress, bytes32 delegateId, address delegateRegistry) = abi.decode(
+            params,
+            (address, bytes32, address)
+        );
         VotingTrieParameters memory votingTrieParameters = abi.decode(userParams, (VotingTrieParameters));
         // Get the contract instance
         IApeChainVotingPower herodotusContract = IApeChainVotingPower(contractAddress);
@@ -49,6 +52,6 @@ contract ApeGasVotingStrategy is IVotingStrategy {
         }
 
         // Call the computeVotingPower function
-        return herodotusContract.computeVotingPower(votingTrieParameters, blockNumber);
+        return herodotusContract.computeVotingPower(votingTrieParameters, blockNumber, delegateId, delegateRegistry);
     }
 }
