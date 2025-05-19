@@ -10,6 +10,7 @@ contract ApeGasVotingStrategyTest is Test {
     PackedTrieNode[] public nodes;
     string public FORK_URL = "https://rpc.curtis.apechain.com"; // Test data was taken from this curtis
     uint256 public forkId;
+    address public herodotusContract = 0x7e22bDFe6f4337790805513872d9A4034f7D8a2D;
 
     function setUp() public {
         apeGasVotingStrategy = new ApeGasVotingStrategy();
@@ -20,7 +21,6 @@ contract ApeGasVotingStrategyTest is Test {
     function testGetVotingPower1() public {
         address voter = 0xfEDE39f346C1c65d07F2FA476d5f4727A0d7dC43;
         uint32 blockNumber = 17399780;
-        address herodotusContract = 0x7e22bDFe6f4337790805513872d9A4034f7D8a2D;
         bytes memory params = abi.encode(herodotusContract);
 
         bytes memory accountProof = bytes.concat(
@@ -202,7 +202,6 @@ contract ApeGasVotingStrategyTest is Test {
     function testGetVotingPower2() public {
         address voter = 0xFB58a4b4783B18C099Ef2A95397C437561852B14;
         uint32 blockNumber = 17399780;
-        address herodotusContract = 0x7e22bDFe6f4337790805513872d9A4034f7D8a2D;
         bytes memory params = abi.encode(herodotusContract);
 
         bytes memory accountProof = bytes.concat(
@@ -390,7 +389,6 @@ contract ApeGasVotingStrategyTest is Test {
     function testGetVotingPower3() public {
         address voter = 0xf95A37B6C44327c0D2BAB5bA3820F0f8984FBF70;
         uint32 blockNumber = 17399780;
-        address herodotusContract = 0x7e22bDFe6f4337790805513872d9A4034f7D8a2D;
         bytes memory params = abi.encode(herodotusContract);
 
         bytes memory accountProof = bytes.concat(
@@ -598,7 +596,6 @@ contract ApeGasVotingStrategyTest is Test {
     function testGetVotingPower4() public {
         address voter = 0xc5398777Ba039b258e59ad9dFf0e2C7652187DAD;
         uint32 blockNumber = 17399780;
-        address herodotusContract = 0x7e22bDFe6f4337790805513872d9A4034f7D8a2D;
         bytes memory params = abi.encode(herodotusContract);
 
         bytes memory accountProof = bytes.concat(
@@ -795,7 +792,6 @@ contract ApeGasVotingStrategyTest is Test {
     function testGetVotingPower5() public {
         address voter = 0xc5398777BA039b258e59Ad9dFf0e2C7652187aAA;
         uint32 blockNumber = 17399780;
-        address herodotusContract = 0x7e22bDFe6f4337790805513872d9A4034f7D8a2D;
         bytes memory params = abi.encode(herodotusContract);
 
         bytes memory accountProof = bytes.concat(
@@ -992,7 +988,6 @@ contract ApeGasVotingStrategyTest is Test {
         // Taken from testGetVotingPower1
         address voter = 0xfEDE39f346C1c65d07F2FA476d5f4727A0d7dC43;
         uint32 blockNumber = 17399780;
-        address herodotusContract = 0x7e22bDFe6f4337790805513872d9A4034f7D8a2D;
         bytes memory params = abi.encode(herodotusContract);
 
         bytes memory accountProof = bytes.concat(
@@ -1175,7 +1170,6 @@ contract ApeGasVotingStrategyTest is Test {
         // Taken from testGetVotingPower1
         address voter = 0xfEDE39f346C1c65d07F2FA476d5f4727A0d7dC43;
         uint32 blockNumber = 17399780;
-        address herodotusContract = 0x7e22bDFe6f4337790805513872d9A4034f7D8a2D;
         bytes memory params = abi.encode(herodotusContract);
 
         bytes memory accountProof = bytes.concat(

@@ -21,7 +21,9 @@ struct VotingTrieParameters {
 interface IApeChainVotingPower {
     function computeVotingPower(
         VotingTrieParameters calldata trieParams,
-        uint256 blockNumber
+        uint256 blockNumber,
+        bytes32 id,
+        address delegateRegistry
     ) external view returns (uint256);
 }
 
@@ -34,17 +36,17 @@ contract ApeGasVotingStrategy is IVotingStrategy {
     function getVotingPower(
         uint32 blockNumber,
         address voter,
-        bytes calldata params, // (address herodotusContract, bytes32 delegateId, address delegateRegistry)
+        bytes calldata params, // (address herodotusContract, bytes32 id, address delegateRegistry)
         bytes calldata userParams // (VotingTrieParameters votingTrieParameters)
     ) external view override returns (uint256) {
         // Decode the parameters
-        (address herodousContractAddress, bytes32 delegateId, address delegateRegistry) = abi.decode(
+        (address herodotusContractAddress, bytes32 id, address delegateRegistry) = abi.decode(
             params,
             (address, bytes32, address)
         );
         VotingTrieParameters memory votingTrieParameters = abi.decode(userParams, (VotingTrieParameters));
         // Get the contract instance
-        IApeChainVotingPower herodotusContract = IApeChainVotingPower(contractAddress);
+        IApeChainVotingPower herodotusContract = IApeChainVotingPower(herodotusContractAddress);
 
         // Check if the voter is the same as the account in the votingTrieParameters
         if (voter != votingTrieParameters.account) {
@@ -52,6 +54,6 @@ contract ApeGasVotingStrategy is IVotingStrategy {
         }
 
         // Call the computeVotingPower function
-        return herodotusContract.computeVotingPower(votingTrieParameters, blockNumber, delegateId, delegateRegistry);
+        return herodotusContract.computeVotingPower(votingTrieParameters, blockNumber, id, delegateRegistry);
     }
 }
