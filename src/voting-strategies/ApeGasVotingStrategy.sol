@@ -62,18 +62,18 @@ contract ApeGasVotingStrategy is IVotingStrategy {
             revert InvalidVoter();
         }
 
-        uint256 l3BlockNumber = _mapBlockNumberL1ToL3(satellite, l1ChainId, l1BlockNumber, l3ChainId);
+        uint256 l3BlockNumber = mapBlockNumberL1ToL3(satellite, l1ChainId, l1BlockNumber, l3ChainId);
 
         // Call the computeVotingPower function
         return herodotusContract.computeVotingPower(votingTrieParameters, l3BlockNumber, id, delegateRegistry);
     }
 
-    function _mapBlockNumberL1ToL3(
+    function mapBlockNumberL1ToL3(
         ISatellite satellite,
         uint256 l1ChainId,
         uint256 l1BlockNumber,
         uint256 l3ChainId
-    ) internal view returns (uint256 l3BlockNumber) {
+    ) public view returns (uint256 l3BlockNumber) {
         bytes32 timestampBytes = satellite.headerField(
             l1ChainId,
             l1BlockNumber,
