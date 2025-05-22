@@ -36,15 +36,15 @@ contract ApeGasVotingStrategy is IVotingStrategy {
     error InvalidVoter();
 
     function getVotingPower(
-        uint32 l2BlockNumber, // `block.number` on Arbitrum L3s are the block numbers on L2
+        uint32 l1BlockNumber, // `block.number` on Arbitrum L3s are the block numbers on mainnet
         address voter,
-        bytes calldata params, // (uint256 l2ChainId, uint256 l3ChainId,
+        bytes calldata params, // (uint256 l1ChainId, uint256 l3ChainId,
         //   address herodotusContract, address satelite, bytes32 id, address delegateRegistry)
         bytes calldata userParams // (VotingTrieParameters votingTrieParameters)
     ) external view override returns (uint256) {
         // Decode the parameters
         (
-            uint256 l2ChainId,
+            uint256 l1ChainId,
             uint256 l3ChainId,
             address herodotusContractAddress,
             address sateliteAddress,
@@ -62,21 +62,21 @@ contract ApeGasVotingStrategy is IVotingStrategy {
             revert InvalidVoter();
         }
 
-        uint256 l3BlockNumber = _mapBlockNumberL2ToL3(satellite, l2ChainId, l2BlockNumber, l3ChainId);
+        uint256 l3BlockNumber = _mapBlockNumberL1ToL3(satellite, l1ChainId, l1BlockNumber, l3ChainId);
 
         // Call the computeVotingPower function
         return herodotusContract.computeVotingPower(votingTrieParameters, l3BlockNumber, id, delegateRegistry);
     }
 
-    function _mapBlockNumberL2ToL3(
+    function _mapBlockNumberL1ToL3(
         ISatellite satellite,
-        uint256 l2ChainId,
-        uint256 l2BlockNumber,
+        uint256 l1ChainId,
+        uint256 l1BlockNumber,
         uint256 l3ChainId
     ) internal view returns (uint256 l3BlockNumber) {
         bytes32 timestampBytes = satellite.headerField(
-            l2ChainId,
-            l2BlockNumber,
+            l1ChainId,
+            l1BlockNumber,
             IEvmFactRegistryModule.BlockHeaderField.TIMESTAMP
         );
         uint256 timestamp = uint256(timestampBytes);
