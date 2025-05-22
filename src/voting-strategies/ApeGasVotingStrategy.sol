@@ -48,7 +48,7 @@ contract ApeGasVotingStrategy is IVotingStrategy {
             uint256 l3ChainId,
             address herodotusContractAddress,
             address satelliteAddress,
-            bytes32 id,
+            bytes32 id, // Corresponds to the `id` used in the delegation registry
             address delegateRegistry
         ) = abi.decode(params, (uint256, uint256, address, address, bytes32, address));
         VotingTrieParameters memory votingTrieParameters = abi.decode(userParams, (VotingTrieParameters));
@@ -68,6 +68,10 @@ contract ApeGasVotingStrategy is IVotingStrategy {
         return herodotusContract.computeVotingPower(votingTrieParameters, l3BlockNumber, id, delegateRegistry);
     }
 
+    /// @title Mapping of L1 block numbers to L3 block numbers
+    /// @notice Maps an L1 block number to an L3 block number
+    /// @notice Uses the satellite contract of herodotus to convert the L1 block number to
+    ///   its corresponding timestamp, and then uses that timestamp to get the corresponding L3 block number.
     function mapBlockNumberL1ToL3(
         ISatellite satellite,
         uint256 l1ChainId,
