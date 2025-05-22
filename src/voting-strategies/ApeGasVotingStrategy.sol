@@ -39,7 +39,7 @@ contract ApeGasVotingStrategy is IVotingStrategy {
         uint32 l1BlockNumber, // `block.number` on Arbitrum L3s are the block numbers on mainnet
         address voter,
         bytes calldata params, // (uint256 l1ChainId, uint256 l3ChainId,
-        //   address herodotusContract, address satelite, bytes32 id, address delegateRegistry)
+        //   address herodotusContract, address satellite, bytes32 id, address delegateRegistry)
         bytes calldata userParams // (VotingTrieParameters votingTrieParameters)
     ) external view override returns (uint256) {
         // Decode the parameters
@@ -47,7 +47,7 @@ contract ApeGasVotingStrategy is IVotingStrategy {
             uint256 l1ChainId,
             uint256 l3ChainId,
             address herodotusContractAddress,
-            address sateliteAddress,
+            address satelliteAddress,
             bytes32 id,
             address delegateRegistry
         ) = abi.decode(params, (uint256, uint256, address, address, bytes32, address));
@@ -55,7 +55,7 @@ contract ApeGasVotingStrategy is IVotingStrategy {
 
         // Get the contract instances
         IApeChainVotingPower herodotusContract = IApeChainVotingPower(herodotusContractAddress);
-        ISatellite satellite = ISatellite(sateliteAddress);
+        ISatellite satellite = ISatellite(satelliteAddress);
 
         // Check if the voter is the same as the account in the votingTrieParameters
         if (voter != votingTrieParameters.account) {
