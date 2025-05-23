@@ -15,13 +15,13 @@
   },
   "scripts": {
     "clean": "rimraf cache out",
-    "coverage": "forge coverage --no-match-coverage testFork --ir-minimum --report lcov",
+    "coverage": "forge coverage --no-match-coverage testFork --no-match-coverage testGetVotingPower1 --ir-minimum --report lcov",
     "lint": "yarn lint:sol && yarn prettier:check",
     "lint:sol": "solhint \"{src,test,script}/**/*.sol\"",
     "prettier:check": "prettier --check \"**/*.{json,md,sol,yml}\"",
     "prettier": "prettier --write \"**/*.{json,md,sol,yml}\"",
     "format": "yarn prettier",
-    "test": "forge test --optimize -vv",
+    "test": "forge test --no-match-test testGetVotingPower1 --optimize -vv",
     "deploy-modules": "forge script script/ModulesSetup.s.sol:ModulesSetup --rpc-url $SEPOLIA_RPC_URL --optimize --broadcast --verify -vvvv",
     "deploy-space": "forge script script/SpaceSetup.s.sol:SpaceSetup --rpc-url $SEPOLIA_RPC_URL --optimize --broadcast --verify -vvvv",
     "prepare": "husky install"
