@@ -14,7 +14,7 @@ contract CurrentGasProposalValidationStrategy is IProposalValidationStrategy {
         // Decode threshold from params
         uint256 threshold = abi.decode(params, (uint256));
 
-        // Ensure author has a balance greater than threshold
+        // Ensure author has a balance greater than or equal to threshold
         return author.balance >= threshold;
     }
 }
