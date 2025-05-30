@@ -9,7 +9,7 @@ import {
 
 contract CurrentGasTest is SpaceTest {
     CurrentGasProposalValidationStrategy internal currentGasProposalValidationStrategy;
-    uint256 threshold = 1 ether; // minimum of 1 ETH
+    uint256 constant threshold = 1 ether; // minimum of 1 ETH
 
     function setUp() public override {
         super.setUp();
