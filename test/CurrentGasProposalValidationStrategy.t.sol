@@ -9,7 +9,7 @@ import {
 
 contract CurrentGasTest is SpaceTest {
     CurrentGasProposalValidationStrategy internal currentGasProposalValidationStrategy;
-    uint256 constant threshold = 1 ether; // minimum of 1 ETH
+    uint256 public constant THRESHOLD = 1 ether; // minimum of 1 ETH
 
     function setUp() public override {
         super.setUp();
@@ -18,7 +18,7 @@ contract CurrentGasTest is SpaceTest {
 
         Strategy memory newProposalStrategy = Strategy(
             address(currentGasProposalValidationStrategy),
-            abi.encode(threshold)
+            abi.encode(THRESHOLD)
         );
         space.updateSettings(
             UpdateSettingsCalldata(
@@ -38,18 +38,18 @@ contract CurrentGasTest is SpaceTest {
         );
     }
 
-    function test_hasJustEnoughGas() public {
-        vm.deal(author, threshold);
+    function testHasJustEnoughGas() public {
+        vm.deal(author, THRESHOLD);
         _createProposal(author, proposalMetadataURI, executionStrategy, new bytes(0));
     }
 
-    function test_hasEnoughGas() public {
-        vm.deal(author, threshold + 1);
+    function testHasEnoughGas() public {
+        vm.deal(author, THRESHOLD + 1);
         _createProposal(author, proposalMetadataURI, executionStrategy, new bytes(0));
     }
 
-    function test_hasNotEnoughGas() public {
-        vm.deal(author, threshold - 1);
+    function testHasNotEnoughGas() public {
+        vm.deal(author, THRESHOLD - 1);
         vm.expectRevert(abi.encodeWithSelector(FailedToPassProposalValidation.selector));
         _createProposal(author, proposalMetadataURI, executionStrategy, new bytes(0));
     }
