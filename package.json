@@ -28,7 +28,7 @@
   },
   "lint-staged": {
     "*.sol": [
-      "solhint",
+      "yarn lint:sol",
       "prettier --check"
     ],
     "*.{json,md,yml}": "prettier --check"
