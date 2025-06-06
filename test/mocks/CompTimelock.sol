@@ -48,6 +48,10 @@ contract CompTimelock {
         delay = delay_;
     }
 
+    // Make the contract payable by adding a receive function
+    receive() external payable {}
+
+    // Optional: Fallback function to handle calls with data
     fallback() external payable {}
 
     receive() external payable {}

@@ -398,12 +398,12 @@ abstract contract CompTimelockExecutionStrategyTest is SpaceTest {
         space.execute(proposalId, abi.encode(transactions));
 
         // Set veto guardian
-        address vetoGuardian = address(0x7e20);
+        address newVetoGuardian = address(0x7e20);
         vm.expectEmit(true, true, true, true);
-        emit VetoGuardianSet(address(0), vetoGuardian);
-        timelockExecutionStrategy.setVetoGuardian(vetoGuardian);
+        emit VetoGuardianSet(address(0), newVetoGuardian);
+        timelockExecutionStrategy.setVetoGuardian(newVetoGuardian);
 
-        vm.prank(vetoGuardian);
+        vm.prank(newVetoGuardian);
         vm.expectEmit(true, true, true, true);
         emit ProposalVetoed(keccak256(abi.encode(transactions)));
         timelockExecutionStrategy.veto(abi.encode(transactions));
@@ -427,8 +427,8 @@ abstract contract CompTimelockExecutionStrategyTest is SpaceTest {
 
         space.execute(proposalId, abi.encode(transactions));
 
-        address vetoGuardian = address(0x7e20);
-        vm.prank(vetoGuardian);
+        address newVetoGuardian = address(0x7e20);
+        vm.prank(newVetoGuardian);
         vm.expectRevert(OnlyVetoGuardian.selector);
         timelockExecutionStrategy.veto(abi.encode(transactions));
     }
@@ -453,12 +453,12 @@ abstract contract CompTimelockExecutionStrategyTest is SpaceTest {
         _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataURI);
 
         // Set veto guardian
-        address vetoGuardian = address(0x7e20);
+        address newVetoGuardian = address(0x7e20);
         vm.expectEmit(true, true, true, true);
-        emit VetoGuardianSet(address(0), vetoGuardian);
-        timelockExecutionStrategy.setVetoGuardian(vetoGuardian);
+        emit VetoGuardianSet(address(0), newVetoGuardian);
+        timelockExecutionStrategy.setVetoGuardian(newVetoGuardian);
 
-        vm.prank(vetoGuardian);
+        vm.prank(newVetoGuardian);
         vm.expectRevert(ProposalNotQueued.selector);
         timelockExecutionStrategy.veto(abi.encode(transactions));
     }
