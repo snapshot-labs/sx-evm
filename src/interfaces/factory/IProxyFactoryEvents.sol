@@ -8,4 +8,9 @@ interface IProxyFactoryEvents {
     /// @param implementation The address of the implementation contract.
     /// @param proxy The address of the proxy contract, determined via CREATE2.
     event ProxyDeployed(address implementation, address proxy);
+
+    /// @notice Emitted when the deployment fee for an implementation contract is updated.
+    /// @param implementation The address of the implementation contract.
+    /// @param fee The new deployment fee.
+    event DeploymentFeeUpdated(address implementation, uint256 fee);
 }
