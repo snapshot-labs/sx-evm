@@ -3,8 +3,7 @@
 pragma solidity ^0.8.18;
 
 import { IVotingStrategy } from "../interfaces/IVotingStrategy.sol";
-import { ISatellite } from "@herodotus-evm-v2/interfaces/ISatellite.sol";
-import { IEvmFactRegistryModule } from "@herodotus-evm-v2/interfaces/modules/IEvmFactRegistryModule.sol";
+import { IEvmFactRegistryModule } from "../external/IEvmFactRegistryModule.sol";
 
 struct PackedTrieNode {
     uint256 data1;
@@ -55,7 +54,7 @@ contract ApeGasVotingStrategy is IVotingStrategy {
 
         // Get the contract instances
         IApeChainVotingPower herodotusContract = IApeChainVotingPower(herodotusContractAddress);
-        ISatellite satellite = ISatellite(satelliteAddress);
+        IEvmFactRegistryModule satellite = IEvmFactRegistryModule(satelliteAddress);
 
         // Check if the voter is the same as the account in the votingTrieParameters
         if (voter != votingTrieParameters.account) {
@@ -72,7 +71,7 @@ contract ApeGasVotingStrategy is IVotingStrategy {
     /// @notice Uses the satellite contract of herodotus to convert the L1 block number to
     ///   its corresponding timestamp, and then uses that timestamp to get the corresponding L3 block number.
     function mapBlockNumberL1ToL3(
-        ISatellite satellite,
+        IEvmFactRegistryModule satellite,
         uint256 l1ChainId,
         uint256 l1BlockNumber,
         uint256 l3ChainId
