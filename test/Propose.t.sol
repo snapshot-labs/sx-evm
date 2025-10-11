@@ -2,7 +2,14 @@
 pragma solidity ^0.8.18;
 
 import { SpaceTest } from "./utils/Space.t.sol";
-import { FinalizationStatus, IndexedStrategy, Proposal, Strategy, UpdateSettingsCalldata } from "../src/types.sol";
+import {
+    FinalizationStatus,
+    IndexedStrategy,
+    PrivilegeLevel,
+    Proposal,
+    Strategy,
+    UpdateSettingsCalldata
+} from "../src/types.sol";
 import { VanillaVotingStrategy } from "../src/voting-strategies/VanillaVotingStrategy.sol";
 import { IExecutionStrategy } from "src/interfaces/IExecutionStrategy.sol";
 import { StupidProposalValidationStrategy } from "./mocks/StupidProposalValidation.sol";
@@ -88,5 +95,33 @@ contract ProposeTest is SpaceTest {
 
         vm.expectRevert(FailedToPassProposalValidation.selector);
         _createProposal(author, proposalMetadataURI, executionStrategy, new bytes(0));
+    }
+
+    function testProposeRefusedValidationButAuthor() public {
+        StupidProposalValidationStrategy stupidProposalValidationStrategy = new StupidProposalValidationStrategy();
+        Strategy memory validationStrategy = Strategy(address(stupidProposalValidationStrategy), new bytes(0));
+        space.updateSettings(
+            UpdateSettingsCalldata(
+                NO_UPDATE_UINT32,
+                NO_UPDATE_UINT32,
+                NO_UPDATE_UINT32,
+                NO_UPDATE_STRING,
+                NO_UPDATE_STRING,
+                validationStrategy,
+                "",
+                NO_UPDATE_ADDRESSES,
+                NO_UPDATE_ADDRESSES,
+                NO_UPDATE_STRATEGIES,
+                NO_UPDATE_STRINGS,
+                NO_UPDATE_UINT8S
+            )
+        );
+
+        address newAuthor = address(2);
+        space.grantPrivilege(newAuthor, PrivilegeLevel.Author);
+
+        // Author should be able to propose without passing the validation strategy
+        vm.prank(newAuthor);
+        _createProposal(newAuthor, proposalMetadataURI, executionStrategy, new bytes(0));
     }
 }

@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.18;
 
-import { Choice, Proposal, ProposalStatus, FinalizationStatus, Strategy } from "src/types.sol";
+import { Choice, Proposal, PrivilegeLevel, ProposalStatus, FinalizationStatus, Strategy } from "src/types.sol";
 import { IExecutionStrategy } from "src/interfaces/IExecutionStrategy.sol";
 
 /// @title Space State
@@ -83,4 +83,9 @@ interface ISpaceState {
     /// @param proposalId The ID of the proposal.
     /// @return The status of the proposal. Refer to the `ProposalStatus` enum for more information.
     function getProposalStatus(uint256 proposalId) external view returns (ProposalStatus);
+
+    /// @notice Returns the privilege level of a user.
+    /// @param user The address of the user.
+    /// @return The privilege level of the user. Refer to the `PrivilegeLevel` enum for more information.
+    function getPrivilegeLevel(address user) external view returns (PrivilegeLevel);
 }

@@ -59,4 +59,7 @@ interface ISpaceErrors {
     /// @notice Thrown when the execution payload supplied to the execution strategy is not equal
     /// to the payload supplied when the proposal was created.
     error InvalidPayload();
+
+    // Happens if a user does not meet the required level of privilege to perform an action.
+    error InvalidPrivilegeLevel();
 }

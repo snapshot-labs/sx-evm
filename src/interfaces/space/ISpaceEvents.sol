@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.18;
 
-import { IndexedStrategy, Proposal, Strategy, Choice, InitializeCalldata } from "src/types.sol";
+import { IndexedStrategy, PrivilegeLevel, Proposal, Strategy, Choice, InitializeCalldata } from "src/types.sol";
 
 /// @title Space Events
 interface ISpaceEvents {
@@ -101,4 +101,9 @@ interface ISpaceEvents {
     ///        consisting of a strategy address and an execution payload array.
     /// @param newMetadataURI The metadata URI for the proposal.
     event ProposalUpdated(uint256 proposalId, Strategy newExecutionStrategy, string newMetadataURI);
+
+    /// @notice Emitted when a privilege is updated (granted, revoked, or changed).
+    /// @param  user The address of the user.
+    /// @param  level The new privilege level.
+    event PrivilegeChanged(address user, PrivilegeLevel level);
 }
