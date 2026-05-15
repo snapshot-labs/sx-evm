@@ -3,7 +3,7 @@
 pragma solidity ^0.8.18;
 
 import { Authenticator } from "./Authenticator.sol";
-import { Choice, IndexedStrategy, Strategy } from "../types.sol";
+import { IndexedStrategy, Strategy } from "../types.sol";
 
 /// @title Ethereum Transaction Authenticator
 contract EthTxAuthenticator is Authenticator {
@@ -35,7 +35,7 @@ contract EthTxAuthenticator is Authenticator {
 
     /// @dev Verifies a vote transaction.
     function _verifyVote(bytes calldata data) internal view {
-        (address voter, , , ) = abi.decode(data, (address, uint256, Choice, IndexedStrategy[]));
+        (address voter, , , ) = abi.decode(data, (address, uint256, bytes, IndexedStrategy[]));
         if (voter != msg.sender) revert InvalidMessageSender();
     }
 

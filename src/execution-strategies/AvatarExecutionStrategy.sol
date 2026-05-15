@@ -40,8 +40,7 @@ contract AvatarExecutionStrategy is SimpleQuorumExecutionStrategy {
             initParams,
             (address, address, address[], uint256)
         );
-        __Ownable_init();
-        transferOwnership(_owner);
+        __Ownable_init(_owner);
         __SpaceManager_init(_spaces);
         __SimpleQuorumExecutionStrategy_init(_quorum);
         target = _target;
@@ -57,20 +56,14 @@ contract AvatarExecutionStrategy is SimpleQuorumExecutionStrategy {
 
     /// @notice Executes a proposal from the avatar contract if the proposal outcome is accepted.
     ///         Must be called by a whitelisted space contract.
-    /// @param proposal The proposal to execute.
-    /// @param votesFor The number of votes in favor of the proposal.
-    /// @param votesAgainst The number of votes against the proposal.
-    /// @param votesAbstain The number of abstaining votes.
-    /// @param payload The encoded transactions to execute.
     function execute(
         uint256 /* proposalId */,
         Proposal memory proposal,
-        uint256 votesFor,
-        uint256 votesAgainst,
-        uint256 votesAbstain,
+        bool quorumReached,
+        bool supportAchieved,
         bytes memory payload
     ) external override onlySpace {
-        ProposalStatus proposalStatus = getProposalStatus(proposal, votesFor, votesAgainst, votesAbstain);
+        ProposalStatus proposalStatus = getProposalStatus(proposal, quorumReached, supportAchieved);
         if ((proposalStatus != ProposalStatus.Accepted) && (proposalStatus != ProposalStatus.VotingPeriodAccepted)) {
             revert InvalidProposalStatus(proposalStatus);
         }

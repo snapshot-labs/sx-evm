@@ -15,20 +15,18 @@ contract VanillaExecutionStrategy is SimpleQuorumExecutionStrategy {
 
     function setUp(bytes memory initParams) public initializer {
         (address _owner, uint256 _quorum) = abi.decode(initParams, (address, uint256));
-        __Ownable_init();
-        transferOwnership(_owner);
+        __Ownable_init(_owner);
         __SimpleQuorumExecutionStrategy_init(_quorum);
     }
 
     function execute(
         uint256 /* proposalId */,
         Proposal memory proposal,
-        uint256 votesFor,
-        uint256 votesAgainst,
-        uint256 votesAbstain,
+        bool quorumReached,
+        bool supportAchieved,
         bytes memory /* payload */
     ) external override {
-        ProposalStatus proposalStatus = getProposalStatus(proposal, votesFor, votesAgainst, votesAbstain);
+        ProposalStatus proposalStatus = getProposalStatus(proposal, quorumReached, supportAchieved);
         if ((proposalStatus != ProposalStatus.Accepted) && (proposalStatus != ProposalStatus.VotingPeriodAccepted)) {
             revert InvalidProposalStatus(proposalStatus);
         }

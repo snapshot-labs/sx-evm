@@ -25,21 +25,9 @@ contract OptimisticTimelockExecutionStrategy is OptimisticQuorumExecutionStrateg
     /// @notice Thrown if veto caller is not the veto guardian.
     error OnlyVetoGuardian();
 
-    /// @notice Emitted when a transaction is queued.
-    /// @param transaction The transaction that was queued.
-    /// @param executionTime The time at which the transaction can be executed.
     event TransactionQueued(MetaTransaction transaction, uint256 executionTime);
-
-    /// @notice Emitted when a transaction is executed.
-    /// @param transaction The transaction that was executed.
     event TransactionExecuted(MetaTransaction transaction);
 
-    /// @notice Emitted when a new Timelock is set up.
-    /// @param owner The owner of the Timelock.
-    /// @param vetoGuardian The veto guardian of the Timelock.
-    /// @param spaces The spaces that are whitelisted for this Timelock.
-    /// @param quorum The quorum required to reject a proposal.
-    /// @param timelockDelay The delay in seconds between a proposal being queued and the execution of the proposal.
     event OptimisticTimelockExecutionStrategySetUp(
         address owner,
         address vetoGuardian,
@@ -48,26 +36,10 @@ contract OptimisticTimelockExecutionStrategy is OptimisticQuorumExecutionStrateg
         uint256 timelockDelay
     );
 
-    /// @notice Emitted when a veto guardian is set.
-    /// @param vetoGuardian The old veto guardian.
-    /// @param newVetoGuardian The new veto guardian.
     event VetoGuardianSet(address vetoGuardian, address newVetoGuardian);
-
-    /// @notice Emitted when the timelock delay is set.
-    /// @param timelockDelay The old timelock delay.
-    /// @param newTimelockDelay The new timelock delay.
     event TimelockDelaySet(uint256 timelockDelay, uint256 newTimelockDelay);
-
-    /// @notice Emitted when a proposal is vetoed.
-    /// @param executionPayloadHash The hash of the proposal execution payload.
     event ProposalVetoed(bytes32 executionPayloadHash);
-
-    /// @notice Emitted when a proposal is queued.
-    /// @param executionPayloadHash The hash of the proposal execution payload.
     event ProposalQueued(bytes32 executionPayloadHash);
-
-    /// @notice Emitted when a proposal is executed.
-    /// @param executionPayloadHash The hash of the proposal execution payload.
     event ProposalExecuted(bytes32 executionPayloadHash);
 
     /// @notice The delay in seconds between a proposal being queued and the execution of the proposal.
@@ -77,24 +49,18 @@ contract OptimisticTimelockExecutionStrategy is OptimisticQuorumExecutionStrateg
     mapping(bytes32 => uint256) public proposalExecutionTime;
 
     /// @notice Veto guardian is given permission to veto any queued proposal.
-    ///         We use a dedicated role for this instead of the owner as a DAO may want to
-    ///         renounce ownership of the contract while still maintaining a veto guardian.
     address public vetoGuardian;
 
     /// @notice Constructor.
-    /// @dev We enforce implementations of this contract to be disabled as a security measure to prevent delegate
-    ///      calls to the SELFDESTRUCT opcode, irrecoverably disabling all the proxies using that implementation.
     constructor() {
         setUp(abi.encode(address(1), address(1), new address[](0), 0, 0));
     }
 
     /// @notice Initialization function, should be called immediately after deploying a new proxy to this contract.
-    /// @param initParams ABI encoded parameters, in the same order as the constructor.
     function setUp(bytes memory initParams) public initializer {
         (address _owner, address _vetoGuardian, address[] memory _spaces, uint256 _timelockDelay, uint256 _quorum) = abi
             .decode(initParams, (address, address, address[], uint256, uint256));
-        __Ownable_init();
-        transferOwnership(_owner);
+        __Ownable_init(_owner);
         vetoGuardian = _vetoGuardian;
         __SpaceManager_init(_spaces);
         __OptimisticQuorumExecutionStrategy_init(_quorum);
@@ -103,20 +69,14 @@ contract OptimisticTimelockExecutionStrategy is OptimisticQuorumExecutionStrateg
     }
 
     /// @notice Executes a proposal by queueing its transactions in the timelock. Can only be called by approved spaces.
-    /// @param proposal The proposal.
-    /// @param votesFor The number of votes for the proposal.
-    /// @param votesAgainst The number of votes against the proposal.
-    /// @param votesAbstain The number of abstaining votes for the proposal.
-    /// @param payload The proposal execution payload.
     function execute(
         uint256 /* proposalId */,
         Proposal memory proposal,
-        uint256 votesFor,
-        uint256 votesAgainst,
-        uint256 votesAbstain,
+        bool quorumReached,
+        bool supportAchieved,
         bytes memory payload
     ) external override onlySpace {
-        ProposalStatus proposalStatus = getProposalStatus(proposal, votesFor, votesAgainst, votesAbstain);
+        ProposalStatus proposalStatus = getProposalStatus(proposal, quorumReached, supportAchieved);
         if ((proposalStatus != ProposalStatus.Accepted) && (proposalStatus != ProposalStatus.VotingPeriodAccepted)) {
             revert InvalidProposalStatus(proposalStatus);
         }
@@ -134,11 +94,6 @@ contract OptimisticTimelockExecutionStrategy is OptimisticQuorumExecutionStrateg
     }
 
     /// @notice Executes a queued proposal.
-    /// @param payload The proposal execution payload.
-    /// @dev Due to possible reentrancy, one cannot rely on the invariant that proposal payloads are executed atomically.
-    ///      As follows: If Proposal A is composed of MetaTransaction a1 and a2, and proposal B of MetaTransaction b1.
-    ///      If A.a1 executes code that triggers a proposal execution, then the execution order overall can potentially
-    ///      become [A.a1, B.b1, A.a2].
     function executeQueuedProposal(bytes memory payload) external {
         bytes32 executionPayloadHash = keccak256(payload);
 
@@ -147,7 +102,6 @@ contract OptimisticTimelockExecutionStrategy is OptimisticQuorumExecutionStrateg
         if (executionTime == 0) revert ProposalNotQueued();
         if (proposalExecutionTime[executionPayloadHash] > block.timestamp) revert TimelockDelayNotMet();
 
-        // Reset the execution time to 0 to prevent reentrancy
         proposalExecutionTime[executionPayloadHash] = 0;
 
         MetaTransaction[] memory transactions = abi.decode(payload, (MetaTransaction[]));
@@ -167,7 +121,6 @@ contract OptimisticTimelockExecutionStrategy is OptimisticQuorumExecutionStrateg
     }
 
     /// @notice Vetoes a queued proposal.
-    /// @param executionPayloadHash The hash of the proposal execution payload.
     function veto(bytes32 executionPayloadHash) external onlyVetoGuardian {
         if (proposalExecutionTime[executionPayloadHash] == 0) revert ProposalNotQueued();
 
@@ -176,7 +129,6 @@ contract OptimisticTimelockExecutionStrategy is OptimisticQuorumExecutionStrateg
     }
 
     /// @notice Sets the veto guardian.
-    /// @param newVetoGuardian The new veto guardian.
     function setVetoGuardian(address newVetoGuardian) external onlyOwner {
         emit VetoGuardianSet(vetoGuardian, newVetoGuardian);
         vetoGuardian = newVetoGuardian;

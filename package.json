@@ -32,5 +32,8 @@
       "prettier --check"
     ],
     "*.{json,md,yml}": "prettier --check"
+  },
+  "dependencies": {
+    "@inco/lightning": "^0.7.12"
   }
 }

@@ -24,27 +24,33 @@ abstract contract OptimisticQuorumExecutionStrategy is IExecutionStrategy, Space
         emit QuorumUpdated(_quorum);
     }
 
+    /// @inheritdoc IExecutionStrategy
+    function getQuorum() external view override returns (uint256) {
+        return quorum;
+    }
+
     function execute(
         uint256 proposalId,
         Proposal memory proposal,
-        uint256 votesFor,
-        uint256 votesAgainst,
-        uint256 votesAbstain,
+        bool quorumReached,
+        bool supportAchieved,
         bytes memory payload
     ) external virtual override;
 
     /// @notice Returns the status of a proposal that uses an optimistic quorum.
-    ///         A proposal is rejected only if a quorum of against votes is reached,
+    ///         A proposal is rejected only if quorum is not reached (i.e. enough against votes),
     ///         otherwise it is accepted.
     /// @param proposal The proposal struct.
-    /// @param votesAgainst The number of votes against the proposal.
+    /// @param quorumReached Whether the quorum has been reached.
+    /// @param supportAchieved Whether the proposal has enough support.
     function getProposalStatus(
         Proposal memory proposal,
-        uint256, // votesFor,
-        uint256 votesAgainst,
-        uint256 // votesAbstain
+        bool quorumReached,
+        bool supportAchieved
     ) public view override returns (ProposalStatus) {
-        bool rejected = votesAgainst >= quorum;
+        // In optimistic mode, proposals are accepted unless explicitly rejected.
+        // quorumReached here means "rejection quorum reached" and supportAchieved is false for rejected.
+        bool rejected = quorumReached && !supportAchieved;
         if (proposal.finalizationStatus == FinalizationStatus.Cancelled) {
             return ProposalStatus.Cancelled;
         } else if (proposal.finalizationStatus == FinalizationStatus.Executed) {
@@ -52,16 +58,12 @@ abstract contract OptimisticQuorumExecutionStrategy is IExecutionStrategy, Space
         } else if (block.number < proposal.startBlockNumber) {
             return ProposalStatus.VotingDelay;
         } else if (rejected) {
-            // We're past the vote start. If it has been rejected, we can short-circuit and return Rejected.
             return ProposalStatus.Rejected;
         } else if (block.number < proposal.minEndBlockNumber) {
-            // minEndBlockNumber not reached, indicate we're still in the voting period.
             return ProposalStatus.VotingPeriod;
         } else if (block.number < proposal.maxEndBlockNumber) {
-            // minEndBlockNumber < block.number < maxEndBlockNumber ; if not `rejected`, we can indicate it can be `accepted`.
             return ProposalStatus.VotingPeriodAccepted;
         } else {
-            // maxEndBlockNumber < block.number ; proposal has not been `rejected` ; we can indicate it's `accepted`.
             return ProposalStatus.Accepted;
         }
     }

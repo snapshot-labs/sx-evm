@@ -72,12 +72,9 @@ enum ProposalStatus {
     Cancelled
 }
 
-/// @notice The set of possible choices for a vote.
-enum Choice {
-    Against,
-    For,
-    Abstain
-}
+// Vote choices are now represented as encrypted uint8 values:
+// 0 = Against, 1 = For, 2 = Abstain
+// These are never visible on-chain.
 
 /// @notice Transaction struct that can be used to represent transactions inside a proposal.
 struct MetaTransaction {

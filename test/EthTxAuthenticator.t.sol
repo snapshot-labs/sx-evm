@@ -6,7 +6,7 @@ import { SpaceTest } from "./utils/Space.t.sol";
 import { AuthenticatorTest } from "./utils/Authenticator.t.sol";
 import { EthTxAuthenticator } from "../src/authenticators/EthTxAuthenticator.sol";
 import { VanillaExecutionStrategy } from "../src/execution-strategies/VanillaExecutionStrategy.sol";
-import { Choice, IndexedStrategy, Strategy, UpdateSettingsCalldata } from "../src/types.sol";
+import { IndexedStrategy, Strategy, UpdateSettingsCalldata } from "../src/types.sol";
 
 contract EthTxAuthenticatorTest is SpaceTest {
     error InvalidFunctionSelector();
@@ -41,7 +41,7 @@ contract EthTxAuthenticatorTest is SpaceTest {
             )
         );
 
-        newStrategy = Strategy(address(new VanillaExecutionStrategy(owner, quorum)), new bytes(0));
+        newStrategy = Strategy(address(new VanillaExecutionStrategy(spaceOwner, quorum)), new bytes(0));
     }
 
     function testAuthenticateTxPropose() public {
@@ -83,35 +83,39 @@ contract EthTxAuthenticatorTest is SpaceTest {
         // Creating demo proposal using vanilla authenticator (both vanilla and eth tx authenticators are whitelisted)
         uint256 proposalId = _createProposal(author, proposalMetadataURI, executionStrategy, new bytes(0));
 
+        bytes memory encryptedChoice = fakePrepareEuint256Ciphertext(1, voter, address(space));
         vm.prank(voter);
         ethTxAuth.authenticate(
             address(space),
             VOTE_SELECTOR,
-            abi.encode(voter, proposalId, Choice.For, userVotingStrategies, voteMetadataURI)
+            abi.encode(voter, proposalId, encryptedChoice, userVotingStrategies, voteMetadataURI)
         );
+        _processAllOperations();
     }
 
     function testAuthenticateTxVoteInvalidVoter() public {
         uint256 proposalId = 1;
 
+        bytes memory encryptedChoice = fakePrepareEuint256Ciphertext(1, voter, address(space));
         vm.expectRevert(InvalidMessageSender.selector);
         vm.prank(address(123));
         ethTxAuth.authenticate(
             address(space),
             VOTE_SELECTOR,
-            abi.encode(voter, proposalId, Choice.For, userVotingStrategies, voteMetadataURI)
+            abi.encode(voter, proposalId, encryptedChoice, userVotingStrategies, voteMetadataURI)
         );
     }
 
     function testAuthenticateTxVoteInvalidSelector() public {
         uint256 proposalId = 1;
 
+        bytes memory encryptedChoice = fakePrepareEuint256Ciphertext(1, voter, address(space));
         vm.expectRevert(InvalidFunctionSelector.selector);
         vm.prank(voter);
         ethTxAuth.authenticate(
             address(space),
             bytes4(0xdeadbeef),
-            abi.encode(voter, proposalId, Choice.For, userVotingStrategies, voteMetadataURI)
+            abi.encode(voter, proposalId, encryptedChoice, userVotingStrategies, voteMetadataURI)
         );
     }
 
@@ -146,14 +150,16 @@ contract EthTxAuthenticatorTest is SpaceTest {
 
         // Fast forward and ensure everything is still working correctly
         vm.roll(vm.getBlockNumber() + votingDelay);
+        bytes memory encryptedChoice = fakePrepareEuint256Ciphertext(1, voter, address(space));
         vm.prank(voter);
         ethTxAuth.authenticate(
             address(space),
             VOTE_SELECTOR,
-            abi.encode(voter, proposalId, Choice.For, userVotingStrategies, voteMetadataURI)
+            abi.encode(voter, proposalId, encryptedChoice, userVotingStrategies, voteMetadataURI)
         );
+        _processAllOperations();
 
-        space.execute(proposalId, executionStrategy.params);
+        _tryExecute(proposalId, executionStrategy.params);
     }
 
     function testAuthenticateTxUpdateProposalInvalidCaller() public {

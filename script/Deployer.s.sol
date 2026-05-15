@@ -207,7 +207,7 @@ contract Deployer is Script {
         (address space, ) = noRedeploy(type(Space).creationCode, saltNonce);
 
         // If the master space is not initialized, initialize it
-        if (Space(space).owner() == address(0x0)) {
+        if (Space(payable(space)).owner() == address(0x0)) {
             // Initializer for the master space, to render it unusable
             Strategy[] memory dummyStrategyArray = new Strategy[](1);
             dummyStrategyArray[0] = Strategy(address(0x1), new bytes(0));
@@ -215,7 +215,7 @@ contract Deployer is Script {
             dummyStringArray[0] = "";
             address[] memory dummyAddressArray = new address[](1);
             dummyAddressArray[0] = address(0x1);
-            Space(space).initialize(
+            Space(payable(space)).initialize(
                 InitializeCalldata(
                     address(0x1),
                     1,
@@ -231,8 +231,8 @@ contract Deployer is Script {
                 )
             );
         }
-        (address addr, ) = Space(space).proposalValidationStrategy();
-        if (Space(space).owner() != address(0x1) || addr != address(0x1)) {
+        (address addr, ) = Space(payable(space)).proposalValidationStrategy();
+        if (Space(payable(space)).owner() != address(0x1) || addr != address(0x1)) {
             // Initialization of the master space was frontrun
             revert SpaceInitializationFailed();
         }

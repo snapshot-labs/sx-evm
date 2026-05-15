@@ -49,10 +49,6 @@ contract CompTimelockCompatibleExecutionStrategy is SimpleQuorumExecutionStrateg
     ICompTimelock public timelock;
 
     /// @notice Constructor
-    /// @param _owner Address of the owner of this contract.
-    /// @param _vetoGuardian Address of the veto guardian.
-    /// @param _spaces Array of whitelisted space contracts.
-    /// @param _quorum The quorum required to execute a proposal.
     constructor(address _owner, address _vetoGuardian, address[] memory _spaces, uint256 _quorum, address _timelock) {
         setUp(abi.encode(_owner, _vetoGuardian, _spaces, _quorum, _timelock));
     }
@@ -60,8 +56,7 @@ contract CompTimelockCompatibleExecutionStrategy is SimpleQuorumExecutionStrateg
     function setUp(bytes memory initializeParams) public initializer {
         (address _owner, address _vetoGuardian, address[] memory _spaces, uint256 _quorum, address _timelock) = abi
             .decode(initializeParams, (address, address, address[], uint256, address));
-        __Ownable_init();
-        transferOwnership(_owner);
+        __Ownable_init(_owner);
         vetoGuardian = _vetoGuardian;
         __SpaceManager_init(_spaces);
         __SimpleQuorumExecutionStrategy_init(_quorum);
@@ -80,20 +75,14 @@ contract CompTimelockCompatibleExecutionStrategy is SimpleQuorumExecutionStrateg
     }
 
     /// @notice Executes a proposal by queueing its transactions in the timelock. Can only be called by approved spaces.
-    /// @param proposal The proposal.
-    /// @param votesFor The number of votes for the proposal.
-    /// @param votesAgainst The number of votes against the proposal.
-    /// @param votesAbstain The number of abstaining votes for the proposal.
-    /// @param payload The encoded payload of the proposal to execute.
     function execute(
         uint256 /* proposalId */,
         Proposal memory proposal,
-        uint256 votesFor,
-        uint256 votesAgainst,
-        uint256 votesAbstain,
+        bool quorumReached,
+        bool supportAchieved,
         bytes memory payload
     ) external override onlySpace {
-        ProposalStatus proposalStatus = getProposalStatus(proposal, votesFor, votesAgainst, votesAbstain);
+        ProposalStatus proposalStatus = getProposalStatus(proposal, quorumReached, supportAchieved);
         if ((proposalStatus != ProposalStatus.Accepted) && (proposalStatus != ProposalStatus.VotingPeriodAccepted)) {
             revert InvalidProposalStatus(proposalStatus);
         }
@@ -111,9 +100,6 @@ contract CompTimelockCompatibleExecutionStrategy is SimpleQuorumExecutionStrateg
                 revert InvalidTransaction();
             }
 
-            // Check there are not duplicates.
-            // We must do this because the Compound Timelock will silently "merge" two duplicate transactions.
-            // This could be problematic for off-chain indexers and UI tools.
             bytes32 txHash = keccak256(
                 abi.encode(transactions[i].to, transactions[i].value, "", transactions[i].data, executionTime)
             );
@@ -132,11 +118,6 @@ contract CompTimelockCompatibleExecutionStrategy is SimpleQuorumExecutionStrateg
     }
 
     /// @notice Executes a queued proposal.
-    /// @param payload The encoded payload of the proposal to execute.
-    /// @dev Due to possible reentrancy, one cannot rely on the invariant that proposal payloads are executed atomically.
-    ///      As follows: If Proposal A is composed of MetaTransaction a1 and a2, and proposal B of MetaTransaction b1.
-    ///      If A.a1 executes code that triggers a proposal execution, then the execution order overall can potentially
-    ///      become [A.a1, B.b1, A.a2].
     function executeQueuedProposal(bytes memory payload) external {
         bytes32 executionPayloadHash = keccak256(payload);
 
@@ -163,7 +144,6 @@ contract CompTimelockCompatibleExecutionStrategy is SimpleQuorumExecutionStrateg
     }
 
     /// @notice Vetoes a queued proposal.
-    /// @param payload The encoded payload of the proposal to veto.
     function veto(bytes memory payload) external {
         bytes32 payloadHash = keccak256(payload);
         if (msg.sender != vetoGuardian) revert OnlyVetoGuardian();
@@ -187,7 +167,6 @@ contract CompTimelockCompatibleExecutionStrategy is SimpleQuorumExecutionStrateg
     }
 
     /// @notice Sets the veto guardian.
-    /// @param newVetoGuardian The new veto guardian.
     function setVetoGuardian(address newVetoGuardian) external onlyOwner {
         emit VetoGuardianSet(vetoGuardian, newVetoGuardian);
         vetoGuardian = newVetoGuardian;

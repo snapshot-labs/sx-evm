@@ -28,7 +28,7 @@ contract SpaceFactoryTest is Test, IProxyFactoryEvents, IProxyFactoryErrors, ISp
     address[] public authenticators;
     Strategy[] public executionStrategies;
 
-    address public owner;
+    address public spaceOwner;
     uint32 public votingDelay;
     uint32 public minVotingDuration;
     uint32 public maxVotingDuration;
@@ -40,12 +40,12 @@ contract SpaceFactoryTest is Test, IProxyFactoryEvents, IProxyFactoryErrors, ISp
     string public proposalValidationStrategyMetadataURI;
 
     function setUp() public {
-        owner = address(1);
+        spaceOwner = address(1);
         masterSpace = new Space();
         factory = new ProxyFactory();
         vanillaVotingStrategy = new VanillaVotingStrategy();
         vanillaAuthenticator = new VanillaAuthenticator();
-        vanillaExecutionStrategy = new VanillaExecutionStrategy(owner, quorum);
+        vanillaExecutionStrategy = new VanillaExecutionStrategy(spaceOwner, quorum);
         vanillaProposalValidationStrategy = new VanillaProposalValidationStrategy();
 
         votingDelay = 0;
@@ -68,7 +68,7 @@ contract SpaceFactoryTest is Test, IProxyFactoryEvents, IProxyFactoryErrors, ISp
         bytes memory initializer = abi.encodeWithSelector(
             Space.initialize.selector,
             InitializeCalldata(
-                owner,
+                spaceOwner,
                 votingDelay,
                 minVotingDuration,
                 maxVotingDuration,
@@ -96,7 +96,7 @@ contract SpaceFactoryTest is Test, IProxyFactoryEvents, IProxyFactoryErrors, ISp
         bytes memory initializer = abi.encodeWithSelector(
             Space.initialize.selector,
             InitializeCalldata(
-                owner,
+                spaceOwner,
                 votingDelay,
                 minVotingDuration,
                 maxVotingDuration,
@@ -123,7 +123,7 @@ contract SpaceFactoryTest is Test, IProxyFactoryEvents, IProxyFactoryErrors, ISp
         bytes memory initializer = abi.encodeWithSelector(
             Space.initialize.selector,
             InitializeCalldata(
-                owner,
+                spaceOwner,
                 votingDelay,
                 minVotingDuration,
                 maxVotingDuration,
@@ -146,7 +146,7 @@ contract SpaceFactoryTest is Test, IProxyFactoryEvents, IProxyFactoryErrors, ISp
         bytes memory initializer = abi.encodeWithSelector(
             Space.initialize.selector,
             InitializeCalldata(
-                owner,
+                spaceOwner,
                 votingDelay,
                 minVotingDuration,
                 maxVotingDuration,
@@ -172,7 +172,7 @@ contract SpaceFactoryTest is Test, IProxyFactoryEvents, IProxyFactoryErrors, ISp
         bytes memory initializer = abi.encodeWithSelector(
             Space.initialize.selector,
             InitializeCalldata(
-                owner,
+                spaceOwner,
                 votingDelay,
                 minVotingDuration,
                 maxVotingDuration,
@@ -190,10 +190,10 @@ contract SpaceFactoryTest is Test, IProxyFactoryEvents, IProxyFactoryErrors, ISp
         address spaceProxy = _predictProxyAddress(address(factory), address(this), address(masterSpace), saltNonce);
 
         // Initializing the space should revert as the space is already initialized
-        vm.expectRevert("Initializable: contract is already initialized");
-        Space(spaceProxy).initialize(
+        vm.expectRevert(bytes4(keccak256("InvalidInitialization()")));
+        Space(payable(spaceProxy)).initialize(
             InitializeCalldata(
-                owner,
+                spaceOwner,
                 votingDelay,
                 minVotingDuration,
                 maxVotingDuration,

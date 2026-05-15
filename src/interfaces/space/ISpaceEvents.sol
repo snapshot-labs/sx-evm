@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.18;
 
-import { IndexedStrategy, Proposal, Strategy, Choice, InitializeCalldata } from "src/types.sol";
+import { IndexedStrategy, Proposal, Strategy, InitializeCalldata } from "src/types.sol";
 
 /// @title Space Events
 interface ISpaceEvents {
@@ -21,23 +21,15 @@ interface ISpaceEvents {
     /// @notice Emitted when a vote is cast.
     /// @param proposalId The proposal id.
     /// @param voter The address of the voter.
-    /// @param choice The vote choice (`For`, `Against`, `Abstain`).
     /// @param votingPower The voting power of the voter.
-    event VoteCast(uint256 proposalId, address voter, Choice choice, uint256 votingPower);
+    event VoteCast(uint256 proposalId, address voter, uint256 votingPower);
 
     /// @notice Emitted when a vote is cast with metadata.
     /// @param proposalId The proposal id.
     /// @param voter The address of the voter.
-    /// @param choice The vote choice (`For`, `Against`, `Abstain`).
     /// @param votingPower The voting power of the voter.
     /// @param metadataUri The metadata URI for the vote.
-    event VoteCastWithMetadata(
-        uint256 proposalId,
-        address voter,
-        Choice choice,
-        uint256 votingPower,
-        string metadataUri
-    );
+    event VoteCastWithMetadata(uint256 proposalId, address voter, uint256 votingPower, string metadataUri);
 
     /// @notice Emitted when a proposal is executed.
     /// @param proposalId The proposal id.

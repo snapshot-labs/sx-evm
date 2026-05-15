@@ -24,29 +24,30 @@ abstract contract SimpleQuorumExecutionStrategy is IExecutionStrategy, SpaceMana
         emit QuorumUpdated(_quorum);
     }
 
+    /// @inheritdoc IExecutionStrategy
+    function getQuorum() external view override returns (uint256) {
+        return quorum;
+    }
+
     function execute(
         uint256 proposalId,
         Proposal memory proposal,
-        uint256 votesFor,
-        uint256 votesAgainst,
-        uint256 votesAbstain,
+        bool quorumReached,
+        bool supportAchieved,
         bytes memory payload
     ) external virtual override;
 
     /// @notice Returns the status of a proposal that uses a simple quorum.
-    ///        A proposal is accepted if the for votes exceeds the against votes
-    ///        and a quorum of (for + abstain) votes is reached.
+    ///        A proposal is accepted if support is achieved and quorum is reached.
     /// @param proposal The proposal struct.
-    /// @param votesFor The number of votes for the proposal.
-    /// @param votesAgainst The number of votes against the proposal.
-    /// @param votesAbstain The number of votes abstaining from the proposal.
+    /// @param quorumReached Whether the quorum has been reached.
+    /// @param supportAchieved Whether the proposal has enough support.
     function getProposalStatus(
         Proposal memory proposal,
-        uint256 votesFor,
-        uint256 votesAgainst,
-        uint256 votesAbstain
+        bool quorumReached,
+        bool supportAchieved
     ) public view override returns (ProposalStatus) {
-        bool accepted = _quorumReached(quorum, votesFor, votesAbstain) && _supported(votesFor, votesAgainst);
+        bool accepted = quorumReached && supportAchieved;
         if (proposal.finalizationStatus == FinalizationStatus.Cancelled) {
             return ProposalStatus.Cancelled;
         } else if (proposal.finalizationStatus == FinalizationStatus.Executed) {
@@ -66,15 +67,6 @@ abstract contract SimpleQuorumExecutionStrategy is IExecutionStrategy, SpaceMana
         } else {
             return ProposalStatus.Rejected;
         }
-    }
-
-    function _quorumReached(uint256 _quorum, uint256 _votesFor, uint256 _votesAbstain) internal pure returns (bool) {
-        uint256 forAndAbstainVotesTotal = _votesFor + _votesAbstain;
-        return forAndAbstainVotesTotal >= _quorum;
-    }
-
-    function _supported(uint256 _votesFor, uint256 _votesAgainst) internal pure returns (bool) {
-        return _votesFor > _votesAgainst;
     }
 
     function getStrategyType() external view virtual override returns (string memory);

@@ -4,7 +4,6 @@ pragma solidity ^0.8.18;
 
 import { SpaceTest } from "./utils/Space.t.sol";
 import {
-    Choice,
     Enum,
     IndexedStrategy,
     MetaTransaction,
@@ -61,11 +60,10 @@ abstract contract OptimisticTimelockExecutionStrategyTest is SpaceTest {
             Strategy(address(timelockExecutionStrategy), abi.encode(transactions)),
             new bytes(0)
         );
-        _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataURI);
+        _vote(author, proposalId, 1, userVotingStrategies, voteMetadataURI);
         vm.roll(vm.getBlockNumber() + space.maxVotingDuration());
 
-        vm.expectRevert(InvalidSpace.selector);
-        space.execute(proposalId, abi.encode(transactions));
+        _tryExecuteExpectRevert(proposalId, abi.encode(transactions), abi.encodeWithSelector(InvalidSpace.selector));
     }
 
     function testQueueing() external {
@@ -77,13 +75,14 @@ abstract contract OptimisticTimelockExecutionStrategyTest is SpaceTest {
             Strategy(address(timelockExecutionStrategy), abi.encode(transactions)),
             new bytes(0)
         );
-        // We do not cast a vote. The optimistic quorum should still accept the proposal
-        // at the end of the voting period.
+        // Under the new tryExecute flow, proposals are only processed for execution
+        // after a positive support signal is produced by voting.
+        _vote(author, proposalId, 1, userVotingStrategies, voteMetadataURI);
         vm.roll(vm.getBlockNumber() + space.maxVotingDuration());
 
         vm.expectEmit(true, true, true, true);
         emit TransactionQueued(transactions[0], block.timestamp + 1000);
-        space.execute(proposalId, abi.encode(transactions));
+        _tryExecute(proposalId, abi.encode(transactions));
     }
 
     function testQueueingRejectedProposal() external {
@@ -95,11 +94,12 @@ abstract contract OptimisticTimelockExecutionStrategyTest is SpaceTest {
             Strategy(address(timelockExecutionStrategy), abi.encode(transactions)),
             new bytes(0)
         );
-        _vote(author, proposalId, Choice.Against, userVotingStrategies, voteMetadataURI);
+        _vote(author, proposalId, 0, userVotingStrategies, voteMetadataURI);
         vm.roll(vm.getBlockNumber() + space.maxVotingDuration());
 
-        vm.expectRevert();
-        space.execute(proposalId, abi.encode(transactions));
+        _tryExecute(proposalId, abi.encode(transactions));
+        // Proposal should NOT be executed since it was rejected
+        assertTrue(uint8(space.getProposalStatus(proposalId)) != uint8(ProposalStatus.Executed));
     }
 
     function testQueueingDoubleQueue() external {
@@ -111,15 +111,14 @@ abstract contract OptimisticTimelockExecutionStrategyTest is SpaceTest {
             Strategy(address(timelockExecutionStrategy), abi.encode(transactions)),
             new bytes(0)
         );
-        _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataURI);
+        _vote(author, proposalId, 1, userVotingStrategies, voteMetadataURI);
         vm.roll(vm.getBlockNumber() + space.maxVotingDuration());
 
         vm.expectEmit(true, true, true, true);
         emit TransactionQueued(transactions[0], block.timestamp + 1000);
-        space.execute(proposalId, abi.encode(transactions));
+        _tryExecute(proposalId, abi.encode(transactions));
 
-        vm.expectRevert();
-        space.execute(proposalId, abi.encode(transactions));
+        _tryExecuteExpectAnyRevert(proposalId, abi.encode(transactions));
     }
 
     function testQueueingQueueDuplicate() external {
@@ -137,15 +136,18 @@ abstract contract OptimisticTimelockExecutionStrategyTest is SpaceTest {
             Strategy(address(timelockExecutionStrategy), abi.encode(transactions)),
             new bytes(0)
         );
-        _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataURI);
-        _vote(author, proposalId2, Choice.For, userVotingStrategies, voteMetadataURI);
+        _vote(author, proposalId, 1, userVotingStrategies, voteMetadataURI);
+        _vote(voter, proposalId2, 1, userVotingStrategies, voteMetadataURI);
         vm.roll(vm.getBlockNumber() + space.maxVotingDuration());
 
-        space.execute(proposalId, abi.encode(transactions));
+        _tryExecute(proposalId, abi.encode(transactions));
 
         // Will revert due to duplicate execution payload hash
-        vm.expectRevert(DuplicateExecutionPayloadHash.selector);
-        space.execute(proposalId2, abi.encode(transactions));
+        _tryExecuteExpectRevert(
+            proposalId2,
+            abi.encode(transactions),
+            abi.encodeWithSelector(DuplicateExecutionPayloadHash.selector)
+        );
     }
 
     function testQueueingQueueDuplicateUniqueSalt() external {
@@ -166,13 +168,13 @@ abstract contract OptimisticTimelockExecutionStrategyTest is SpaceTest {
             Strategy(address(timelockExecutionStrategy), abi.encode(transactions2)),
             new bytes(0)
         );
-        _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataURI);
-        _vote(author, proposalId2, Choice.For, userVotingStrategies, voteMetadataURI);
+        _vote(author, proposalId, 1, userVotingStrategies, voteMetadataURI);
+        _vote(voter, proposalId2, 1, userVotingStrategies, voteMetadataURI);
         vm.roll(vm.getBlockNumber() + space.maxVotingDuration());
 
-        space.execute(proposalId, abi.encode(transactions));
+        _tryExecute(proposalId, abi.encode(transactions));
 
-        space.execute(proposalId2, abi.encode(transactions2));
+        _tryExecute(proposalId2, abi.encode(transactions2));
     }
 
     function testQueueingInvalidPayload() external {
@@ -184,13 +186,12 @@ abstract contract OptimisticTimelockExecutionStrategyTest is SpaceTest {
             Strategy(address(timelockExecutionStrategy), abi.encode(transactions)),
             new bytes(0)
         );
-        _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataURI);
+        _vote(author, proposalId, 1, userVotingStrategies, voteMetadataURI);
         vm.roll(vm.getBlockNumber() + space.maxVotingDuration());
 
         transactions[0] = MetaTransaction(recipient, 2, "", Enum.Operation.Call, 0);
 
-        vm.expectRevert(InvalidPayload.selector);
-        space.execute(proposalId, abi.encode(transactions));
+        _tryExecuteExpectRevert(proposalId, abi.encode(transactions), abi.encodeWithSelector(InvalidPayload.selector));
     }
 
     function testExecute() external {
@@ -202,12 +203,12 @@ abstract contract OptimisticTimelockExecutionStrategyTest is SpaceTest {
             Strategy(address(timelockExecutionStrategy), abi.encode(transactions)),
             new bytes(0)
         );
-        _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataURI);
+        _vote(author, proposalId, 1, userVotingStrategies, voteMetadataURI);
         vm.roll(vm.getBlockNumber() + space.maxVotingDuration());
 
         vm.expectEmit(true, true, true, true);
         emit TransactionQueued(transactions[0], block.timestamp + 1000);
-        space.execute(proposalId, abi.encode(transactions));
+        _tryExecute(proposalId, abi.encode(transactions));
 
         assertEq(recipient.balance, 0);
 
@@ -226,10 +227,10 @@ abstract contract OptimisticTimelockExecutionStrategyTest is SpaceTest {
             Strategy(address(timelockExecutionStrategy), abi.encode(transactions)),
             new bytes(0)
         );
-        _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataURI);
+        _vote(author, proposalId, 1, userVotingStrategies, voteMetadataURI);
         vm.roll(vm.getBlockNumber() + space.maxVotingDuration());
 
-        space.execute(proposalId, abi.encode(transactions));
+        _tryExecute(proposalId, abi.encode(transactions));
 
         vm.warp(vm.getBlockTimestamp() + timelockExecutionStrategy.timelockDelay());
 
@@ -246,10 +247,10 @@ abstract contract OptimisticTimelockExecutionStrategyTest is SpaceTest {
             Strategy(address(timelockExecutionStrategy), abi.encode(transactions)),
             new bytes(0)
         );
-        _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataURI);
+        _vote(author, proposalId, 1, userVotingStrategies, voteMetadataURI);
         vm.roll(vm.getBlockNumber() + space.maxVotingDuration());
 
-        space.execute(proposalId, abi.encode(transactions));
+        _tryExecute(proposalId, abi.encode(transactions));
 
         vm.warp(vm.getBlockTimestamp() + timelockExecutionStrategy.timelockDelay());
         transactions[0] = MetaTransaction(recipient, 2, "", Enum.Operation.Call, 0);
@@ -267,12 +268,12 @@ abstract contract OptimisticTimelockExecutionStrategyTest is SpaceTest {
             Strategy(address(timelockExecutionStrategy), abi.encode(transactions)),
             new bytes(0)
         );
-        _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataURI);
+        _vote(author, proposalId, 1, userVotingStrategies, voteMetadataURI);
         vm.roll(vm.getBlockNumber() + space.maxVotingDuration());
 
         vm.expectEmit(true, true, true, true);
         emit TransactionQueued(transactions[0], block.timestamp + 1000);
-        space.execute(proposalId, abi.encode(transactions));
+        _tryExecute(proposalId, abi.encode(transactions));
 
         vm.expectRevert(TimelockDelayNotMet.selector);
         timelockExecutionStrategy.executeQueuedProposal(abi.encode(transactions));
@@ -287,7 +288,7 @@ abstract contract OptimisticTimelockExecutionStrategyTest is SpaceTest {
             Strategy(address(timelockExecutionStrategy), abi.encode(transactions)),
             new bytes(0)
         );
-        _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataURI);
+        _vote(author, proposalId, 1, userVotingStrategies, voteMetadataURI);
         vm.roll(vm.getBlockNumber() + space.maxVotingDuration());
 
         vm.expectRevert(ProposalNotQueued.selector);
@@ -303,12 +304,12 @@ abstract contract OptimisticTimelockExecutionStrategyTest is SpaceTest {
             Strategy(address(timelockExecutionStrategy), abi.encode(transactions)),
             new bytes(0)
         );
-        _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataURI);
+        _vote(author, proposalId, 1, userVotingStrategies, voteMetadataURI);
         vm.roll(vm.getBlockNumber() + space.maxVotingDuration());
 
         vm.expectEmit(true, true, true, true);
         emit TransactionQueued(transactions[0], block.timestamp + 1000);
-        space.execute(proposalId, abi.encode(transactions));
+        _tryExecute(proposalId, abi.encode(transactions));
 
         assertEq(recipient.balance, 0);
 
@@ -336,12 +337,12 @@ abstract contract OptimisticTimelockExecutionStrategyTest is SpaceTest {
             Strategy(address(timelockExecutionStrategy), abi.encode(transactions)),
             new bytes(0)
         );
-        _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataURI);
+        _vote(author, proposalId, 1, userVotingStrategies, voteMetadataURI);
         vm.roll(vm.getBlockNumber() + space.maxVotingDuration());
 
         vm.expectEmit(true, true, true, true);
         emit TransactionQueued(transactions[0], block.timestamp + 1000);
-        space.execute(proposalId, abi.encode(transactions));
+        _tryExecute(proposalId, abi.encode(transactions));
 
         assertEq(recipient.balance, 0);
 
@@ -362,7 +363,7 @@ abstract contract OptimisticTimelockExecutionStrategyTest is SpaceTest {
     function testSetTimelockDelayUnauthorized() external {
         vm.prank(unauthorized);
         uint256 newTimelockDelay = 1000;
-        vm.expectRevert("Ownable: caller is not the owner");
+        _expectOnlyOwnerRevert(unauthorized);
         timelockExecutionStrategy.setTimelockDelay(newTimelockDelay);
     }
 
@@ -375,10 +376,10 @@ abstract contract OptimisticTimelockExecutionStrategyTest is SpaceTest {
             Strategy(address(timelockExecutionStrategy), abi.encode(transactions)),
             new bytes(0)
         );
-        _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataURI);
+        _vote(author, proposalId, 1, userVotingStrategies, voteMetadataURI);
         vm.roll(vm.getBlockNumber() + space.maxVotingDuration());
 
-        space.execute(proposalId, abi.encode(transactions));
+        _tryExecute(proposalId, abi.encode(transactions));
 
         // Set veto guardian
         address vetoGuardian = address(0x7e20);
@@ -405,7 +406,7 @@ abstract contract OptimisticTimelockExecutionStrategyTest is SpaceTest {
             Strategy(address(timelockExecutionStrategy), abi.encode(transactions)),
             new bytes(0)
         );
-        _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataURI);
+        _vote(author, proposalId, 1, userVotingStrategies, voteMetadataURI);
         vm.roll(vm.getBlockNumber() + space.maxVotingDuration());
 
         // Set veto guardian
@@ -426,10 +427,10 @@ abstract contract OptimisticTimelockExecutionStrategyTest is SpaceTest {
             Strategy(address(timelockExecutionStrategy), abi.encode(transactions)),
             new bytes(0)
         );
-        _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataURI);
+        _vote(author, proposalId, 1, userVotingStrategies, voteMetadataURI);
         vm.roll(vm.getBlockNumber() + space.maxVotingDuration());
 
-        space.execute(proposalId, abi.encode(transactions));
+        _tryExecute(proposalId, abi.encode(transactions));
 
         address vetoGuardian = address(0x7e20);
         vm.prank(vetoGuardian);
@@ -489,12 +490,12 @@ abstract contract OptimisticTimelockExecutionStrategyTest is SpaceTest {
             Strategy(address(timelockExecutionStrategy), abi.encode(transactions)),
             new bytes(0)
         );
-        _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataURI);
+        _vote(author, proposalId, 1, userVotingStrategies, voteMetadataURI);
         vm.roll(vm.getBlockNumber() + space.maxVotingDuration());
 
         vm.expectEmit(true, true, true, true);
         emit TransactionQueued(transactions[0], block.timestamp + 1000);
-        space.execute(proposalId, abi.encode(transactions));
+        _tryExecute(proposalId, abi.encode(transactions));
 
         assertEq(erc721.ownerOf(1), address(timelockExecutionStrategy));
         assertEq(erc1155.balanceOf(author, 1), 0);
@@ -514,7 +515,7 @@ abstract contract OptimisticTimelockExecutionStrategyTest is SpaceTest {
     }
 
     function testSetUp() public view {
-        assertEq(timelockExecutionStrategy.owner(), owner);
+        assertEq(timelockExecutionStrategy.owner(), spaceOwner);
         assertEq(timelockExecutionStrategy.vetoGuardian(), emptyVetoGuardian);
         assertEq(timelockExecutionStrategy.quorum(), quorum);
         assertEq(timelockExecutionStrategy.timelockDelay(), 1000);
@@ -536,12 +537,12 @@ contract OptimisticTimelockExecutionStrategyTestProxy is OptimisticTimelockExecu
                     address(masterExecutionStrategy),
                     abi.encodeWithSelector(
                         OptimisticTimelockExecutionStrategy.setUp.selector,
-                        abi.encode(owner, emptyVetoGuardian, spaces, 1000, quorum)
+                        abi.encode(spaceOwner, emptyVetoGuardian, spaces, 1000, quorum)
                     )
                 )
             )
         );
-        vm.deal(address(owner), 1000);
+        vm.deal(address(spaceOwner), 1000);
         payable(timelockExecutionStrategy).transfer(1000);
     }
 }

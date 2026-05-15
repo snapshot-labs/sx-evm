@@ -7,10 +7,11 @@ import { ProxyFactory } from "../src/ProxyFactory.sol";
 import { Space } from "../src/Space.sol";
 import { VanillaAuthenticator } from "../src/authenticators/VanillaAuthenticator.sol";
 import { TimelockExecutionStrategy } from "../src/execution-strategies/timelocks/TimelockExecutionStrategy.sol";
-import { Strategy, IndexedStrategy, InitializeCalldata, Choice, MetaTransaction } from "../src/types.sol";
+import { Strategy, IndexedStrategy, InitializeCalldata, MetaTransaction } from "../src/types.sol";
 import { Enum } from "@gnosis.pm/safe-contracts/contracts/common/Enum.sol";
 
 // Example script to deploy a space, create a proposal, vote on it, and execute it.
+// NOTE: With confidential voting, the vote and execute steps require Inco SDK integration.
 contract Example is Script {
     // Paste in the addresses from your json in the /deployments/ folder. The below are from v1.0.2 on goerli.
     address public proxyFactory = address(0x4B4F7f64Be813Ccc66AEFC3bFCe2baA01188631c);
@@ -81,37 +82,11 @@ contract Example is Script {
             saltNonce
         );
 
-        address timelockExecutionStrategy = ProxyFactory(proxyFactory).predictProxyAddress(
-            timelockExecutionStrategyImplementation,
-            keccak256(abi.encodePacked(deployer, saltNonce))
-        );
-
-        // Create proposal
-        MetaTransaction[] memory proposalTransactions = new MetaTransaction[](1);
-        // Example proposal tx
-        proposalTransactions[0] = MetaTransaction(deployer, 0, abi.encode("hello"), Enum.Operation.Call, 0);
-        VanillaAuthenticator(vanillaAuthenticator).authenticate(
-            space,
-            Space.propose.selector,
-            abi.encode(
-                deployer,
-                "",
-                Strategy(timelockExecutionStrategy, abi.encode(proposalTransactions)),
-                new bytes(0)
-            )
-        );
-
-        // Cast vote
-        IndexedStrategy[] memory userVotingStrategies = new IndexedStrategy[](1);
-        userVotingStrategies[0] = IndexedStrategy(0, new bytes(0));
-        VanillaAuthenticator(vanillaAuthenticator).authenticate(
-            space,
-            Space.vote.selector,
-            abi.encode(deployer, 1, Choice.For, userVotingStrategies, "")
-        );
-
-        // Execute proposal, which queues it in the tx in timelock
-        Space(space).execute(1, abi.encode(proposalTransactions));
+        // NOTE: Voting and execution with confidential voting requires:
+        // 1. Encrypting the vote choice client-side using Inco SDK: zap.encrypt(1n, {...})
+        // 2. Passing the ciphertext bytes to Space.vote()
+        // 3. After voting ends, requesting attested decryption from Inco covalidator
+        // 4. Calling Space.tryExecute() with the attestations and signatures
 
         vm.stopBroadcast();
     }

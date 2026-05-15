@@ -2,7 +2,8 @@
 
 pragma solidity ^0.8.18;
 
-import { Choice, IndexedStrategy, Strategy, InitializeCalldata } from "src/types.sol";
+import { IndexedStrategy, Strategy, InitializeCalldata } from "src/types.sol";
+import { DecryptionAttestation } from "@inco/lightning/src/lightning-parts/DecryptionAttester.types.sol";
 
 /// @title Space Actions
 /// @notice User focused actions that can be performed on a space.
@@ -38,25 +39,36 @@ interface ISpaceActions {
         bytes calldata userProposalValidationParams
     ) external;
 
-    /// @notice  Casts a vote.
+    /// @notice  Casts a vote with an encrypted choice.
     /// @param   voter  The voter's address.
     /// @param   proposalId  The proposal id.
-    /// @param   choice  The vote choice  (`For`, `Against`, `Abstain`).
+    /// @param   ciphertext  The encrypted vote choice (encrypted via Inco SDK).
     /// @param   userVotingStrategies  The strategies to use to compute the voter's voting power,
     ///          each consisting of a strategy index and an array of user provided parameters.
     /// @param   metadataURI  An optional metadata to give information about the vote.
     function vote(
         address voter,
         uint256 proposalId,
-        Choice choice,
+        bytes calldata ciphertext,
         IndexedStrategy[] calldata userVotingStrategies,
         string calldata metadataURI
     ) external;
 
-    /// @notice  Executes a proposal.
+    /// @notice  Executes a proposal after verifying attested decryptions from Inco's TEE covalidator.
     /// @param   proposalId  The proposal id.
     /// @param   executionPayload  The execution payload.
-    function execute(uint256 proposalId, bytes calldata executionPayload) external;
+    /// @param   quorumAttestation  The attested decryption proving the quorum result.
+    /// @param   quorumSignatures  The covalidator signatures for the quorum attestation.
+    /// @param   supportAttestation  The attested decryption proving the support result.
+    /// @param   supportSignatures  The covalidator signatures for the support attestation.
+    function tryExecute(
+        uint256 proposalId,
+        bytes calldata executionPayload,
+        DecryptionAttestation memory quorumAttestation,
+        bytes[] memory quorumSignatures,
+        DecryptionAttestation memory supportAttestation,
+        bytes[] memory supportSignatures
+    ) external;
 
     /// @notice  Updates the proposal execution strategy and metadata.
     /// @param   proposalId The id of the proposal to edit.

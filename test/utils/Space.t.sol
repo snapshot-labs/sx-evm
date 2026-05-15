@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.18;
 
-import { Test } from "forge-std/Test.sol";
+import { IncoTest } from "@inco/lightning/src/test/IncoTest.sol";
 import { GasSnapshot } from "forge-gas-snapshot/GasSnapshot.sol";
 import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
@@ -16,14 +16,23 @@ import {
 import { ISpaceEvents } from "../../src/interfaces/space/ISpaceEvents.sol";
 import { ISpaceErrors } from "../../src/interfaces/space/ISpaceErrors.sol";
 import { IExecutionStrategyErrors } from "../../src/interfaces/execution-strategies/IExecutionStrategyErrors.sol";
-import { Choice, Strategy, IndexedStrategy, InitializeCalldata, TRUE, FALSE } from "../../src/types.sol";
+import { Strategy, IndexedStrategy, InitializeCalldata, TRUE, FALSE } from "../../src/types.sol";
+
+// Inco imports for test helpers
+import { euint256, inco } from "@inco/lightning/src/Lib.sol";
+import { DecryptionAttestation } from "@inco/lightning/src/lightning-parts/DecryptionAttester.types.sol";
+import { AllowanceProof } from "@inco/lightning/src/lightning-parts/AccessControl/AdvancedAccessControl.types.sol";
 
 // solhint-disable-next-line max-states-count
-abstract contract SpaceTest is Test, GasSnapshot, ISpaceEvents, ISpaceErrors, IExecutionStrategyErrors {
+abstract contract SpaceTest is IncoTest, GasSnapshot, ISpaceEvents, ISpaceErrors, IExecutionStrategyErrors {
     bytes4 internal constant PROPOSE_SELECTOR = bytes4(keccak256("propose(address,string,(address,bytes),bytes)"));
-    bytes4 internal constant VOTE_SELECTOR = bytes4(keccak256("vote(address,uint256,uint8,(uint8,bytes)[],string)"));
+    bytes4 internal constant VOTE_SELECTOR = bytes4(keccak256("vote(address,uint256,bytes,(uint8,bytes)[],string)"));
     bytes4 internal constant UPDATE_PROPOSAL_SELECTOR =
         bytes4(keccak256("updateProposal(address,uint256,(address,bytes),string)"));
+    bytes4 internal constant OWNABLE_UNAUTHORIZED_ACCOUNT_SELECTOR =
+        bytes4(keccak256("OwnableUnauthorizedAccount(address)"));
+    bytes4 internal constant OWNABLE_INVALID_OWNER_SELECTOR = bytes4(keccak256("OwnableInvalidOwner(address)"));
+    bytes4 internal constant INVALID_INITIALIZATION_SELECTOR = bytes4(keccak256("InvalidInitialization()"));
 
     Space internal masterSpace;
     Space internal space;
@@ -40,7 +49,8 @@ abstract contract SpaceTest is Test, GasSnapshot, ISpaceEvents, ISpaceErrors, IE
 
     // Address of the meta transaction relayer (mana)
     address public relayer = address(this);
-    address public owner = address(this);
+    // Space owner — must be address(this) so the test contract can call onlyOwner functions directly
+    address public spaceOwner = address(this);
     address public author = vm.addr(AUTHOR_KEY);
     address public voter = vm.addr(VOTER_KEY);
     address public unauthorized = vm.addr(UNAUTHORIZED_KEY);
@@ -80,14 +90,20 @@ abstract contract SpaceTest is Test, GasSnapshot, ISpaceEvents, ISpaceErrors, IE
     string[] public votingStrategyMetadataURIs;
     string public proposalValidationStrategyMetadataURI;
 
-    function setUp() public virtual {
+    // Empty proof for decryption attestation requests
+    AllowanceProof internal emptyProof;
+
+    function setUp() public virtual override {
+        super.setUp(); // REQUIRED: deploys mocked Inco infra
+        vm.stopPrank(); // IncoTest.setUp() leaves a startPrank active
+
         masterSpace = new Space();
 
         quorum = 1;
 
         vanillaVotingStrategy = new VanillaVotingStrategy();
         vanillaAuthenticator = new VanillaAuthenticator();
-        vanillaExecutionStrategy = new VanillaExecutionStrategy(owner, quorum);
+        vanillaExecutionStrategy = new VanillaExecutionStrategy(spaceOwner, quorum);
         vanillaProposalValidationStrategy = new VanillaProposalValidationStrategy();
 
         votingDelay = 0;
@@ -101,28 +117,41 @@ abstract contract SpaceTest is Test, GasSnapshot, ISpaceEvents, ISpaceErrors, IE
         executionStrategy = Strategy(address(vanillaExecutionStrategy), new bytes(0));
         proposalValidationStrategy = Strategy(address(vanillaProposalValidationStrategy), new bytes(0));
         space = Space(
-            address(
-                new ERC1967Proxy(
-                    address(masterSpace),
-                    abi.encodeWithSelector(
-                        Space.initialize.selector,
-                        InitializeCalldata(
-                            owner,
-                            votingDelay,
-                            minVotingDuration,
-                            maxVotingDuration,
-                            proposalValidationStrategy,
-                            proposalValidationStrategyMetadataURI,
-                            daoURI,
-                            spaceMetadataURI,
-                            votingStrategies,
-                            votingStrategyMetadataURIs,
-                            authenticators
+            payable(
+                address(
+                    new ERC1967Proxy(
+                        address(masterSpace),
+                        abi.encodeWithSelector(
+                            Space.initialize.selector,
+                            InitializeCalldata(
+                                spaceOwner,
+                                votingDelay,
+                                minVotingDuration,
+                                maxVotingDuration,
+                                proposalValidationStrategy,
+                                proposalValidationStrategyMetadataURI,
+                                daoURI,
+                                spaceMetadataURI,
+                                votingStrategies,
+                                votingStrategyMetadataURIs,
+                                authenticators
+                            )
                         )
                     )
                 )
             )
         );
+
+        // Fund the space for Inco confidential compute fees
+        vm.deal(address(space), 10 ether);
+        // Discard setup logs; tests should process only logs emitted during test actions.
+        vm.recordLogs();
+    }
+
+    /// @dev Process only newly-emitted Inco operations by resetting the log recorder after each flush.
+    function _processAllOperations() internal {
+        processAllOperations();
+        vm.recordLogs();
     }
 
     function _createProposal(
@@ -140,17 +169,104 @@ abstract contract SpaceTest is Test, GasSnapshot, ISpaceEvents, ISpaceErrors, IE
         return space.nextProposalId() - 1;
     }
 
+    /// @dev Casts an encrypted vote. choiceValue: 0=Against, 1=For, 2=Abstain
     function _vote(
-        address _author,
+        address _voter,
         uint256 _proposalId,
-        Choice _choice,
+        uint256 _choiceValue,
         IndexedStrategy[] memory _userVotingStrategies,
         string memory _voteMetadataURI
     ) internal {
+        bytes memory ciphertext = fakePrepareEuint256Ciphertext(_choiceValue, _voter, address(space));
         vanillaAuthenticator.authenticate(
             address(space),
             VOTE_SELECTOR,
-            abi.encode(_author, _proposalId, _choice, _userVotingStrategies, _voteMetadataURI)
+            abi.encode(_voter, _proposalId, ciphertext, _userVotingStrategies, _voteMetadataURI)
         );
+        _processAllOperations();
+    }
+
+    /// @dev Executes a proposal via tryExecute with mock attestations.
+    function _prepareTryExecuteAttestations(
+        uint256 _proposalId
+    )
+        internal
+        returns (
+            DecryptionAttestation memory qAttest,
+            bytes[] memory qSigs,
+            DecryptionAttestation memory sAttest,
+            bytes[] memory sSigs
+        )
+    {
+        _processAllOperations();
+
+        bytes32 qHandleRaw = euint256.unwrap(space.encryptedIsQuorumReached(_proposalId));
+        bytes32 sHandleRaw = euint256.unwrap(space.encryptedIsSupportAchieved(_proposalId));
+
+        HandleWithProof memory qHandle = HandleWithProof({ handle: qHandleRaw, proof: emptyProof });
+        HandleWithProof memory sHandle = HandleWithProof({ handle: sHandleRaw, proof: emptyProof });
+
+        (qAttest, qSigs) = getDecryptionAttestation(address(space), qHandle);
+        (sAttest, sSigs) = getDecryptionAttestation(address(space), sHandle);
+    }
+
+    /// @dev Executes a proposal via tryExecute with mock attestations.
+    function _tryExecute(uint256 _proposalId, bytes memory _payload) internal {
+        (
+            DecryptionAttestation memory qAttest,
+            bytes[] memory qSigs,
+            DecryptionAttestation memory sAttest,
+            bytes[] memory sSigs
+        ) = _prepareTryExecuteAttestations(_proposalId);
+
+        space.tryExecute(_proposalId, _payload, qAttest, qSigs, sAttest, sSigs);
+    }
+
+    function _tryExecuteExpectRevert(uint256 _proposalId, bytes memory _payload, bytes memory _revertData) internal {
+        (
+            DecryptionAttestation memory qAttest,
+            bytes[] memory qSigs,
+            DecryptionAttestation memory sAttest,
+            bytes[] memory sSigs
+        ) = _prepareTryExecuteAttestations(_proposalId);
+        vm.expectRevert(_revertData);
+        space.tryExecute(_proposalId, _payload, qAttest, qSigs, sAttest, sSigs);
+    }
+
+    function _tryExecuteExpectAnyRevert(uint256 _proposalId, bytes memory _payload) internal {
+        (
+            DecryptionAttestation memory qAttest,
+            bytes[] memory qSigs,
+            DecryptionAttestation memory sAttest,
+            bytes[] memory sSigs
+        ) = _prepareTryExecuteAttestations(_proposalId);
+        vm.expectRevert();
+        space.tryExecute(_proposalId, _payload, qAttest, qSigs, sAttest, sSigs);
+    }
+
+    function _tryExecuteInvalidProposalExpectRevert(
+        uint256 _proposalId,
+        bytes memory _payload,
+        bytes memory _revertData
+    ) internal {
+        DecryptionAttestation memory emptyAttestation = DecryptionAttestation({
+            handle: bytes32(0),
+            value: bytes32(0)
+        });
+        bytes[] memory noSigs = new bytes[](0);
+        vm.expectRevert(_revertData);
+        space.tryExecute(_proposalId, _payload, emptyAttestation, noSigs, emptyAttestation, noSigs);
+    }
+
+    function _expectOnlyOwnerRevert(address caller) internal {
+        vm.expectRevert(abi.encodeWithSelector(OWNABLE_UNAUTHORIZED_ACCOUNT_SELECTOR, caller));
+    }
+
+    function _expectInvalidOwnerRevert() internal {
+        vm.expectRevert(abi.encodeWithSelector(OWNABLE_INVALID_OWNER_SELECTOR, address(0)));
+    }
+
+    function _expectInvalidInitializationRevert() internal {
+        vm.expectRevert(INVALID_INITIALIZATION_SELECTOR);
     }
 }

@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.18;
 
-import { Choice, IndexedStrategy, Strategy } from "../../src/types.sol";
+import { IndexedStrategy, Strategy } from "../../src/types.sol";
 import { SXHash } from "../../src/utils/SXHash.sol";
 
 abstract contract SigUtils {
@@ -23,7 +23,7 @@ abstract contract SigUtils {
         );
     bytes32 private constant VOTE_TYPEHASH =
         keccak256(
-            "Vote(address space,address voter,uint256 proposalId,uint8 choice,"
+            "Vote(address space,address voter,uint256 proposalId,bytes ciphertext,"
             "IndexedStrategy[] userVotingStrategies,string voteMetadataURI)"
             "IndexedStrategy(uint8 index,bytes params)"
         );
@@ -82,7 +82,7 @@ abstract contract SigUtils {
         address space,
         address voter,
         uint256 proposalId,
-        Choice choice,
+        bytes memory ciphertext,
         IndexedStrategy[] memory usedVotingStrategies,
         string memory voteMetadataURI
     ) internal view returns (bytes32) {
@@ -104,7 +104,7 @@ abstract contract SigUtils {
                         space,
                         voter,
                         proposalId,
-                        choice,
+                        keccak256(ciphertext),
                         usedVotingStrategies.hash(),
                         keccak256(bytes(voteMetadataURI))
                     )

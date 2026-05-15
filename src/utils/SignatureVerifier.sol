@@ -5,7 +5,7 @@ pragma solidity ^0.8.18;
 import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import { EIP712 } from "@openzeppelin/contracts/utils/cryptography/EIP712.sol";
 import { SignatureChecker } from "@openzeppelin/contracts/utils/cryptography/SignatureChecker.sol";
-import { Choice, IndexedStrategy, Strategy } from "src/types.sol";
+import { IndexedStrategy, Strategy } from "src/types.sol";
 import { SXHash } from "src/utils/SXHash.sol";
 import { TRUE, FALSE } from "../types.sol";
 
@@ -30,7 +30,7 @@ abstract contract SignatureVerifier is EIP712 {
         );
     bytes32 private constant VOTE_TYPEHASH =
         keccak256(
-            "Vote(address space,address voter,uint256 proposalId,uint8 choice,"
+            "Vote(address space,address voter,uint256 proposalId,bytes ciphertext,"
             "IndexedStrategy[] userVotingStrategies,string voteMetadataURI)"
             "IndexedStrategy(uint8 index,bytes params)"
         );
@@ -86,10 +86,10 @@ abstract contract SignatureVerifier is EIP712 {
         (
             address voter,
             uint256 proposeId,
-            Choice choice,
+            bytes memory ciphertext,
             IndexedStrategy[] memory userVotingStrategies,
             string memory voteMetadataURI
-        ) = abi.decode(data, (address, uint256, Choice, IndexedStrategy[], string));
+        ) = abi.decode(data, (address, uint256, bytes, IndexedStrategy[], string));
 
         bytes32 messageHash = _hashTypedDataV4(
             keccak256(
@@ -98,7 +98,7 @@ abstract contract SignatureVerifier is EIP712 {
                     space,
                     voter,
                     proposeId,
-                    choice,
+                    keccak256(ciphertext),
                     userVotingStrategies.hash(),
                     keccak256(bytes(voteMetadataURI))
                 )

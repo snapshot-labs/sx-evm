@@ -3,7 +3,7 @@
 pragma solidity ^0.8.18;
 
 import { TRUE, FALSE, SpaceTest } from "./utils/Space.t.sol";
-import { Choice, IndexedStrategy, Strategy, UpdateSettingsCalldata } from "../src/types.sol";
+import { IndexedStrategy, Strategy, UpdateSettingsCalldata } from "../src/types.sol";
 import { VanillaVotingStrategy } from "../src/voting-strategies/VanillaVotingStrategy.sol";
 
 contract VoteTest is SpaceTest {
@@ -13,12 +13,8 @@ contract VoteTest is SpaceTest {
         uint256 proposalId = _createProposal(author, proposalMetadataURI, executionStrategy, new bytes(0));
 
         vm.expectEmit(true, true, true, true);
-        emit VoteCastWithMetadata(proposalId, author, Choice.For, 1, voteMetadataURI);
-        vanillaAuthenticator.authenticate(
-            address(space),
-            VOTE_SELECTOR,
-            abi.encode(author, proposalId, Choice.For, userVotingStrategies, voteMetadataURI)
-        );
+        emit VoteCastWithMetadata(proposalId, author, 1, voteMetadataURI);
+        _vote(author, proposalId, 1, userVotingStrategies, voteMetadataURI);
 
         assertEq(space.voteRegistry(proposalId, author), TRUE);
     }
@@ -27,7 +23,7 @@ contract VoteTest is SpaceTest {
         uint256 proposalId = _createProposal(author, proposalMetadataURI, executionStrategy, new bytes(0));
 
         vm.expectRevert(abi.encodeWithSelector(AuthenticatorNotWhitelisted.selector));
-        space.vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataURI);
+        space.vote(author, proposalId, bytes(""), userVotingStrategies, voteMetadataURI);
     }
 
     function testVoteInvalidProposalId() public {
@@ -35,18 +31,18 @@ contract VoteTest is SpaceTest {
         uint256 invalidProposalId = proposalId + 1;
 
         vm.expectRevert(abi.encodeWithSelector(InvalidProposal.selector));
-        _vote(author, invalidProposalId, Choice.For, userVotingStrategies, voteMetadataURI);
+        _vote(author, invalidProposalId, 1, userVotingStrategies, voteMetadataURI);
     }
 
     function testVoteAlreadyExecuted() public {
         uint256 proposalId = _createProposal(author, proposalMetadataURI, executionStrategy, new bytes(0));
 
-        _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataURI);
+        _vote(author, proposalId, 1, userVotingStrategies, voteMetadataURI);
 
-        space.execute(proposalId, executionStrategy.params);
+        _tryExecute(proposalId, executionStrategy.params);
 
         vm.expectRevert(abi.encodeWithSelector(ProposalFinalized.selector));
-        _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataURI);
+        _vote(author, proposalId, 1, userVotingStrategies, voteMetadataURI);
     }
 
     function testVoteVotingPeriodHasEnded() public {
@@ -54,7 +50,7 @@ contract VoteTest is SpaceTest {
 
         vm.roll(vm.getBlockNumber() + space.maxVotingDuration());
         vm.expectRevert(abi.encodeWithSelector(VotingPeriodHasEnded.selector));
-        _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataURI);
+        _vote(author, proposalId, 1, userVotingStrategies, voteMetadataURI);
     }
 
     function testVoteVotingPeriodHasNotStarted() public {
@@ -77,19 +73,19 @@ contract VoteTest is SpaceTest {
         uint256 proposalId = _createProposal(author, proposalMetadataURI, executionStrategy, new bytes(0));
 
         vm.expectRevert(abi.encodeWithSelector(VotingPeriodHasNotStarted.selector));
-        _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataURI);
+        _vote(author, proposalId, 1, userVotingStrategies, voteMetadataURI);
 
         vm.roll(vm.getBlockNumber() + space.votingDelay());
-        _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataURI);
+        _vote(author, proposalId, 1, userVotingStrategies, voteMetadataURI);
     }
 
     function testVoteDoubleVote() public {
         uint256 proposalId = _createProposal(author, proposalMetadataURI, executionStrategy, new bytes(0));
 
-        _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataURI);
+        _vote(author, proposalId, 1, userVotingStrategies, voteMetadataURI);
 
         vm.expectRevert(abi.encodeWithSelector(UserAlreadyVoted.selector));
-        _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataURI);
+        _vote(author, proposalId, 1, userVotingStrategies, voteMetadataURI);
     }
 
     function testVoteNoVotingPower() public {
@@ -98,7 +94,7 @@ contract VoteTest is SpaceTest {
         IndexedStrategy[] memory empty = new IndexedStrategy[](0);
 
         vm.expectRevert(abi.encodeWithSelector(UserHasNoVotingPower.selector));
-        _vote(author, proposalId, Choice.For, empty, voteMetadataURI);
+        _vote(author, proposalId, 1, empty, voteMetadataURI);
     }
 
     function testVoteRemovedVotingStrategy() public {
@@ -131,7 +127,7 @@ contract VoteTest is SpaceTest {
 
         // casting a vote with the voting strategy that was just removed.
         // this is possible because voting strategies are stored inside a proposal.
-        _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataURI);
+        _vote(author, proposalId, 1, userVotingStrategies, voteMetadataURI);
     }
 
     function testVoteAddedVotingStrategy() public {
@@ -163,7 +159,7 @@ contract VoteTest is SpaceTest {
         IndexedStrategy[] memory newUserVotingStrategies = new IndexedStrategy[](1);
         newUserVotingStrategies[0] = IndexedStrategy(1, new bytes(0));
         vm.expectRevert(abi.encodeWithSelector(InvalidStrategyIndex.selector, 1)); // array out of bounds
-        _vote(author, proposalId, Choice.For, newUserVotingStrategies, voteMetadataURI);
+        _vote(author, proposalId, 1, newUserVotingStrategies, voteMetadataURI);
     }
 
     function testVoteInvalidVotingStrategy() public {
@@ -173,7 +169,7 @@ contract VoteTest is SpaceTest {
         IndexedStrategy[] memory newUserVotingStrategies = new IndexedStrategy[](1);
         newUserVotingStrategies[0] = IndexedStrategy(1, new bytes(0));
         vm.expectRevert(abi.encodeWithSelector(InvalidStrategyIndex.selector, 1)); // array out of bounds
-        _vote(author, proposalId, Choice.For, newUserVotingStrategies, voteMetadataURI);
+        _vote(author, proposalId, 1, newUserVotingStrategies, voteMetadataURI);
     }
 
     function testVoteDuplicateUsedVotingStrategy() public {
@@ -183,7 +179,7 @@ contract VoteTest is SpaceTest {
         duplicateStrategies[0] = userVotingStrategies[0];
         duplicateStrategies[1] = userVotingStrategies[0];
         vm.expectRevert(abi.encodeWithSelector(DuplicateFound.selector, duplicateStrategies[0].index));
-        _vote(author, proposalId, Choice.For, duplicateStrategies, voteMetadataURI);
+        _vote(author, proposalId, 1, duplicateStrategies, voteMetadataURI);
     }
 
     function testVoteMultipleStrategies() public {
@@ -220,7 +216,7 @@ contract VoteTest is SpaceTest {
 
         uint256 expectedVotingPower = 3; // 1 voting power per vanilla strat, so 3
         vm.expectEmit(true, true, true, true);
-        emit VoteCastWithMetadata(proposalId, author, Choice.For, expectedVotingPower, voteMetadataURI);
-        _vote(author, proposalId, Choice.For, newVotingStrategies, voteMetadataURI);
+        emit VoteCastWithMetadata(proposalId, author, expectedVotingPower, voteMetadataURI);
+        _vote(author, proposalId, 1, newVotingStrategies, voteMetadataURI);
     }
 }

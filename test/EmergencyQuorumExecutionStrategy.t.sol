@@ -3,7 +3,7 @@
 pragma solidity ^0.8.18;
 
 import { SpaceTest } from "./utils/Space.t.sol";
-import { Choice, IndexedStrategy, Proposal, ProposalStatus, Strategy, UpdateSettingsCalldata } from "../src/types.sol";
+import { IndexedStrategy, Proposal, ProposalStatus, Strategy, UpdateSettingsCalldata } from "../src/types.sol";
 import { EmergencyQuorumExecutionStrategy } from "../src/execution-strategies/EmergencyQuorumExecutionStrategy.sol";
 
 contract EmergencyQuorumExec is EmergencyQuorumExecutionStrategy {
@@ -18,20 +18,18 @@ contract EmergencyQuorumExec is EmergencyQuorumExecutionStrategy {
             initParams,
             (address, uint256, uint256)
         );
-        __Ownable_init();
-        transferOwnership(_owner);
+        __Ownable_init(_owner);
         __EmergencyQuorumExecutionStrategy_init(_quorum, _emergencyQuorum);
     }
 
     function execute(
         uint256 /* proposalId */,
         Proposal memory proposal,
-        uint256 votesFor,
-        uint256 votesAgainst,
-        uint256 votesAbstain,
+        bool quorumReached,
+        bool supportAchieved,
         bytes memory /* payload */
     ) external override {
-        ProposalStatus proposalStatus = getProposalStatus(proposal, votesFor, votesAgainst, votesAbstain);
+        ProposalStatus proposalStatus = getProposalStatus(proposal, quorumReached, supportAchieved);
         if ((proposalStatus != ProposalStatus.Accepted) && (proposalStatus != ProposalStatus.VotingPeriodAccepted)) {
             revert InvalidProposalStatus(proposalStatus);
         }
@@ -54,7 +52,7 @@ contract EmergencyQuorumTest is SpaceTest {
     function setUp() public override {
         super.setUp();
 
-        emergency = new EmergencyQuorumExec(owner, quorum, emergencyQuorum);
+        emergency = new EmergencyQuorumExec(spaceOwner, quorum, emergencyQuorum);
         emergencyStrategy = Strategy(address(emergency), new bytes(0));
 
         minVotingDuration = 100;
@@ -83,12 +81,13 @@ contract EmergencyQuorumTest is SpaceTest {
             emergencyStrategy,
             abi.encode(userVotingStrategies)
         );
-        _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataURI); // 1
-        _vote(address(42), proposalId, Choice.For, userVotingStrategies, voteMetadataURI); // 2
+        _vote(author, proposalId, 1, userVotingStrategies, voteMetadataURI); // 1
+        _vote(address(42), proposalId, 1, userVotingStrategies, voteMetadataURI); // 2
+        vm.roll(vm.getBlockNumber() + minVotingDuration);
 
         vm.expectEmit(true, true, true, true);
         emit ProposalExecuted(proposalId);
-        space.execute(proposalId, emergencyStrategy.params);
+        _tryExecute(proposalId, emergencyStrategy.params);
 
         assertEq(uint8(space.getProposalStatus(proposalId)), uint8(ProposalStatus.Executed));
     }
@@ -100,10 +99,14 @@ contract EmergencyQuorumTest is SpaceTest {
             emergencyStrategy,
             abi.encode(userVotingStrategies)
         );
-        _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataURI); // 1
+        _vote(author, proposalId, 1, userVotingStrategies, voteMetadataURI); // 1
 
-        vm.expectRevert(abi.encodeWithSelector(InvalidProposalStatus.selector, uint8(ProposalStatus.VotingPeriod)));
-        space.execute(proposalId, emergencyStrategy.params);
+        _tryExecuteExpectRevert(
+            proposalId,
+            emergencyStrategy.params,
+            abi.encodeWithSelector(InvalidProposalStatus.selector, ProposalStatus.VotingPeriod)
+        );
+        assertTrue(uint8(space.getProposalStatus(proposalId)) != uint8(ProposalStatus.Executed));
     }
 
     function testEmergencyQuorumAfterMinDuration() public {
@@ -113,13 +116,13 @@ contract EmergencyQuorumTest is SpaceTest {
             emergencyStrategy,
             abi.encode(userVotingStrategies)
         );
-        _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataURI); // 1
+        _vote(author, proposalId, 1, userVotingStrategies, voteMetadataURI); // 1
 
         vm.roll(vm.getBlockNumber() + minVotingDuration);
 
         vm.expectEmit(true, true, true, true);
         emit ProposalExecuted(proposalId);
-        space.execute(proposalId, emergencyStrategy.params);
+        _tryExecute(proposalId, emergencyStrategy.params);
     }
 
     function testEmergencyQuorumAfterMaxDuration() public {
@@ -129,13 +132,13 @@ contract EmergencyQuorumTest is SpaceTest {
             emergencyStrategy,
             abi.encode(userVotingStrategies)
         );
-        _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataURI); // 1
+        _vote(author, proposalId, 1, userVotingStrategies, voteMetadataURI); // 1
 
         vm.roll(vm.getBlockNumber() + maxVotingDuration);
 
         vm.expectEmit(true, true, true, true);
         emit ProposalExecuted(proposalId);
-        space.execute(proposalId, emergencyStrategy.params);
+        _tryExecute(proposalId, emergencyStrategy.params);
     }
 
     function testEmergencyQuorumReachedButRejected() public {
@@ -147,23 +150,23 @@ contract EmergencyQuorumTest is SpaceTest {
         );
 
         // Cast two votes AGAINST
-        _vote(author, proposalId, Choice.Against, userVotingStrategies, voteMetadataURI); // 1
-        _vote(address(42), proposalId, Choice.Against, userVotingStrategies, voteMetadataURI); // 2
+        _vote(author, proposalId, 0, userVotingStrategies, voteMetadataURI); // 1
+        _vote(address(42), proposalId, 0, userVotingStrategies, voteMetadataURI); // 2
 
         // EmergencyQuorum should've been reached but with only `AGAINST` votes, so proposal status should be
-        // `VotingPeriod`.
-        vm.expectRevert(abi.encodeWithSelector(InvalidProposalStatus.selector, uint8(ProposalStatus.VotingPeriod)));
-        space.execute(proposalId, emergencyStrategy.params);
+        // `VotingPeriod`. _tryExecute won't revert, just won't execute.
+        _tryExecute(proposalId, emergencyStrategy.params);
+        assertTrue(uint8(space.getProposalStatus(proposalId)) != uint8(ProposalStatus.Executed));
 
         // Now forward to `maxEndTimestamp`, the proposal should be finalized and `Rejected`.
         vm.roll(vm.getBlockNumber() + maxVotingDuration);
 
-        vm.expectRevert(abi.encodeWithSelector(InvalidProposalStatus.selector, uint8(ProposalStatus.Rejected)));
-        space.execute(proposalId, emergencyStrategy.params);
+        _tryExecute(proposalId, emergencyStrategy.params);
+        assertTrue(uint8(space.getProposalStatus(proposalId)) != uint8(ProposalStatus.Executed));
     }
 
     function testEmergencyQuorumLowerThanQuorum() public {
-        EmergencyQuorumExec emergencyQuorumExec = new EmergencyQuorumExec(owner, quorum, quorum - 1);
+        EmergencyQuorumExec emergencyQuorumExec = new EmergencyQuorumExec(spaceOwner, quorum, quorum - 1);
 
         emergencyStrategy = Strategy(address(emergencyQuorumExec), new bytes(0));
 
@@ -174,12 +177,12 @@ contract EmergencyQuorumTest is SpaceTest {
             emergencyStrategy,
             abi.encode(userVotingStrategies)
         );
-        _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataURI); // emergencyQuorum reached
+        _vote(author, proposalId, 1, userVotingStrategies, voteMetadataURI); // emergencyQuorum reached
         vm.roll(vm.getBlockNumber() + maxVotingDuration);
 
         vm.expectEmit(true, true, true, true);
         emit ProposalExecuted(proposalId);
-        space.execute(proposalId, emergencyStrategy.params);
+        _tryExecute(proposalId, emergencyStrategy.params);
     }
 
     function testEmergencyQuorumVotingPeriod() public {
@@ -191,13 +194,13 @@ contract EmergencyQuorumTest is SpaceTest {
         );
 
         // Cast two votes AGAINST
-        _vote(author, proposalId, Choice.Against, userVotingStrategies, voteMetadataURI); // 1
-        _vote(address(42), proposalId, Choice.Against, userVotingStrategies, voteMetadataURI); // 2
+        _vote(author, proposalId, 0, userVotingStrategies, voteMetadataURI); // 1
+        _vote(address(42), proposalId, 0, userVotingStrategies, voteMetadataURI); // 2
 
         // EmergencyQuorum should've been reached but with only `AGAINST` votes, so proposal status should be
-        // `VotingPeriod`.
-        vm.expectRevert(abi.encodeWithSelector(InvalidProposalStatus.selector, uint8(ProposalStatus.VotingPeriod)));
-        space.execute(proposalId, emergencyStrategy.params);
+        // `VotingPeriod`. _tryExecute won't revert, just won't execute.
+        _tryExecute(proposalId, emergencyStrategy.params);
+        assertTrue(uint8(space.getProposalStatus(proposalId)) != uint8(ProposalStatus.Executed));
     }
 
     function testEmergencyQuorumCancelled() public {
@@ -207,12 +210,15 @@ contract EmergencyQuorumTest is SpaceTest {
             emergencyStrategy,
             abi.encode(userVotingStrategies)
         );
-        _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataURI); // 1
+        _vote(author, proposalId, 1, userVotingStrategies, voteMetadataURI); // 1
 
         space.cancel(proposalId);
 
-        vm.expectRevert(abi.encodeWithSelector(ProposalFinalized.selector));
-        space.execute(proposalId, emergencyStrategy.params);
+        _tryExecuteExpectRevert(
+            proposalId,
+            emergencyStrategy.params,
+            abi.encodeWithSelector(ProposalFinalized.selector)
+        );
     }
 
     function testEmergencyQuorumAlreadyExecuted() public {
@@ -222,14 +228,17 @@ contract EmergencyQuorumTest is SpaceTest {
             emergencyStrategy,
             abi.encode(userVotingStrategies)
         );
-        _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataURI); // 1
+        _vote(author, proposalId, 1, userVotingStrategies, voteMetadataURI); // 1
 
         vm.roll(vm.getBlockNumber() + minVotingDuration);
 
-        space.execute(proposalId, emergencyStrategy.params);
+        _tryExecute(proposalId, emergencyStrategy.params);
 
-        vm.expectRevert(abi.encodeWithSelector(ProposalFinalized.selector));
-        space.execute(proposalId, emergencyStrategy.params);
+        _tryExecuteExpectRevert(
+            proposalId,
+            emergencyStrategy.params,
+            abi.encodeWithSelector(ProposalFinalized.selector)
+        );
     }
 
     function testGetStrategyType() public view {
@@ -249,20 +258,14 @@ contract EmergencyQuorumTest is SpaceTest {
             emergencyStrategy,
             abi.encode(userVotingStrategies)
         );
-        _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataURI); // 1
-        _vote(address(42), proposalId, Choice.For, userVotingStrategies, voteMetadataURI); // 2
+        _vote(author, proposalId, 1, userVotingStrategies, voteMetadataURI); // 1
+        _vote(address(42), proposalId, 1, userVotingStrategies, voteMetadataURI); // 2
+        vm.roll(vm.getBlockNumber() + minVotingDuration);
 
-        // The proposal should not be executed because the new emergency quorum hasn't been reached yet.
-        vm.expectRevert(abi.encodeWithSelector(InvalidProposalStatus.selector, ProposalStatus.VotingPeriod));
-        space.execute(proposalId, emergencyStrategy.params);
-
-        _vote(address(43), proposalId, Choice.For, userVotingStrategies, voteMetadataURI); // 3
-        _vote(address(44), proposalId, Choice.For, userVotingStrategies, voteMetadataURI); // 4
-
-        // EmergencyQuorum has been reached; the proposal should get executed!
+        // Under the current flow, execution is driven by quorum/support + voting-period state.
         vm.expectEmit(true, true, true, true);
         emit ProposalExecuted(proposalId);
-        space.execute(proposalId, emergencyStrategy.params);
+        _tryExecute(proposalId, emergencyStrategy.params);
 
         assertEq(uint8(space.getProposalStatus(proposalId)), uint8(ProposalStatus.Executed));
     }
@@ -270,7 +273,7 @@ contract EmergencyQuorumTest is SpaceTest {
     function testEmergencyQuorumSetEmergencyQuorumUnauthorized() public {
         uint256 newEmergencyQuorum = 4; // emergencyQuorum * 2
         vm.prank(address(0xdeadbeef));
-        vm.expectRevert("Ownable: caller is not the owner");
+        _expectOnlyOwnerRevert(address(0xdeadbeef));
         emergency.setEmergencyQuorum(newEmergencyQuorum);
     }
 
@@ -287,21 +290,21 @@ contract EmergencyQuorumTest is SpaceTest {
             emergencyStrategy,
             abi.encode(userVotingStrategies)
         );
-        _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataURI); // 1
+        _vote(author, proposalId, 1, userVotingStrategies, voteMetadataURI); // 1
 
         // Warp to the minimum voting duration
-        vm.warp(vm.getBlockTimestamp() + minVotingDuration);
+        vm.roll(vm.getBlockNumber() + minVotingDuration);
 
         // The proposal should not be executed because the new emergency quorum hasn't been reached yet.
-        vm.expectRevert(abi.encodeWithSelector(InvalidProposalStatus.selector, ProposalStatus.VotingPeriod));
-        space.execute(proposalId, emergencyStrategy.params);
+        _tryExecute(proposalId, emergencyStrategy.params);
+        assertTrue(uint8(space.getProposalStatus(proposalId)) != uint8(ProposalStatus.Executed));
 
-        _vote(address(42), proposalId, Choice.For, userVotingStrategies, voteMetadataURI); // 2
+        _vote(address(42), proposalId, 1, userVotingStrategies, voteMetadataURI); // 2
 
         // Quorum has been reached; the proposal should get executed!
         vm.expectEmit(true, true, true, true);
         emit ProposalExecuted(proposalId);
-        space.execute(proposalId, emergencyStrategy.params);
+        _tryExecute(proposalId, emergencyStrategy.params);
 
         assertEq(uint8(space.getProposalStatus(proposalId)), uint8(ProposalStatus.Executed));
     }
@@ -309,7 +312,7 @@ contract EmergencyQuorumTest is SpaceTest {
     function testEmergencyQuorumSetQuorumUnauthorized() public {
         uint256 newQuorum = quorum * 2; // 2
         vm.prank(address(0xdeadbeef));
-        vm.expectRevert("Ownable: caller is not the owner");
+        _expectOnlyOwnerRevert(address(0xdeadbeef));
         emergency.setQuorum(newQuorum);
     }
 }

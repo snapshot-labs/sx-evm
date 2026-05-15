@@ -93,8 +93,7 @@ contract TimelockExecutionStrategy is SimpleQuorumExecutionStrategy, IERC1155Rec
     function setUp(bytes memory initParams) public initializer {
         (address _owner, address _vetoGuardian, address[] memory _spaces, uint256 _timelockDelay, uint256 _quorum) = abi
             .decode(initParams, (address, address, address[], uint256, uint256));
-        __Ownable_init();
-        transferOwnership(_owner);
+        __Ownable_init(_owner);
         vetoGuardian = _vetoGuardian;
         __SpaceManager_init(_spaces);
         __SimpleQuorumExecutionStrategy_init(_quorum);
@@ -103,20 +102,14 @@ contract TimelockExecutionStrategy is SimpleQuorumExecutionStrategy, IERC1155Rec
     }
 
     /// @notice Executes a proposal by queueing its transactions in the timelock. Can only be called by approved spaces.
-    /// @param proposal The proposal.
-    /// @param votesFor The number of votes for the proposal.
-    /// @param votesAgainst The number of votes against the proposal.
-    /// @param votesAbstain The number of abstaining votes for the proposal.
-    /// @param payload The proposal execution payload.
     function execute(
         uint256 /* proposalId */,
         Proposal memory proposal,
-        uint256 votesFor,
-        uint256 votesAgainst,
-        uint256 votesAbstain,
+        bool quorumReached,
+        bool supportAchieved,
         bytes memory payload
     ) external override onlySpace {
-        ProposalStatus proposalStatus = getProposalStatus(proposal, votesFor, votesAgainst, votesAbstain);
+        ProposalStatus proposalStatus = getProposalStatus(proposal, quorumReached, supportAchieved);
         if ((proposalStatus != ProposalStatus.Accepted) && (proposalStatus != ProposalStatus.VotingPeriodAccepted)) {
             revert InvalidProposalStatus(proposalStatus);
         }
@@ -135,10 +128,6 @@ contract TimelockExecutionStrategy is SimpleQuorumExecutionStrategy, IERC1155Rec
 
     /// @notice Executes a queued proposal.
     /// @param payload The proposal execution payload.
-    /// @dev Due to possible reentrancy, one cannot rely on the invariant that proposal payloads are executed atomically.
-    ///      As follows: If Proposal A is composed of MetaTransaction a1 and a2, and proposal B of MetaTransaction b1.
-    ///      If A.a1 executes code that triggers a proposal execution, then the execution order overall can potentially
-    ///      become [A.a1, B.b1, A.a2].
     function executeQueuedProposal(bytes memory payload) external {
         bytes32 executionPayloadHash = keccak256(payload);
 

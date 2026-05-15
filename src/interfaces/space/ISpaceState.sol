@@ -2,8 +2,9 @@
 
 pragma solidity ^0.8.18;
 
-import { Choice, Proposal, ProposalStatus, FinalizationStatus, Strategy } from "src/types.sol";
+import { Proposal, ProposalStatus, FinalizationStatus, Strategy } from "src/types.sol";
 import { IExecutionStrategy } from "src/interfaces/IExecutionStrategy.sol";
+import { euint256 } from "@inco/lightning/src/Types.sol";
 
 /// @title Space State
 interface ISpaceState {
@@ -41,10 +42,27 @@ interface ISpaceState {
     /// @return params The parameters of the proposal validation strategy.
     function proposalValidationStrategy() external view returns (address addr, bytes memory params);
 
-    /// @notice Returns the voting power of a choice on a proposal.
+    /// @notice Encrypted quorum flag handle for off-chain attested decryption.
     /// @param proposalId The ID of the proposal.
-    /// @param choice The choice of the voter.
-    function votePower(uint256 proposalId, Choice choice) external view returns (uint256);
+    function encryptedIsQuorumReached(uint256 proposalId) external view returns (euint256);
+
+    /// @notice Encrypted support flag handle for off-chain attested decryption.
+    /// @param proposalId The ID of the proposal.
+    function encryptedIsSupportAchieved(uint256 proposalId) external view returns (euint256);
+
+    /// @notice Decrypted quorum result, set after tryExecute().
+    /// @param proposalId The ID of the proposal.
+    function isQuorumReached(uint256 proposalId) external view returns (bool);
+
+    /// @notice Decrypted support result, set after tryExecute().
+    /// @param proposalId The ID of the proposal.
+    function isSupportAchieved(uint256 proposalId) external view returns (bool);
+
+    /// @notice Returns both encrypted handles for off-chain attested decryption.
+    /// @param proposalId The ID of the proposal.
+    function getQuorumAndSupportHandles(
+        uint256 proposalId
+    ) external view returns (euint256 quorumHandle, euint256 supportHandle);
 
     /// @notice Returns whether a voter has voted on a proposal.
     /// @param proposalId The ID of the proposal.

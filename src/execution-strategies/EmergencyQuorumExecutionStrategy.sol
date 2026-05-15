@@ -33,25 +33,26 @@ abstract contract EmergencyQuorumExecutionStrategy is IExecutionStrategy, SpaceM
         emit EmergencyQuorumUpdated(_emergencyQuorum);
     }
 
+    /// @inheritdoc IExecutionStrategy
+    function getQuorum() external view override returns (uint256) {
+        return quorum;
+    }
+
     function execute(
         uint256 proposalId,
         Proposal memory proposal,
-        uint256 votesFor,
-        uint256 votesAgainst,
-        uint256 votesAbstain,
+        bool quorumReached,
+        bool supportAchieved,
         bytes memory payload
     ) external virtual override;
 
     // solhint-disable-next-line code-complexity
     function getProposalStatus(
         Proposal memory proposal,
-        uint256 votesFor,
-        uint256 votesAgainst,
-        uint256 votesAbstain
+        bool quorumReached,
+        bool supportAchieved
     ) public view override returns (ProposalStatus) {
-        bool emergencyQuorumReached = _quorumReached(emergencyQuorum, votesFor, votesAbstain);
-
-        bool accepted = _quorumReached(quorum, votesFor, votesAbstain) && _supported(votesFor, votesAgainst);
+        bool accepted = quorumReached && supportAchieved;
 
         if (proposal.finalizationStatus == FinalizationStatus.Cancelled) {
             return ProposalStatus.Cancelled;
@@ -59,53 +60,18 @@ abstract contract EmergencyQuorumExecutionStrategy is IExecutionStrategy, SpaceM
             return ProposalStatus.Executed;
         } else if (block.number < proposal.startBlockNumber) {
             return ProposalStatus.VotingDelay;
-        } else if (emergencyQuorumReached) {
-            if (_supported(votesFor, votesAgainst)) {
-                // Proposal is supported
-                if (block.number < proposal.maxEndBlockNumber) {
-                    // New votes can still come in so return `VotingPeriodAccepted`.
-                    return ProposalStatus.VotingPeriodAccepted;
-                } else {
-                    // No new votes can't come in, so it's definitely accepted.
-                    return ProposalStatus.Accepted;
-                }
-            } else {
-                // Proposal is not supported
-                if (block.number < proposal.maxEndBlockNumber) {
-                    // New votes might still come in so return `VotingPeriod`.
-                    return ProposalStatus.VotingPeriod;
-                } else {
-                    // New votes can't come in, so it's definitely rejected.
-                    return ProposalStatus.Rejected;
-                }
-            }
         } else if (block.number < proposal.minEndBlockNumber) {
-            // Proposal has not reached minEndBlockNumber yet.
             return ProposalStatus.VotingPeriod;
         } else if (block.number < proposal.maxEndBlockNumber) {
-            // block number is between minEndBlockNumber and maxEndBlockNumber
             if (accepted) {
                 return ProposalStatus.VotingPeriodAccepted;
             } else {
                 return ProposalStatus.VotingPeriod;
             }
         } else if (accepted) {
-            // Quorum reached and proposal supported: no new votes will come in so the proposal is
-            // definitely  accepted.
             return ProposalStatus.Accepted;
         } else {
-            // Quorum not reached reached or proposal supported: no new votes will come in so the proposal is
-            // definitely rejected.
             return ProposalStatus.Rejected;
         }
-    }
-
-    function _quorumReached(uint256 _quorum, uint256 _votesFor, uint256 _votesAbstain) internal pure returns (bool) {
-        uint256 totalVotes = _votesFor + _votesAbstain;
-        return totalVotes >= _quorum;
-    }
-
-    function _supported(uint256 _votesFor, uint256 _votesAgainst) internal pure returns (bool) {
-        return _votesFor > _votesAgainst;
     }
 }

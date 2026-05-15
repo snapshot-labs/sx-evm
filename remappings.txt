@@ -7,3 +7,4 @@ forge-gas-snapshot/=lib/forge-gas-snapshot/src
 @gnosis.pm/safe-contracts=lib/safe-contracts
 @murky/=lib/murky/src
 @herodotus-evm-v2/=lib/herodotus-evm-v2/src
+@inco/=node_modules/@inco/

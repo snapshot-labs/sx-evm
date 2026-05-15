@@ -4,7 +4,7 @@ pragma solidity ^0.8.18;
 
 import { SpaceTest } from "./utils/Space.t.sol";
 import { VanillaExecutionStrategy } from "../src/execution-strategies/VanillaExecutionStrategy.sol";
-import { Choice, IndexedStrategy, Strategy, UpdateSettingsCalldata } from "../src/types.sol";
+import { IndexedStrategy, Strategy, UpdateSettingsCalldata } from "../src/types.sol";
 
 contract UpdateProposalTest is SpaceTest {
     string internal newMetadataURI = "Testing123";
@@ -13,7 +13,7 @@ contract UpdateProposalTest is SpaceTest {
     function setUp() public virtual override {
         super.setUp();
 
-        newStrategy = Strategy(address(new VanillaExecutionStrategy(owner, quorum)), new bytes(0));
+        newStrategy = Strategy(address(new VanillaExecutionStrategy(spaceOwner, quorum)), new bytes(0));
 
         // Set the votingDelay to 10.
         votingDelay = 10;
@@ -59,15 +59,15 @@ contract UpdateProposalTest is SpaceTest {
 
         // Fast forward and finish the proposal to ensure everything is still working properly.
         vm.roll(vm.getBlockNumber() + votingDelay);
-        _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataURI);
-        space.execute(proposalId, executionStrategy.params);
+        _vote(author, proposalId, 1, userVotingStrategies, voteMetadataURI);
+        _tryExecute(proposalId, executionStrategy.params);
     }
 
     function testUpdateFinalizedProposal() public {
         uint256 proposalId = _createProposal(author, proposalMetadataURI, executionStrategy, new bytes(0));
         vm.roll(vm.getBlockNumber() + votingDelay);
-        _vote(author, proposalId, Choice.For, userVotingStrategies, voteMetadataURI);
-        space.execute(proposalId, executionStrategy.params);
+        _vote(author, proposalId, 1, userVotingStrategies, voteMetadataURI);
+        _tryExecute(proposalId, executionStrategy.params);
 
         vm.expectRevert(abi.encodeWithSelector(ProposalFinalized.selector));
         _updateProposal(author, proposalId, newStrategy, newMetadataURI);

@@ -5,11 +5,10 @@ pragma solidity ^0.8.18;
 import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import { Initializable } from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import { UUPSUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
-import { ReentrancyGuard } from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import { ReentrancyGuard } from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import { IERC4824 } from "src/interfaces/IERC4824.sol";
 import { ISpace, ISpaceActions, ISpaceState, ISpaceOwnerActions } from "src/interfaces/ISpace.sol";
 import {
-    Choice,
     FinalizationStatus,
     IndexedStrategy,
     Proposal,
@@ -26,12 +25,20 @@ import { IProposalValidationStrategy } from "src/interfaces/IProposalValidationS
 import { SXUtils } from "./utils/SXUtils.sol";
 import { BitPacker } from "./utils/BitPacker.sol";
 
+// Inco imports
+import { euint256, ebool, e, inco } from "@inco/lightning/src/Lib.sol";
+import { DecryptionAttestation } from "@inco/lightning/src/lightning-parts/DecryptionAttester.types.sol";
+import { asBool } from "@inco/lightning/src/shared/TypeUtils.sol";
+
 /// @title Space Contract
-/// @notice The core contract for Snapshot X.
+/// @notice The core contract for Snapshot X with Inco confidential voting.
 ///         A proxy of this contract should be deployed with the Proxy Factory.
 contract Space is ISpace, Initializable, IERC4824, UUPSUpgradeable, OwnableUpgradeable, ReentrancyGuard {
     using BitPacker for uint256;
     using SXUtils for IndexedStrategy[];
+    using e for bytes;
+    using e for euint256;
+    using e for ebool;
 
     /// @dev Placeholder value to indicate the user does not want to update a string.
     /// @dev Evaluates to: `0xf2cda9b13ed04e585461605c0d6e804933ca828111bd94d4e6a96c75e8b048ba`.
@@ -67,10 +74,28 @@ contract Space is ISpace, Initializable, IERC4824, UUPSUpgradeable, OwnableUpgra
     mapping(address auth => uint256 allowed) public override authenticators;
     /// @inheritdoc ISpaceState
     mapping(uint256 proposalId => Proposal proposal) public override proposals;
-    // @inheritdoc ISpaceState
-    mapping(uint256 proposalId => mapping(Choice choice => uint256 votePower)) public override votePower;
     /// @inheritdoc ISpaceState
     mapping(uint256 proposalId => mapping(address voter => uint256 hasVoted)) public override voteRegistry;
+
+    // Vote tallies stored as encrypted values. 0=Against, 1=For, 2=Abstain.
+    // Private: no one can read running tallies.
+    mapping(uint256 proposalId => mapping(uint8 choice => euint256)) private votePower;
+
+    /// @inheritdoc ISpaceState
+    mapping(uint256 proposalId => euint256) public override encryptedIsQuorumReached;
+    /// @inheritdoc ISpaceState
+    mapping(uint256 proposalId => euint256) public override encryptedIsSupportAchieved;
+
+    /// @inheritdoc ISpaceState
+    mapping(uint256 proposalId => bool) public override isQuorumReached;
+    /// @inheritdoc ISpaceState
+    mapping(uint256 proposalId => bool) public override isSupportAchieved;
+
+    /// @dev Allow the contract to receive ETH for Inco confidential compute fees.
+    receive() external payable {}
+
+    /// @dev Explicit funding entrypoint.
+    function fund() external payable {}
 
     /// @inheritdoc ISpaceActions
     function initialize(InitializeCalldata calldata input) external override initializer {
@@ -78,8 +103,7 @@ contract Space is ISpace, Initializable, IERC4824, UUPSUpgradeable, OwnableUpgra
         if (input.authenticators.length == 0) revert EmptyArray();
         if (input.votingStrategies.length != input.votingStrategyMetadataURIs.length) revert ArrayLengthMismatch();
 
-        __Ownable_init();
-        transferOwnership(input.owner);
+        __Ownable_init(input.owner);
         _setDaoURI(input.daoURI);
         _setMaxVotingDuration(input.maxVotingDuration);
         _setMinVotingDuration(input.minVotingDuration);
@@ -103,10 +127,6 @@ contract Space is ISpace, Initializable, IERC4824, UUPSUpgradeable, OwnableUpgra
     // solhint-disable-next-line code-complexity
     function updateSettings(UpdateSettingsCalldata calldata input) external override onlyOwner {
         if ((input.minVotingDuration != NO_UPDATE_UINT32) && (input.maxVotingDuration != NO_UPDATE_UINT32)) {
-            // Check that min and max VotingDuration are valid
-            // We don't use the internal `_setMinVotingDuration` and `_setMaxVotingDuration` functions because
-            // it would revert when `_minVotingDuration > maxVotingDuration` (when the new `_min` is
-            // bigger than the current `max`).
             if (input.minVotingDuration > input.maxVotingDuration) {
                 revert InvalidDuration(input.minVotingDuration, input.maxVotingDuration);
             }
@@ -189,10 +209,16 @@ contract Space is ISpace, Initializable, IERC4824, UUPSUpgradeable, OwnableUpgra
         return
             proposal.executionStrategy.getProposalStatus(
                 proposal,
-                votePower[proposalId][Choice.For],
-                votePower[proposalId][Choice.Against],
-                votePower[proposalId][Choice.Abstain]
+                isQuorumReached[proposalId],
+                isSupportAchieved[proposalId]
             );
+    }
+
+    /// @inheritdoc ISpaceState
+    function getQuorumAndSupportHandles(
+        uint256 proposalId
+    ) external view override returns (euint256 quorumHandle, euint256 supportHandle) {
+        return (encryptedIsQuorumReached[proposalId], encryptedIsSupportAchieved[proposalId]);
     }
 
     // ------------------------------------
@@ -216,12 +242,10 @@ contract Space is ISpace, Initializable, IERC4824, UUPSUpgradeable, OwnableUpgra
             )
         ) revert FailedToPassProposalValidation();
 
-        // Max block number of 2^32 - 1 = 4,294,967,295
         uint32 startBlockNumber = uint32(block.number) + votingDelay;
         uint32 minEndBlockNumber = startBlockNumber + minVotingDuration;
         uint32 maxEndBlockNumber = startBlockNumber + maxVotingDuration;
 
-        // The execution payload is the params of the supplied execution strategy struct.
         bytes32 executionPayloadHash = keccak256(executionStrategy.params);
 
         Proposal memory proposal = Proposal(
@@ -236,6 +260,21 @@ contract Space is ISpace, Initializable, IERC4824, UUPSUpgradeable, OwnableUpgra
         );
 
         proposals[nextProposalId] = proposal;
+
+        // Initialize quorum/support encrypted handles to "false" so tryExecute can attest
+        // even before any vote is cast.
+        euint256 initialQuorum = e.asEuint256(0);
+        initialQuorum.allowThis();
+        initialQuorum.allow(msg.sender);
+        initialQuorum.allow(author);
+        encryptedIsQuorumReached[nextProposalId] = initialQuorum;
+
+        euint256 initialSupport = e.asEuint256(0);
+        initialSupport.allowThis();
+        initialSupport.allow(msg.sender);
+        initialSupport.allow(author);
+        encryptedIsSupportAchieved[nextProposalId] = initialSupport;
+
         emit ProposalCreated(nextProposalId, author, proposal, metadataURI, executionStrategy.params);
 
         nextProposalId++;
@@ -245,7 +284,7 @@ contract Space is ISpace, Initializable, IERC4824, UUPSUpgradeable, OwnableUpgra
     function vote(
         address voter,
         uint256 proposalId,
-        Choice choice,
+        bytes calldata ciphertext,
         IndexedStrategy[] calldata userVotingStrategies,
         string calldata metadataURI
     ) external override onlyAuthenticator {
@@ -265,37 +304,122 @@ contract Space is ISpace, Initializable, IERC4824, UUPSUpgradeable, OwnableUpgra
             proposal.activeVotingStrategies
         );
         if (votingPower == 0) revert UserHasNoVotingPower();
-        votePower[proposalId][choice] += votingPower;
+
+        // --- CONFIDENTIAL SECTION: Process encrypted vote ---
+
+        // 1. Create encrypted handle from the user's ciphertext
+        bytes memory ciphertextMem = ciphertext;
+        euint256 userChoice = ciphertextMem.newEuint256(voter);
+
+        // 2. Determine which bucket this vote goes to (all comparisons are encrypted)
+        ebool isAgainst = userChoice.eq(uint256(0));
+        ebool isFor = userChoice.eq(uint256(1));
+        ebool isAbstain = userChoice.eq(uint256(2));
+
+        // 3. Encrypt the voting power
+        euint256 encryptedPower = e.asEuint256(votingPower);
+
+        // 4. Conditionally add power to each bucket using select (encrypted ternary)
+
+        // Against votes (index 0)
+        euint256 existingAgainst = _getOrZero(proposalId, 0);
+        euint256 newAgainst = isAgainst.select(existingAgainst.add(encryptedPower), existingAgainst);
+        newAgainst.allowThis();
+        newAgainst.allow(msg.sender);
+        votePower[proposalId][0] = newAgainst;
+
+        // For votes (index 1)
+        euint256 existingFor = _getOrZero(proposalId, 1);
+        euint256 newFor = isFor.select(existingFor.add(encryptedPower), existingFor);
+        newFor.allowThis();
+        newFor.allow(msg.sender);
+        votePower[proposalId][1] = newFor;
+
+        // Abstain votes (index 2)
+        euint256 existingAbstain = _getOrZero(proposalId, 2);
+        euint256 newAbstain = isAbstain.select(existingAbstain.add(encryptedPower), existingAbstain);
+        newAbstain.allowThis();
+        newAbstain.allow(msg.sender);
+        votePower[proposalId][2] = newAbstain;
+
+        // 5. Compute encrypted quorum and support flags
+        uint256 quorumValue = proposal.executionStrategy.getQuorum();
+        ebool quorumReachedFlag = newFor.add(newAbstain).ge(quorumValue);
+        ebool supportAchievedFlag = newFor.gt(newAgainst);
+
+        // 6. Store encrypted results as euint256 (cast from ebool)
+        euint256 encQuorum = e.asEuint256(quorumReachedFlag);
+        euint256 encSupport = e.asEuint256(supportAchievedFlag);
+
+        encQuorum.allowThis();
+        encQuorum.allow(msg.sender);
+        encQuorum.allow(proposal.author);
+        encryptedIsQuorumReached[proposalId] = encQuorum;
+
+        encSupport.allowThis();
+        encSupport.allow(msg.sender);
+        encSupport.allow(proposal.author);
+        encryptedIsSupportAchieved[proposalId] = encSupport;
+
+        // 7. Grant execution strategy access to vote tallies
+        newAgainst.allow(address(proposal.executionStrategy));
+        newFor.allow(address(proposal.executionStrategy));
+        newAbstain.allow(address(proposal.executionStrategy));
+
+        // --- END CONFIDENTIAL SECTION ---
 
         if (bytes(metadataURI).length == 0) {
-            emit VoteCast(proposalId, voter, choice, votingPower);
+            emit VoteCast(proposalId, voter, votingPower);
         } else {
-            emit VoteCastWithMetadata(proposalId, voter, choice, votingPower, metadataURI);
+            emit VoteCastWithMetadata(proposalId, voter, votingPower, metadataURI);
         }
     }
 
     /// @inheritdoc ISpaceActions
-    function execute(uint256 proposalId, bytes calldata executionPayload) external override nonReentrant {
+    function tryExecute(
+        uint256 proposalId,
+        bytes calldata executionPayload,
+        DecryptionAttestation memory quorumAttestation,
+        bytes[] memory quorumSignatures,
+        DecryptionAttestation memory supportAttestation,
+        bytes[] memory supportSignatures
+    ) external override {
         Proposal storage proposal = proposals[proposalId];
         _assertProposalExists(proposal);
-        Proposal memory cachedProposal = proposal;
-        if (cachedProposal.executionPayloadHash != keccak256(executionPayload)) revert InvalidPayload();
-        if (cachedProposal.finalizationStatus != FinalizationStatus.Pending) revert ProposalFinalized();
+        if (proposal.finalizationStatus != FinalizationStatus.Pending) revert ProposalFinalized();
 
-        // We update the finalization status of the proposal in the space before calling the execution strategy
-        // to avoid reentrancy issues.
-        proposal.finalizationStatus = FinalizationStatus.Executed;
-
-        proposal.executionStrategy.execute(
-            proposalId,
-            cachedProposal,
-            votePower[proposalId][Choice.For],
-            votePower[proposalId][Choice.Against],
-            votePower[proposalId][Choice.Abstain],
-            executionPayload
+        // 1. Verify covalidator signatures on both attestations
+        require(
+            inco.incoVerifier().isValidDecryptionAttestation(quorumAttestation, quorumSignatures),
+            "Invalid quorum attestation"
+        );
+        require(
+            inco.incoVerifier().isValidDecryptionAttestation(supportAttestation, supportSignatures),
+            "Invalid support attestation"
         );
 
-        emit ProposalExecuted(proposalId);
+        // 2. Verify the attestation handles match our stored encrypted values
+        require(
+            euint256.unwrap(encryptedIsQuorumReached[proposalId]) == quorumAttestation.handle,
+            "Quorum handle mismatch"
+        );
+        require(
+            euint256.unwrap(encryptedIsSupportAchieved[proposalId]) == supportAttestation.handle,
+            "Support handle mismatch"
+        );
+
+        // 3. Extract decrypted boolean results
+        bool quorumPassed = asBool(quorumAttestation.value);
+        bool supportPassed = asBool(supportAttestation.value);
+
+        // 4. Store the decrypted results
+        isQuorumReached[proposalId] = quorumPassed;
+        isSupportAchieved[proposalId] = supportPassed;
+
+        // 5. Execute if both conditions are met
+        if (quorumPassed && supportPassed) {
+            _execute(proposalId, executionPayload);
+        }
     }
 
     /// @inheritdoc ISpaceOwnerActions
@@ -331,6 +455,27 @@ contract Space is ISpace, Initializable, IERC4824, UUPSUpgradeable, OwnableUpgra
     // |            INTERNAL              |
     // |                                  |
     // ------------------------------------
+
+    /// @dev Internal execution, called only after attestation verification.
+    function _execute(uint256 proposalId, bytes calldata executionPayload) internal nonReentrant {
+        Proposal storage proposal = proposals[proposalId];
+        _assertProposalExists(proposal);
+        Proposal memory cachedProposal = proposal;
+        if (cachedProposal.executionPayloadHash != keccak256(executionPayload)) revert InvalidPayload();
+        if (cachedProposal.finalizationStatus != FinalizationStatus.Pending) revert ProposalFinalized();
+
+        proposal.finalizationStatus = FinalizationStatus.Executed;
+
+        proposal.executionStrategy.execute(
+            proposalId,
+            cachedProposal,
+            isQuorumReached[proposalId],
+            isSupportAchieved[proposalId],
+            executionPayload
+        );
+
+        emit ProposalExecuted(proposalId);
+    }
 
     /// @dev Only the Space owner can authorize an upgrade to this contract.
     // solhint-disable-next-line no-empty-blocks
@@ -383,7 +528,6 @@ contract Space is ISpace, Initializable, IERC4824, UUPSUpgradeable, OwnableUpgra
         for (uint8 i = 0; i < _votingStrategyIndices.length; i++) {
             activeVotingStrategies = activeVotingStrategies.setBit(_votingStrategyIndices[i], false);
         }
-        // There must always be at least one active voting strategy.
         if (activeVotingStrategies == 0) revert NoActiveVotingStrategies();
     }
 
@@ -399,13 +543,21 @@ contract Space is ISpace, Initializable, IERC4824, UUPSUpgradeable, OwnableUpgra
         for (uint256 i = 0; i < _authenticators.length; i++) {
             authenticators[_authenticators[i]] = FALSE;
         }
-        // TODO: should we check that there are still authenticators left? same for other setters..
     }
 
     /// @dev Reverts if a specified proposal does not exist.
     function _assertProposalExists(Proposal memory proposal) internal pure {
-        // If a proposal exists, then its execution payload hash will be non-zero.
         if (proposal.executionPayloadHash == 0) revert InvalidProposal();
+    }
+
+    /// @dev Returns existing encrypted vote tally or zero if not yet initialized.
+    function _getOrZero(uint256 proposalId, uint8 choice) internal returns (euint256) {
+        if (euint256.unwrap(votePower[proposalId][choice]) == bytes32(0)) {
+            euint256 zero = e.asEuint256(0);
+            zero.allowThis();
+            return zero;
+        }
+        return votePower[proposalId][choice];
     }
 
     /// @dev Returns the cumulative voting power of a user over a set of voting strategies.
@@ -415,14 +567,12 @@ contract Space is ISpace, Initializable, IERC4824, UUPSUpgradeable, OwnableUpgra
         IndexedStrategy[] calldata userStrategies,
         uint256 allowedStrategies
     ) internal view returns (uint256) {
-        // Ensure there are no duplicates to avoid an attack where people double count a strategy.
         userStrategies.assertNoDuplicateIndicesCalldata();
 
         uint256 totalVotingPower;
         for (uint256 i = 0; i < userStrategies.length; ++i) {
             uint8 strategyIndex = userStrategies[i].index;
 
-            // Check that the strategy is allowed for this proposal.
             if (!allowedStrategies.isBitSet(strategyIndex)) {
                 revert InvalidStrategyIndex(strategyIndex);
             }

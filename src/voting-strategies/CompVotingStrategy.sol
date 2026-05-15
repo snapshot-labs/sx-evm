@@ -10,6 +10,8 @@ import { IComp } from "../interfaces/IComp.sol";
 contract CompVotingStrategy is IVotingStrategy {
     /// @notice Thrown when the byte array is not long enough to represent an address.
     error InvalidByteArray();
+    /// @notice Thrown when the token does not expose a compatible voting-power view.
+    error InvalidVotingToken();
 
     /// @notice Returns the voting power of an address at a given block number.
     /// @param blockNumber The block number to get the voting power at.
@@ -25,6 +27,24 @@ contract CompVotingStrategy is IVotingStrategy {
         address tokenAddress = address(bytes20(params));
         // We subract 1 from the block number so that when blockNumber == block.number,
         // getPriorVotes can still be called.
-        return uint256(IComp(tokenAddress).getPriorVotes(voter, blockNumber - 1));
+        uint256 queryBlock = blockNumber - 1;
+
+        // Compound-style interface.
+        (bool ok, bytes memory data) = tokenAddress.staticcall(
+            abi.encodeWithSelector(IComp.getPriorVotes.selector, voter, queryBlock)
+        );
+        if (ok && data.length >= 32) {
+            return abi.decode(data, (uint256));
+        }
+
+        // OZ ERC20Votes interface.
+        (ok, data) = tokenAddress.staticcall(
+            abi.encodeWithSignature("getPastVotes(address,uint256)", voter, queryBlock)
+        );
+        if (ok && data.length >= 32) {
+            return abi.decode(data, (uint256));
+        }
+
+        revert InvalidVotingToken();
     }
 }

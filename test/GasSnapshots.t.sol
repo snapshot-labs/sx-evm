@@ -11,7 +11,7 @@ import { EthTxAuthenticator } from "../src/authenticators/EthTxAuthenticator.sol
 import {
     PropositionPowerAndActiveProposalsLimiterValidationStrategy
 } from "../src/proposal-validation-strategies/PropositionPowerAndActiveProposalsLimiterValidationStrategy.sol";
-import { Choice, IndexedStrategy, Strategy, UpdateSettingsCalldata } from "../src/types.sol";
+import { IndexedStrategy, Strategy, UpdateSettingsCalldata } from "../src/types.sol";
 
 contract GasSnapshotsTest is SpaceTest, SigUtils {
     CompVotingStrategy internal compVotingStrategy;
@@ -207,108 +207,134 @@ contract GasSnapshotsTest is SpaceTest, SigUtils {
 
         uint256 proposalId = 1;
 
-        (v, r, s) = vm.sign(
-            VOTER_KEY,
-            _getVoteDigest(address(ethSigAuth), address(space), voter, proposalId, Choice.For, userVotingStrategies, "")
-        );
-        ethSigAuth.authenticate(
-            v,
-            r,
-            s,
-            0,
-            address(space),
-            VOTE_SELECTOR,
-            abi.encode(voter, proposalId, Choice.For, userVotingStrategies, "")
-        );
+        _castSigVotes(proposalId);
+        _castTxVotes(proposalId);
+    }
 
-        (v, r, s) = vm.sign(
-            key2,
-            _getVoteDigest(
-                address(ethSigAuth),
+    function _castSigVotes(uint256 proposalId) internal {
+        // Voter 1
+        {
+            bytes memory encryptedChoice = fakePrepareEuint256Ciphertext(1, voter, address(space));
+            (uint8 v, bytes32 r, bytes32 s) = vm.sign(
+                VOTER_KEY,
+                _getVoteDigest(
+                    address(ethSigAuth),
+                    address(space),
+                    voter,
+                    proposalId,
+                    encryptedChoice,
+                    userVotingStrategies,
+                    ""
+                )
+            );
+            ethSigAuth.authenticate(
+                v,
+                r,
+                s,
+                0,
                 address(space),
-                voter2,
-                proposalId,
-                Choice.For,
-                userVotingStrategies,
-                ""
-            )
-        );
-
-        // We take the snapshot on the second vote because the first vote will write to new
-        // storage making it not representative of average usage.
-        snapStart("VoteSigComp");
-        ethSigAuth.authenticate(
-            v,
-            r,
-            s,
-            0,
-            address(space),
-            VOTE_SELECTOR,
-            abi.encode(voter2, proposalId, Choice.For, userVotingStrategies, "")
-        );
-        snapEnd();
-
-        (v, r, s) = vm.sign(
-            key3,
-            _getVoteDigest(
-                address(ethSigAuth),
+                VOTE_SELECTOR,
+                abi.encode(voter, proposalId, encryptedChoice, userVotingStrategies, "")
+            );
+            processAllOperations();
+        }
+        // Voter 2
+        {
+            bytes memory encryptedChoice = fakePrepareEuint256Ciphertext(1, voter2, address(space));
+            (uint8 v, bytes32 r, bytes32 s) = vm.sign(
+                key2,
+                _getVoteDigest(
+                    address(ethSigAuth),
+                    address(space),
+                    voter2,
+                    proposalId,
+                    encryptedChoice,
+                    userVotingStrategies,
+                    ""
+                )
+            );
+            snapStart("VoteSigComp");
+            ethSigAuth.authenticate(
+                v,
+                r,
+                s,
+                0,
                 address(space),
-                voter3,
-                proposalId,
-                Choice.For,
-                userVotingStrategies,
-                "bafkreibv2yjocyotgj2n6awe5z7vqxrzyo72t2ml2ijgj4fgktfpyukuv4"
-            )
-        );
+                VOTE_SELECTOR,
+                abi.encode(voter2, proposalId, encryptedChoice, userVotingStrategies, "")
+            );
+            snapEnd();
+            processAllOperations();
+        }
+        // Voter 3 (with metadata)
+        {
+            bytes memory encryptedChoice = fakePrepareEuint256Ciphertext(1, voter3, address(space));
+            string memory meta = "bafkreibv2yjocyotgj2n6awe5z7vqxrzyo72t2ml2ijgj4fgktfpyukuv4";
+            (uint8 v, bytes32 r, bytes32 s) = vm.sign(
+                key3,
+                _getVoteDigest(
+                    address(ethSigAuth),
+                    address(space),
+                    voter3,
+                    proposalId,
+                    encryptedChoice,
+                    userVotingStrategies,
+                    meta
+                )
+            );
+            snapStart("VoteSigCompMetadata");
+            ethSigAuth.authenticate(
+                v,
+                r,
+                s,
+                0,
+                address(space),
+                VOTE_SELECTOR,
+                abi.encode(voter3, proposalId, encryptedChoice, userVotingStrategies, meta)
+            );
+            snapEnd();
+            processAllOperations();
+        }
+    }
 
-        // Adding metadata with the vote
-        snapStart("VoteSigCompMetadata");
-        ethSigAuth.authenticate(
-            v,
-            r,
-            s,
-            0,
-            address(space),
-            VOTE_SELECTOR,
-            abi.encode(
-                voter3,
-                proposalId,
-                Choice.For,
-                userVotingStrategies,
-                "bafkreibv2yjocyotgj2n6awe5z7vqxrzyo72t2ml2ijgj4fgktfpyukuv4"
-            )
-        );
-        snapEnd();
-
-        vm.prank(voter4);
-        ethTxAuth.authenticate(
-            address(space),
-            VOTE_SELECTOR,
-            abi.encode(voter4, proposalId, Choice.For, userVotingStrategies, "")
-        );
-
-        vm.prank(voter5);
-        snapStart("VoteTxComp");
-        ethTxAuth.authenticate(
-            address(space),
-            VOTE_SELECTOR,
-            abi.encode(voter5, proposalId, Choice.For, userVotingStrategies, "")
-        );
-        snapEnd();
-
-        vm.prank(voter6);
-        snapStart("VoteTxCompMetadata");
-        ethTxAuth.authenticate(
-            address(space),
-            VOTE_SELECTOR,
-            abi.encode(
-                voter6,
-                proposalId,
-                Choice.For,
-                userVotingStrategies,
-                "bafkreibv2yjocyotgj2n6awe5z7vqxrzyo72t2ml2ijgj4fgktfpyukuv4"
-            )
-        );
-        snapEnd();
+    function _castTxVotes(uint256 proposalId) internal {
+        // Voter 4
+        {
+            bytes memory encryptedChoice = fakePrepareEuint256Ciphertext(1, voter4, address(space));
+            vm.prank(voter4);
+            ethTxAuth.authenticate(
+                address(space),
+                VOTE_SELECTOR,
+                abi.encode(voter4, proposalId, encryptedChoice, userVotingStrategies, "")
+            );
+            processAllOperations();
+        }
+        // Voter 5
+        {
+            bytes memory encryptedChoice = fakePrepareEuint256Ciphertext(1, voter5, address(space));
+            vm.prank(voter5);
+            snapStart("VoteTxComp");
+            ethTxAuth.authenticate(
+                address(space),
+                VOTE_SELECTOR,
+                abi.encode(voter5, proposalId, encryptedChoice, userVotingStrategies, "")
+            );
+            snapEnd();
+            processAllOperations();
+        }
+        // Voter 6 (with metadata)
+        {
+            bytes memory encryptedChoice = fakePrepareEuint256Ciphertext(1, voter6, address(space));
+            string memory meta = "bafkreibv2yjocyotgj2n6awe5z7vqxrzyo72t2ml2ijgj4fgktfpyukuv4";
+            vm.prank(voter6);
+            snapStart("VoteTxCompMetadata");
+            ethTxAuth.authenticate(
+                address(space),
+                VOTE_SELECTOR,
+                abi.encode(voter6, proposalId, encryptedChoice, userVotingStrategies, meta)
+            );
+            snapEnd();
+            processAllOperations();
+        }
     }
 }
