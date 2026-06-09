@@ -2,8 +2,8 @@
 
 pragma solidity ^0.8.18;
 
-import { Choice, Proposal, ProposalStatus, FinalizationStatus, Strategy } from "src/types.sol";
-import { IExecutionStrategy } from "src/interfaces/IExecutionStrategy.sol";
+import { Choice, Proposal, ProposalStatus, FinalizationStatus, Strategy } from "../../types.sol";
+import { IExecutionStrategy } from "../IExecutionStrategy.sol";
 
 /// @title Space State
 interface ISpaceState {

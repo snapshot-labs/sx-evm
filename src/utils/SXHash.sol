@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.18;
 
-import { IndexedStrategy, Strategy } from "src/types.sol";
+import { IndexedStrategy, Strategy } from "../types.sol";
 
 /// @title Snapshot X Types Hashing Library
 /// @notice For use in EIP712 signatures.

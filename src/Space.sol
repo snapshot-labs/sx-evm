@@ -6,8 +6,8 @@ import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/O
 import { Initializable } from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import { UUPSUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import { ReentrancyGuard } from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
-import { IERC4824 } from "src/interfaces/IERC4824.sol";
-import { ISpace, ISpaceActions, ISpaceState, ISpaceOwnerActions } from "src/interfaces/ISpace.sol";
+import { IERC4824 } from "./interfaces/IERC4824.sol";
+import { ISpace, ISpaceActions, ISpaceState, ISpaceOwnerActions } from "./interfaces/ISpace.sol";
 import {
     Choice,
     FinalizationStatus,
@@ -19,10 +19,10 @@ import {
     InitializeCalldata,
     TRUE,
     FALSE
-} from "src/types.sol";
-import { IVotingStrategy } from "src/interfaces/IVotingStrategy.sol";
-import { IExecutionStrategy } from "src/interfaces/IExecutionStrategy.sol";
-import { IProposalValidationStrategy } from "src/interfaces/IProposalValidationStrategy.sol";
+} from "./types.sol";
+import { IVotingStrategy } from "./interfaces/IVotingStrategy.sol";
+import { IExecutionStrategy } from "./interfaces/IExecutionStrategy.sol";
+import { IProposalValidationStrategy } from "./interfaces/IProposalValidationStrategy.sol";
 import { SXUtils } from "./utils/SXUtils.sol";
 import { BitPacker } from "./utils/BitPacker.sol";
 

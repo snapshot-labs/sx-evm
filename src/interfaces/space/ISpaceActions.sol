@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.18;
 
-import { Choice, IndexedStrategy, Strategy, InitializeCalldata } from "src/types.sol";
+import { Choice, IndexedStrategy, Strategy, InitializeCalldata } from "../../types.sol";
 
 /// @title Space Actions
 /// @notice User focused actions that can be performed on a space.
