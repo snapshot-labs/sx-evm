@@ -89,6 +89,17 @@ struct MetaTransaction {
     uint256 salt;
 }
 
+/// @notice Transaction struct that can be used to represent xChain transactions inside a proposal.
+struct xMetaTransaction {
+    address to;
+    uint256 toChainId;
+    uint256 value;
+    bytes data;
+    Enum.Operation operation;
+    // We require a salt so that the struct can always be unique and we can use its hash as a unique identifier.
+    uint256 salt;
+}
+
 /// @dev    Structure used for the function `initialize` of the Space contract because of solidity's stack constraints.
 ///         For more information, see `ISpaceActions.sol`.
 struct InitializeCalldata {
