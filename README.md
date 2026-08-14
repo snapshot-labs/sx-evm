@@ -1,5 +1,7 @@
-[![codecov](https://codecov.io/github/snapshot-labs/sx-evm/branch/main/graph/badge.svg?token=BZ4XKYU3FT)](https://app.codecov.io/gh/snapshot-labs/sx-evm)
-[![ci](https://github.com/snapshot-labs/sx-evm/actions/workflows/ci.yml/badge.svg)](https://github.com/snapshot-labs/sx-evm/actions/workflows/ci.yml)
+> [!WARNING]
+>
+> This repo has been migrated to
+> [snapshot-labs/sx-monorepo](https://github.com/snapshot-labs/sx-monorepo/tree/master/contracts/sx-evm).
 
 # Snapshot X
 
