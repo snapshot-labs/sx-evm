@@ -12,4 +12,7 @@ interface IProxyFactoryErrors {
 
     /// @notice Thrown when the implementation supplied to the proxy factory is the zero address or has no code.
     error InvalidImplementation();
+
+    /// @notice Thrown when the deployment fee is insufficient.
+    error InsufficientFee();
 }
